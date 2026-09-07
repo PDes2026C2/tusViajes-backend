@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record CreateCompradorRequest(
+public record CreateCompradorRequestDTO(
     @NotBlank(message = "El nombre es obligatorio") String nombre,
     @NotBlank(message = "El apellido es obligatorio") String apellido,
     @NotBlank(message = "El email es obligatorio")

@@ -17,6 +17,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Testcontainers
@@ -36,7 +37,7 @@ class AgenciaControllerTest {
     private AgenciaRepository agenciaRepository;
 
     @Test
-    void listar_retorna200YListaDesdePostgres() throws Exception {
+    void listar_retorna200YLista() throws Exception {
         agenciaRepository.save(AgenciaBuilder.anAgencia().withRazonSocial("Turismo Sur").build());
 
         mockMvc.perform(get("/api/agencias"))
@@ -63,7 +64,7 @@ class AgenciaControllerTest {
     }
 
     @Test
-    void crear_persisteEnPostgresYRetorna201() throws Exception {
+    void crear_persisteYRetorna201() throws Exception {
         String json = """
                 {
                     "razonSocial": "Nueva Agencia SA",
@@ -72,6 +73,7 @@ class AgenciaControllerTest {
                 """;
 
         mockMvc.perform(post("/api/agencias")
+                        .with(user("user"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
@@ -84,7 +86,7 @@ class AgenciaControllerTest {
     void eliminar_retorna204NoContent() throws Exception {
         Agencia guardada = agenciaRepository.save(AgenciaBuilder.anAgencia().build());
 
-        mockMvc.perform(delete("/api/agencias/" + guardada.getId()))
+        mockMvc.perform(delete("/api/agencias/" + guardada.getId()).with(user("user")))
                 .andExpect(status().isNoContent());
 
         assertThat(agenciaRepository.existsById(guardada.getId())).isFalse();
