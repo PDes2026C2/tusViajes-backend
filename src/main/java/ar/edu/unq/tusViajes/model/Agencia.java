@@ -27,13 +27,6 @@ public class Agencia extends Usuario {
     @Column(nullable = false, length = 20)
     private EstadoAgencia estado = EstadoAgencia.PENDIENTE;
 
-    public Agencia(String razonSocial, String cuit) {
-        super(cuit + "@agencia.com", "placeholderPasswordHash");
-        this.razonSocial = razonSocial;
-        this.cuit = cuit;
-        this.estado = EstadoAgencia.PENDIENTE;
-    }
-
     public Agencia(String email, String passwordHash, String razonSocial, String cuit) {
         super(email, passwordHash);
         this.razonSocial = razonSocial;

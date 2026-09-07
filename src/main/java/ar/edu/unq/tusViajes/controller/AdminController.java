@@ -18,20 +18,20 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/admin/administradores")
 @RequiredArgsConstructor
 public class AdminController {
 
     private final AdminService adminService;
 
     @GetMapping
-    public List<AdminResponseDTO> listar() {
-        return adminService.listar();
+    public ResponseEntity<List<AdminResponseDTO>> listar() {
+        return ResponseEntity.ok(adminService.listar());
     }
 
     @GetMapping("/{id}")
-    public AdminResponseDTO buscarPorId(@PathVariable Long id) {
-        return adminService.buscarPorId(id);
+    public ResponseEntity<AdminResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.buscarPorId(id));
     }
 
     @PostMapping

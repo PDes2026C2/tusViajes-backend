@@ -5,7 +5,6 @@ import ar.edu.unq.tusViajes.controller.dto.response.PaqueteResponseDTO;
 import ar.edu.unq.tusViajes.service.PaqueteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,13 +19,13 @@ public class PaqueteController {
     private final PaqueteService paqueteService;
 
     @GetMapping
-    public List<PaqueteResponseDTO> listar() {
-        return paqueteService.listar();
+    public ResponseEntity<List<PaqueteResponseDTO>> listar() {
+        return ResponseEntity.ok(paqueteService.listar());
     }
 
     @GetMapping("/{id}")
-    public PaqueteResponseDTO buscarPorId(@PathVariable Long id) {
-        return paqueteService.buscarPorId(id);
+    public ResponseEntity<PaqueteResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(paqueteService.buscarPorId(id));
     }
 
     @PostMapping
@@ -36,13 +35,13 @@ public class PaqueteController {
     }
 
     @PutMapping("/{id}")
-    public PaqueteResponseDTO actualizar(@PathVariable Long id, @Valid @RequestBody PaqueteRequestDTO dto) {
-        return paqueteService.actualizar(id, dto);
+    public ResponseEntity<PaqueteResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody PaqueteRequestDTO dto) {
+        return ResponseEntity.ok(paqueteService.actualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         paqueteService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }

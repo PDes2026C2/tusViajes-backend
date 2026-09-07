@@ -27,13 +27,13 @@ public class CompradorController {
     private final CompradorService compradorService;
 
     @GetMapping
-    public List<CompradorResponseDTO> listar() {
-        return compradorService.listar();
+    public ResponseEntity<List<CompradorResponseDTO>> listar() {
+        return ResponseEntity.ok(compradorService.listar());
     }
 
     @GetMapping("/{id}")
-    public CompradorResponseDTO buscarPorId(@PathVariable Long id) {
-        return compradorService.buscarPorId(id);
+    public ResponseEntity<CompradorResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(compradorService.buscarPorId(id));
     }
 
     @PostMapping

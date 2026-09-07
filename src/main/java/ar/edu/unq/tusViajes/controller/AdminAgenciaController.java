@@ -21,8 +21,8 @@ public class AdminAgenciaController {
     private final AgenciaService agenciaService;
 
     @GetMapping("/pendientes")
-    public List<AgenciaResponseDTO> listarPendientes() {
-        return agenciaService.listarPendientes();
+    public ResponseEntity<List<AgenciaResponseDTO>> listarPendientes() {
+        return ResponseEntity.ok(agenciaService.listarPendientes());
     }
 
     @PostMapping("/{id}/autorizar")

@@ -64,22 +64,22 @@ class AgenciaControllerTest {
     }
 
     @Test
-    void crear_persisteYRetorna201() throws Exception {
+    void actualizar_modificaRazonSocialYRetorna200() throws Exception {
+        Agencia guardada = agenciaRepository.save(AgenciaBuilder.anAgencia().withRazonSocial("Original SA").build());
+
         String json = """
                 {
-                    "razonSocial": "Nueva Agencia SA",
-                    "cuit": "30-77665544-3"
+                    "razonSocial": "Modificada SA"
                 }
                 """;
 
-        mockMvc.perform(post("/api/agencias")
+        mockMvc.perform(put("/api/agencias/" + guardada.getId())
                         .with(user("user"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated())
-                .andExpect(header().exists("Location"))
-                .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.razonSocial").value("Nueva Agencia SA"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(guardada.getId()))
+                .andExpect(jsonPath("$.razonSocial").value("Modificada SA"));
     }
 
     @Test

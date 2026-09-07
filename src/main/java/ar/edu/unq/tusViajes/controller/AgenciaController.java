@@ -1,21 +1,17 @@
 package ar.edu.unq.tusViajes.controller;
 
-import java.net.URI;
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.unq.tusViajes.controller.dto.request.CreateAgenciaRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.UpdateAgenciaRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AgenciaResponseDTO;
 import ar.edu.unq.tusViajes.service.AgenciaService;
 
@@ -30,29 +26,23 @@ public class AgenciaController {
     private final AgenciaService agenciaService;
  
     @GetMapping
-    public List<AgenciaResponseDTO> listar() {
-        return agenciaService.listar();
+    public ResponseEntity<List<AgenciaResponseDTO>> listar() {
+        return ResponseEntity.ok(agenciaService.listar());
     }
  
     @GetMapping("/{id}")
-    public AgenciaResponseDTO buscarPorId(@PathVariable Long id) {
-        return agenciaService.buscarPorId(id);
-    }
- 
-    @PostMapping
-    public ResponseEntity<AgenciaResponseDTO> crear(@Valid @RequestBody CreateAgenciaRequestDTO dto) {
-        AgenciaResponseDTO creada = agenciaService.crear(dto);
-        return ResponseEntity.created(URI.create("/api/agencias/" + creada.id())).body(creada);
+    public ResponseEntity<AgenciaResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(agenciaService.buscarPorId(id));
     }
  
     @PutMapping("/{id}")
-    public AgenciaResponseDTO actualizar(@PathVariable Long id, @Valid @RequestBody CreateAgenciaRequestDTO dto) {
-        return agenciaService.actualizar(id, dto);
+    public ResponseEntity<AgenciaResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody UpdateAgenciaRequestDTO dto) {
+        return ResponseEntity.ok(agenciaService.actualizar(id, dto));
     }
  
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         agenciaService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }

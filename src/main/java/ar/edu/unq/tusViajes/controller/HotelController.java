@@ -26,13 +26,13 @@ public class HotelController {
     private final HotelService hotelService;
 
     @GetMapping
-    public List<HotelResponseDTO> listar() {
-        return hotelService.listar();
+    public ResponseEntity<List<HotelResponseDTO>> listar() {
+        return ResponseEntity.ok(hotelService.listar());
     }
 
     @GetMapping("/{id}")
-    public HotelResponseDTO buscarPorId(@PathVariable Long id) {
-        return hotelService.buscarPorId(id);
+    public ResponseEntity<HotelResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(hotelService.buscarPorId(id));
     }
 
     @PostMapping
