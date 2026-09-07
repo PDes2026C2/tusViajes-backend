@@ -8,8 +8,10 @@ class AgenciaTest {
 
     @Test
     void constructor_asigna_todos_los_campos() {
-        Agencia agencia = new Agencia("Huryn", "20-44576859-8");
+        Agencia agencia = new Agencia("turismo@test.com", "hash123", "Huryn", "20-44576859-8");
 
+        assertThat(agencia.getEmail()).isEqualTo("turismo@test.com");
+        assertThat(agencia.getPasswordHash()).isEqualTo("hash123");
         assertThat(agencia.getRazonSocial()).isEqualTo("Huryn");
         assertThat(agencia.getCuit()).isEqualTo("20-44576859-8");
         assertThat(agencia.getEstado()).isEqualTo(EstadoAgencia.PENDIENTE);
@@ -20,7 +22,7 @@ class AgenciaTest {
 
     @Test
     void solo_cambia_razon_social() {
-        Agencia agencia = new Agencia("Huryn", "20-44576859-8");
+        Agencia agencia = new Agencia("turismo@test.com", "hash123", "Huryn", "20-44576859-8");
 
         agencia.actualizarRazonSocial("Metal");
 

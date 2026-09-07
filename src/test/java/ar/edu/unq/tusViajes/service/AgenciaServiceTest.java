@@ -1,9 +1,8 @@
 package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.builder.AgenciaBuilder;
-import ar.edu.unq.tusViajes.controller.dto.request.CreateAgenciaRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.UpdateAgenciaRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AgenciaResponseDTO;
-import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Agencia;
 import ar.edu.unq.tusViajes.model.EstadoAgencia;
@@ -67,25 +66,18 @@ public class AgenciaServiceTest {
     }
 
     @Test
-    void crear_guardaYDevuelveLaAgenciaPersistida() {
-        CreateAgenciaRequestDTO dto = new CreateAgenciaRequestDTO("Viajes del Norte", "30-99887766-1");
+    void actualizar_modificaRazonSocialYPersiste() {
+        Agencia guardada = agenciaRepository.save(
+                AgenciaBuilder.anAgencia().withRazonSocial("Viejo Nombre").build()
+        );
 
-        AgenciaResponseDTO resultado = agenciaService.crear(dto);
+        UpdateAgenciaRequestDTO dto = new UpdateAgenciaRequestDTO("Nuevo Nombre SA");
 
-        assertThat(resultado.id()).isNotNull();
-        assertThat(resultado.razonSocial()).isEqualTo("Viajes del Norte");
-        assertThat(agenciaRepository.existsById(resultado.id())).isTrue();
-    }
+        AgenciaResponseDTO resultado = agenciaService.actualizar(guardada.getId(), dto);
 
-    @Test
-    void crear_lanzaRecursoDuplicadoExceptionCuandoElCuitYaExiste() {
-        agenciaRepository.save(AgenciaBuilder.anAgencia().withCuit("30-12345678-9").build());
-
-        CreateAgenciaRequestDTO dtoDuplicado = new CreateAgenciaRequestDTO("Otra Agencia", "30-12345678-9");
-
-        assertThatThrownBy(() -> agenciaService.crear(dtoDuplicado))
-                .isInstanceOf(DuplicateResourceException.class)
-                .hasMessageContaining("30-12345678-9");
+        assertThat(resultado.razonSocial()).isEqualTo("Nuevo Nombre SA");
+        Agencia enDb = agenciaRepository.findById(guardada.getId()).orElseThrow();
+        assertThat(enDb.getRazonSocial()).isEqualTo("Nuevo Nombre SA");
     }
 
     @Test

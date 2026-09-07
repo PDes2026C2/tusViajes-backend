@@ -6,9 +6,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ar.edu.unq.tusViajes.controller.dto.request.CreateAgenciaRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.UpdateAgenciaRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AgenciaResponseDTO;
-import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.model.Agencia;
 import ar.edu.unq.tusViajes.model.EstadoAgencia;
 import ar.edu.unq.tusViajes.repository.AgenciaRepository;
@@ -42,16 +41,7 @@ public class AgenciaService {
     }
 
     @Transactional
-    public AgenciaResponseDTO crear(CreateAgenciaRequestDTO dto) {
-        if (agenciaRepository.existsByCuit(dto.cuit())) {
-            throw new DuplicateResourceException("Ya existe una agencia con el CUIT " + dto.cuit());
-        }
-        Agencia agencia = new Agencia(dto.razonSocial(), dto.cuit());
-        return AgenciaResponseDTO.from(agenciaRepository.save(agencia));
-    }
-
-    @Transactional
-    public AgenciaResponseDTO actualizar(Long id, CreateAgenciaRequestDTO dto) {
+    public AgenciaResponseDTO actualizar(Long id, UpdateAgenciaRequestDTO dto) {
         Agencia agencia = buscarEntidadPorId(id);
         agencia.actualizarRazonSocial(dto.razonSocial());
         return AgenciaResponseDTO.from(agenciaRepository.save(agencia));
