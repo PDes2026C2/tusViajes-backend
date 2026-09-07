@@ -25,34 +25,29 @@ public class PaqueteService {
     @Transactional(readOnly = true)
     public List<PaqueteResponseDTO> listar() {
         return paqueteRepository.findAll().stream()
-                .map(this::toResponseDTO)
+                .map(PaqueteResponseDTO::from)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public PaqueteResponseDTO buscarPorId(Long id) {
-        return toResponseDTO(buscarEntidadPorId(id));
+        return PaqueteResponseDTO.from(buscarEntidadPorId(id));
     }
 
     @Transactional
     public PaqueteResponseDTO crear(PaqueteRequestDTO dto) {
-
         Hotel hotel = hotelService.buscarEntidadPorId(dto.getHotelId());
-
         Agencia agencia = agenciaService.buscarEntidadPorId(dto.getAgenciaId());
 
         Paquete paquete = new Paquete(dto.getNombre(), dto.getDescripcion(), dto.getPrecio(), dto.getFechaInicio(),
                 dto.getFechaFin(), hotel, agencia);
-        return toResponseDTO(paqueteRepository.save(paquete));
+        return PaqueteResponseDTO.from(paqueteRepository.save(paquete));
     }
 
     @Transactional
     public PaqueteResponseDTO actualizar(Long id, PaqueteRequestDTO dto) {
-
         Paquete paquete = buscarEntidadPorId(id);
-
         Hotel hotel = hotelService.buscarEntidadPorId(dto.getHotelId());
-
         Agencia agencia = agenciaService.buscarEntidadPorId(dto.getAgenciaId());
 
         paquete.actualizarDatos(
@@ -65,7 +60,7 @@ public class PaqueteService {
                 agencia
         );
 
-        return toResponseDTO(paqueteRepository.save(paquete));
+        return PaqueteResponseDTO.from(paqueteRepository.save(paquete));
     }
 
     @Transactional
@@ -79,11 +74,5 @@ public class PaqueteService {
     private Paquete buscarEntidadPorId(Long id) {
         return paqueteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Paquete con id " + id + " no encontrado"));
-    }
-
-    private PaqueteResponseDTO toResponseDTO(Paquete paquete) {
-        return new PaqueteResponseDTO(paquete.getId(), paquete.getNombre(), paquete.getDescripcion(),
-                paquete.getPrecio(), paquete.getFechaInicio(), paquete.getFechaFin(), hotelService.toResponseDTO(paquete.getHotel()),
-                agenciaService.toResponseDTO(paquete.getAgencia()));
     }
 }

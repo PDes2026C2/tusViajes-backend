@@ -23,6 +23,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Testcontainers
@@ -91,7 +92,6 @@ class PaqueteControllerTest {
 
     @Test
     void crear_retorna201YLocationHeader() throws Exception {
-        
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agencia agencia = agenciaRepository.save(AgenciaBuilder.anAgencia().build());
 
@@ -108,6 +108,7 @@ class PaqueteControllerTest {
                 """.formatted(hotel.getId(), agencia.getId());
 
         mockMvc.perform(post("/api/paquetes")
+                        .with(user("user"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
@@ -127,10 +128,9 @@ class PaqueteControllerTest {
                 .build();
         Paquete guardado = paqueteRepository.save(paquete);
 
-        mockMvc.perform(delete("/api/paquetes/" + guardado.getId()))
+        mockMvc.perform(delete("/api/paquetes/" + guardado.getId()).with(user("user")))
                 .andExpect(status().isNoContent());
 
-        
         assertThat(paqueteRepository.existsById(guardado.getId())).isFalse();
     }
 }
