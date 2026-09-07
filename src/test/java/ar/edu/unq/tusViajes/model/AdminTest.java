@@ -1,28 +1,25 @@
 package ar.edu.unq.tusViajes.model;
 
-import ar.edu.unq.tusViajes.builder.PerfilAdminBuilder;
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
-class PerfilAdminTest {
+import org.junit.jupiter.api.Test;
+
+class AdminTest {
 
     @Test
-    void crearPerfilAdmin_asignaDatosCorrectamente() {
-        PerfilAdmin admin = PerfilAdminBuilder.aPerfilAdmin()
-                .withNombre("Root")
-                .withApellido("Admin")
-                .withEmail("root@tusviajes.com")
-                .build();
+    void crearAdmin_asignaDatosCorrectamente() {
+        Admin admin = new Admin("Root", "Admin", "root@tusviajes.com", "hash123");
 
         assertThat(admin.getNombre()).isEqualTo("Root");
         assertThat(admin.getApellido()).isEqualTo("Admin");
         assertThat(admin.getEmail()).isEqualTo("root@tusviajes.com");
+        assertThat(admin.getRol()).isEqualTo(Rol.ADMIN);
+        assertThat(admin.isActivo()).isTrue();
     }
 
     @Test
     void actualizarDatos_modificaNombreYApellido() {
-        PerfilAdmin admin = PerfilAdminBuilder.aPerfilAdmin().build();
+        Admin admin = new Admin("Root", "Admin", "root@tusviajes.com", "hash123");
 
         admin.actualizarDatos("Super", "Usuario");
 
@@ -30,4 +27,3 @@ class PerfilAdminTest {
         assertThat(admin.getApellido()).isEqualTo("Usuario");
     }
 }
-
