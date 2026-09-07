@@ -6,7 +6,7 @@ public class AdminBuilder {
 
     private String nombre = "Admin";
     private String apellido = "Root";
-    private String email = "admin@tusviajes.com";
+    private String email = "admin-builder@tusviajes.com";
     private String passwordHash = "$2a$10$hashedPasswordPlaceholder";
 
     public static AdminBuilder anAdmin() {
