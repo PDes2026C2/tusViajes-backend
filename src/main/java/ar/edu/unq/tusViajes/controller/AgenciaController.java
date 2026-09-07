@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.unq.tusViajes.controller.dto.request.AgenciaRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.CreateAgenciaRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AgenciaResponseDTO;
 import ar.edu.unq.tusViajes.service.AgenciaService;
 
@@ -40,13 +40,13 @@ public class AgenciaController {
     }
  
     @PostMapping
-    public ResponseEntity<AgenciaResponseDTO> crear(@Valid @RequestBody AgenciaRequestDTO dto) {
+    public ResponseEntity<AgenciaResponseDTO> crear(@Valid @RequestBody CreateAgenciaRequestDTO dto) {
         AgenciaResponseDTO creada = agenciaService.crear(dto);
         return ResponseEntity.created(URI.create("/api/agencias/" + creada.id())).body(creada);
     }
  
     @PutMapping("/{id}")
-    public AgenciaResponseDTO actualizar(@PathVariable Long id, @Valid @RequestBody AgenciaRequestDTO dto) {
+    public AgenciaResponseDTO actualizar(@PathVariable Long id, @Valid @RequestBody CreateAgenciaRequestDTO dto) {
         return agenciaService.actualizar(id, dto);
     }
  
