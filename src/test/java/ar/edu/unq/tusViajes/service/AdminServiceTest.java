@@ -1,7 +1,7 @@
 package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.builder.AdminBuilder;
-import ar.edu.unq.tusViajes.controller.dto.request.RegistroAdminRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.AdminRegistrationRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AdminResponseDTO;
 import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
@@ -21,7 +21,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
 @Transactional
 class AdminServiceTest {
@@ -37,48 +37,48 @@ class AdminServiceTest {
     private AdminRepository adminRepository;
 
     @Test
-    void listar_retornaTodosLosAdmins() {
+    void getAll_returnsAllAdmins() {
         Admin admin = adminRepository.save(AdminBuilder.anAdmin().build());
 
-        List<AdminResponseDTO> resultado = adminService.listar();
+        List<AdminResponseDTO> result = adminService.getAll();
 
-        assertThat(resultado).isNotEmpty();
-        assertThat(resultado.getFirst().nombre()).isEqualTo(admin.getNombre());
+        assertThat(result).isNotEmpty();
+        assertThat(result.getFirst().firstName()).isEqualTo(admin.getFirstName());
     }
 
     @Test
-    void buscarPorId_retornaAdminCuandoExiste() {
-        Admin guardado = adminRepository.save(AdminBuilder.anAdmin().build());
+    void getById_returnsAdminWhenExists() {
+        Admin saved = adminRepository.save(AdminBuilder.anAdmin().build());
 
-        AdminResponseDTO resultado = adminService.buscarPorId(guardado.getId());
+        AdminResponseDTO result = adminService.getById(saved.getId());
 
-        assertThat(resultado.nombre()).isEqualTo(guardado.getNombre());
-        assertThat(resultado.email()).isEqualTo(guardado.getEmail());
+        assertThat(result.firstName()).isEqualTo(saved.getFirstName());
+        assertThat(result.email()).isEqualTo(saved.getEmail());
     }
 
     @Test
-    void buscarPorId_lanzaExcepcionCuandoNoExiste() {
-        assertThatThrownBy(() -> adminService.buscarPorId(99999L))
+    void getById_throwsExceptionWhenDoesNotExist() {
+        assertThatThrownBy(() -> adminService.getById(99999L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
-    void crear_guardaYRetornaAdmin() {
-        RegistroAdminRequestDTO dto = new RegistroAdminRequestDTO("Super", "Admin", "newadmin@test.com", "secretPassword123");
+    void create_savesAndReturnsAdmin() {
+        AdminRegistrationRequestDTO dto = new AdminRegistrationRequestDTO("Super", "Admin", "newadmin@test.com", "secretPassword123");
 
-        AdminResponseDTO resultado = adminService.crear(dto);
+        AdminResponseDTO result = adminService.create(dto);
 
-        assertThat(resultado.id()).isNotNull();
-        assertThat(resultado.email()).isEqualTo("newadmin@test.com");
+        assertThat(result.id()).isNotNull();
+        assertThat(result.email()).isEqualTo("newadmin@test.com");
     }
 
     @Test
-    void crear_lanzaExcepcionCuandoEmailYaExiste() {
+    void create_throwsExceptionWhenEmailAlreadyExists() {
         adminRepository.save(AdminBuilder.anAdmin().withEmail("repetido@test.com").build());
 
-        RegistroAdminRequestDTO dto = new RegistroAdminRequestDTO("Otro", "Admin", "repetido@test.com", "secretPassword123");
+        AdminRegistrationRequestDTO dto = new AdminRegistrationRequestDTO("Other", "Admin", "repetido@test.com", "secretPassword123");
 
-        assertThatThrownBy(() -> adminService.crear(dto))
+        assertThatThrownBy(() -> adminService.create(dto))
                 .isInstanceOf(DuplicateResourceException.class);
     }
 }

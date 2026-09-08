@@ -23,7 +23,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         response.getWriter().write("""
                 {
                     "timestamp": "%s",
-                    "mensaje": "Acceso denegado: no posee los permisos necesarios para realizar esta accion"
+                    "message": "Access denied: you do not have sufficient permissions to perform this action"
                 }
                 """.formatted(Instant.now().toString()));
     }

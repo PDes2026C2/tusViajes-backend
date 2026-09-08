@@ -3,11 +3,11 @@ package ar.edu.unq.tusViajes.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import ar.edu.unq.tusViajes.model.Admin;
-import org.springframework.context.annotation.Profile;
 import ar.edu.unq.tusViajes.repository.AdminRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -26,12 +26,12 @@ public class AdminInitializer implements CommandLineRunner {
         if (adminRepository.count() == 0) {
             Admin admin = new Admin(
                     "Admin",
-                    "Sistema",
+                    "System",
                     "admin@tusviajes.com",
                     passwordEncoder.encode("admin123")
             );
             adminRepository.save(admin);
-            logger.info("Administrador inicial creado exitosamente: admin@tusviajes.com");
+            logger.info("Initial administrator successfully created: admin@tusviajes.com");
         }
     }
 }

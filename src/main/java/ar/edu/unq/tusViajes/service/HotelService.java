@@ -14,31 +14,31 @@ import ar.edu.unq.tusViajes.validator.EntityValidator;
 import lombok.RequiredArgsConstructor;
 
 @Service
-@RequiredArgsConstructor 
+@RequiredArgsConstructor
 public class HotelService {
 
     private final EntityValidator entityValidator;
     private final HotelRepository hotelRepository;
 
     @Transactional(readOnly = true)
-    public List<HotelResponseDTO> listar() {
+    public List<HotelResponseDTO> getAll() {
         return hotelRepository.findAll().stream()
                 .map(HotelResponseDTO::from)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public HotelResponseDTO buscarPorId(Long id) {
-        return HotelResponseDTO.from(buscarEntidadPorId(id));
+    public HotelResponseDTO getById(Long id) {
+        return HotelResponseDTO.from(getEntityById(id));
     }
 
     @Transactional
-    public HotelResponseDTO crear(HotelRequestDTO dto) {
-        Hotel hotel = new Hotel(dto.nombre(), dto.destino(), dto.fotoUrl(), dto.servicio());
+    public HotelResponseDTO create(HotelRequestDTO dto) {
+        Hotel hotel = new Hotel(dto.name(), dto.destination(), dto.photoUrl(), dto.services());
         return HotelResponseDTO.from(hotelRepository.save(hotel));
     }
 
-    public Hotel buscarEntidadPorId(Long id) {
+    public Hotel getEntityById(Long id) {
         return entityValidator.findByIdOrThrow(hotelRepository, id, "Hotel");
     }
 }

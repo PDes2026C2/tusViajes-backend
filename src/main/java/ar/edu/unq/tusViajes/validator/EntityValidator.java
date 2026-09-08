@@ -11,12 +11,12 @@ public class EntityValidator {
     public <T, ID> T findByIdOrThrow(
             JpaRepository<T, ID> repository,
             ID id,
-            String nombreEntidad
+            String entityName
     ) {
         return repository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                nombreEntidad + " " + id + " no encontrado"
+                                entityName + " with id " + id + " not found"
                         )
                 );
     }

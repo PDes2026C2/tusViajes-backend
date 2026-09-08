@@ -12,11 +12,10 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
-import org.springframework.security.web.context.SecurityContextRepository;
+
 import ar.edu.unq.tusViajes.security.CustomAccessDeniedHandler;
 import ar.edu.unq.tusViajes.security.CustomAuthenticationEntryPoint;
 import ar.edu.unq.tusViajes.security.JwtAuthenticationFilter;
@@ -49,10 +48,10 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/compradores").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/paquetes/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/hoteles/**").hasAnyRole("ADMIN", "AGENCIA")
-                        .requestMatchers(HttpMethod.GET, "/api/agencias/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/buyers").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/travel-packages/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/hotels/**").hasAnyRole("ADMIN", "AGENCY")
+                        .requestMatchers(HttpMethod.GET, "/api/agencies/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

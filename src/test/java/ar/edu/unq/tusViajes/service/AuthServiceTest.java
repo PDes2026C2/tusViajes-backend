@@ -1,21 +1,21 @@
 package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.builder.AdminBuilder;
-import ar.edu.unq.tusViajes.builder.AgenciaBuilder;
+import ar.edu.unq.tusViajes.builder.AgencyBuilder;
+import ar.edu.unq.tusViajes.controller.dto.request.AgencyRegistrationRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.LoginRequestDTO;
-import ar.edu.unq.tusViajes.controller.dto.request.RegistroAgenciaRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.response.AgencyRegistrationResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.LoginResponseDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.RegistroAgenciaResponseDTO;
-import ar.edu.unq.tusViajes.exception.AgenciaNoAutorizadaException;
-import ar.edu.unq.tusViajes.exception.CredencialesInvalidasException;
 import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
+import ar.edu.unq.tusViajes.exception.InvalidCredentialsException;
 import ar.edu.unq.tusViajes.exception.InvalidRefreshTokenException;
+import ar.edu.unq.tusViajes.exception.UnauthorizedAgencyException;
 import ar.edu.unq.tusViajes.model.Admin;
-import ar.edu.unq.tusViajes.model.Agencia;
-import ar.edu.unq.tusViajes.model.EstadoAgencia;
-import ar.edu.unq.tusViajes.model.Rol;
+import ar.edu.unq.tusViajes.model.Agency;
+import ar.edu.unq.tusViajes.model.AgencyStatus;
+import ar.edu.unq.tusViajes.model.Role;
 import ar.edu.unq.tusViajes.repository.AdminRepository;
-import ar.edu.unq.tusViajes.repository.AgenciaRepository;
+import ar.edu.unq.tusViajes.repository.AgencyRepository;
 import ar.edu.unq.tusViajes.security.JwtTokenService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
 @Transactional
 class AuthServiceTest {
@@ -46,7 +46,7 @@ class AuthServiceTest {
     private AdminRepository adminRepository;
 
     @Autowired
-    private AgenciaRepository agenciaRepository;
+    private AgencyRepository agencyRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -55,108 +55,108 @@ class AuthServiceTest {
     private JwtTokenService jwtTokenService;
 
     @Test
-    void login_retornaTokenYDatos_cuandoAdminValido() {
+    void login_returnsTokenAndData_whenAdminIsValid() {
         adminRepository.save(AdminBuilder.anAdmin()
                 .withEmail("admin@test.com")
                 .withPasswordHash(passwordEncoder.encode("secretPassword"))
                 .build());
 
-        LoginResponseDTO respuesta = authService.login(new LoginRequestDTO("admin@test.com", "secretPassword"));
+        LoginResponseDTO response = authService.login(new LoginRequestDTO("admin@test.com", "secretPassword"));
 
-        assertThat(respuesta.token()).isNotBlank();
-        assertThat(respuesta.tokenType()).isEqualTo("Bearer");
-        assertThat(respuesta.email()).isEqualTo("admin@test.com");
-        assertThat(respuesta.rol()).isEqualTo(Rol.ADMIN.name());
+        assertThat(response.token()).isNotBlank();
+        assertThat(response.tokenType()).isEqualTo("Bearer");
+        assertThat(response.email()).isEqualTo("admin@test.com");
+        assertThat(response.role()).isEqualTo(Role.ADMIN.name());
     }
 
     @Test
-    void login_retornaToken_cuandoAgenciaAutorizada() {
-        agenciaRepository.save(AgenciaBuilder.anAgencia()
-                .withEmail("agencia@test.com")
+    void login_returnsToken_whenAgencyIsAuthorized() {
+        agencyRepository.save(AgencyBuilder.anAgency()
+                .withEmail("agency@test.com")
                 .withPasswordHash(passwordEncoder.encode("secretPassword"))
-                .withEstado(EstadoAgencia.AUTORIZADA)
+                .withStatus(AgencyStatus.AUTHORIZED)
                 .build());
 
-        LoginResponseDTO respuesta = authService.login(new LoginRequestDTO("agencia@test.com", "secretPassword"));
+        LoginResponseDTO response = authService.login(new LoginRequestDTO("agency@test.com", "secretPassword"));
 
-        assertThat(respuesta.token()).isNotBlank();
-        assertThat(respuesta.rol()).isEqualTo(Rol.AGENCIA.name());
+        assertThat(response.token()).isNotBlank();
+        assertThat(response.role()).isEqualTo(Role.AGENCY.name());
     }
 
     @Test
-    void login_lanzaAgenciaNoAutorizada_cuandoAgenciaEstaPendiente() {
-        agenciaRepository.save(AgenciaBuilder.anAgencia()
-                .withEmail("pendiente@test.com")
+    void login_throwsUnauthorizedAgency_whenAgencyIsPending() {
+        agencyRepository.save(AgencyBuilder.anAgency()
+                .withEmail("pending@test.com")
                 .withPasswordHash(passwordEncoder.encode("secretPassword"))
-                .withEstado(EstadoAgencia.PENDIENTE)
+                .withStatus(AgencyStatus.PENDING)
                 .build());
 
-        assertThatThrownBy(() -> authService.login(new LoginRequestDTO("pendiente@test.com", "secretPassword")))
-                .isInstanceOf(AgenciaNoAutorizadaException.class)
-                .hasMessageContaining("pendiente de autorizacion");
+        assertThatThrownBy(() -> authService.login(new LoginRequestDTO("pending@test.com", "secretPassword")))
+                .isInstanceOf(UnauthorizedAgencyException.class)
+                .hasMessageContaining("pending authorization");
     }
 
     @Test
-    void login_lanzaCredencialesInvalidas_cuandoPasswordIncorrecto() {
+    void login_throwsInvalidCredentials_whenPasswordIsIncorrect() {
         adminRepository.save(AdminBuilder.anAdmin()
                 .withEmail("admin@test.com")
                 .withPasswordHash(passwordEncoder.encode("secretPassword"))
                 .build());
 
         assertThatThrownBy(() -> authService.login(new LoginRequestDTO("admin@test.com", "wrongPassword")))
-                .isInstanceOf(CredencialesInvalidasException.class);
+                .isInstanceOf(InvalidCredentialsException.class);
     }
 
     @Test
-    void login_lanzaCredencialesInvalidas_cuandoEmailNoExiste() {
-        assertThatThrownBy(() -> authService.login(new LoginRequestDTO("noexiste@test.com", "anyPassword")))
-                .isInstanceOf(CredencialesInvalidasException.class);
+    void login_throwsInvalidCredentials_whenEmailDoesNotExist() {
+        assertThatThrownBy(() -> authService.login(new LoginRequestDTO("notfound@test.com", "anyPassword")))
+                .isInstanceOf(InvalidCredentialsException.class);
     }
 
     @Test
-    void registrarAgencia_creaAgenciaEnEstadoPendiente() {
-        RegistroAgenciaRequestDTO dto = new RegistroAgenciaRequestDTO(
-                "Despegar SRL", "30-55555555-5", "contacto@despegar.com", "secretPassword123"
+    void registerAgency_createsAgencyInPendingStatus() {
+        AgencyRegistrationRequestDTO dto = new AgencyRegistrationRequestDTO(
+                "SkyTravel SRL", "30-55555555-5", "contact@skytravel.com", "secretPassword123"
         );
 
-        RegistroAgenciaResponseDTO respuesta = authService.registrarAgencia(dto);
+        AgencyRegistrationResponseDTO response = authService.registerAgency(dto);
 
-        assertThat(respuesta.id()).isNotNull();
-        assertThat(respuesta.estado()).isEqualTo(EstadoAgencia.PENDIENTE);
-        assertThat(respuesta.razonSocial()).isEqualTo("Despegar SRL");
+        assertThat(response.id()).isNotNull();
+        assertThat(response.status()).isEqualTo(AgencyStatus.PENDING);
+        assertThat(response.businessName()).isEqualTo("SkyTravel SRL");
 
-        Agencia enDb = agenciaRepository.findById(respuesta.id()).orElseThrow();
-        assertThat(enDb.getEstado()).isEqualTo(EstadoAgencia.PENDIENTE);
-        assertThat(enDb.isActivo()).isFalse();
+        Agency inDb = agencyRepository.findById(response.id()).orElseThrow();
+        assertThat(inDb.getStatus()).isEqualTo(AgencyStatus.PENDING);
+        assertThat(inDb.isActive()).isFalse();
     }
 
     @Test
-    void registrarAgencia_lanzaExcepcion_cuandoCuitYaExiste() {
-        agenciaRepository.save(AgenciaBuilder.anAgencia().withCuit("30-77777777-7").build());
+    void registerAgency_throwsException_whenTaxIdAlreadyExists() {
+        agencyRepository.save(AgencyBuilder.anAgency().withTaxId("30-77777777-7").build());
 
-        RegistroAgenciaRequestDTO dto = new RegistroAgenciaRequestDTO(
-                "Otra SRL", "30-77777777-7", "otra@test.com", "secretPassword123"
+        AgencyRegistrationRequestDTO dto = new AgencyRegistrationRequestDTO(
+                "Another SRL", "30-77777777-7", "another@test.com", "secretPassword123"
         );
 
-        assertThatThrownBy(() -> authService.registrarAgencia(dto))
+        assertThatThrownBy(() -> authService.registerAgency(dto))
                 .isInstanceOf(DuplicateResourceException.class)
                 .hasMessageContaining("30-77777777-7");
     }
 
     @Test
-    void refreshToken_lanzaInvalidRefreshToken_cuandoTokenEsDeAcceso() {
+    void refreshToken_throwsInvalidRefreshToken_whenTokenIsAccessToken() {
         Admin admin = adminRepository.save(AdminBuilder.anAdmin()
                 .withEmail("admin-access-token@test.com")
                 .build());
 
-        String accessToken = jwtTokenService.generarToken(admin, false);
+        String accessToken = jwtTokenService.generateToken(admin, false);
 
         assertThatThrownBy(() -> authService.refreshToken(accessToken))
                 .isInstanceOf(InvalidRefreshTokenException.class);
     }
 
     @Test
-    void refreshToken_lanzaInvalidRefreshToken_cuandoTokenExpiradoOInvalido() {
+    void refreshToken_throwsInvalidRefreshToken_whenTokenIsExpiredOrInvalid() {
         Admin admin = adminRepository.save(AdminBuilder.anAdmin()
                 .withEmail("admin-expired-token@test.com")
                 .build());
@@ -166,25 +166,25 @@ class AuthServiceTest {
                 86400000L,
                 -10000L
         );
-        String expiredRefreshToken = expiredService.generarToken(admin, true);
+        String expiredRefreshToken = expiredService.generateToken(admin, true);
 
         assertThatThrownBy(() -> authService.refreshToken(expiredRefreshToken))
                 .isInstanceOf(InvalidRefreshTokenException.class);
     }
 
     @Test
-    void refreshToken_retornaNuevosTokensYDatos_cuandoRefreshTokenEsValido() {
+    void refreshToken_returnsNewTokensAndData_whenRefreshTokenIsValid() {
         Admin admin = adminRepository.save(AdminBuilder.anAdmin()
                 .withEmail("admin-valid-refresh@test.com")
                 .build());
 
-        String refreshToken = jwtTokenService.generarToken(admin, true);
+        String refreshToken = jwtTokenService.generateToken(admin, true);
 
-        LoginResponseDTO respuesta = authService.refreshToken(refreshToken);
+        LoginResponseDTO response = authService.refreshToken(refreshToken);
 
-        assertThat(respuesta.token()).isNotBlank();
-        assertThat(respuesta.refreshToken()).isNotBlank();
-        assertThat(respuesta.email()).isEqualTo("admin-valid-refresh@test.com");
-        assertThat(respuesta.rol()).isEqualTo(Rol.ADMIN.name());
+        assertThat(response.token()).isNotBlank();
+        assertThat(response.refreshToken()).isNotBlank();
+        assertThat(response.email()).isEqualTo("admin-valid-refresh@test.com");
+        assertThat(response.role()).isEqualTo(Role.ADMIN.name());
     }
 }
