@@ -12,7 +12,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping({"/api/travel-packages", "/api/packages"})
+@RequestMapping({"/api/travel-packages"})
 @RequiredArgsConstructor
 public class TravelPackageController {
 

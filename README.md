@@ -47,7 +47,7 @@ All retrieval endpoints and internal service methods follow a unified `get` conv
 | `POST` | `/api/auth/register/buyer` | Public | Register a new buyer |
 | `POST` | `/api/auth/refresh` | Public | Refresh expired access token using a valid refresh token |
 
-### Travel Packages (`/api/travel-packages` or `/api/packages`)
+### Travel Packages (`/api/travel-packages`)
 | Method | Path | Access | Description |
 |---|---|---|---|
 | `GET` | `/api/travel-packages` | Public | Get all travel packages |
