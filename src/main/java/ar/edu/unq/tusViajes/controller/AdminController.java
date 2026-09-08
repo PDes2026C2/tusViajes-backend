@@ -11,32 +11,32 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.unq.tusViajes.controller.dto.request.RegistroAdminRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.AdminRegistrationRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AdminResponseDTO;
 import ar.edu.unq.tusViajes.service.AdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/admin/administradores")
+@RequestMapping({"/api/admin/administrators", "/api/admin/admins"})
 @RequiredArgsConstructor
 public class AdminController {
 
     private final AdminService adminService;
 
     @GetMapping
-    public ResponseEntity<List<AdminResponseDTO>> listar() {
-        return ResponseEntity.ok(adminService.listar());
+    public ResponseEntity<List<AdminResponseDTO>> getAll() {
+        return ResponseEntity.ok(adminService.getAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AdminResponseDTO> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(adminService.buscarPorId(id));
+    public ResponseEntity<AdminResponseDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.getById(id));
     }
 
     @PostMapping
-    public ResponseEntity<AdminResponseDTO> crear(@Valid @RequestBody RegistroAdminRequestDTO dto) {
-        AdminResponseDTO creado = adminService.crear(dto);
-        return ResponseEntity.created(URI.create("/api/admin/administradores/" + creado.id())).body(creado);
+    public ResponseEntity<AdminResponseDTO> create(@Valid @RequestBody AdminRegistrationRequestDTO dto) {
+        AdminResponseDTO created = adminService.create(dto);
+        return ResponseEntity.created(URI.create("/api/admin/administrators/" + created.id())).body(created);
     }
 }

@@ -4,37 +4,36 @@ import ar.edu.unq.tusViajes.model.Hotel;
 
 public class HotelBuilder {
 
-    private String nombre = "Hotel Gran Central";
-    private String destino = "Bariloche";
-    private String fotoUrl = "https://ejemplo.com/hotel.jpg";
-    private String servicio = "Desayuno incluido, WiFi";
+    private String name = "Hotel Gran Central";
+    private String destination = "Bariloche";
+    private String photoUrl = "https://ejemplo.com/hotel.jpg";
+    private String services = "Breakfast included, WiFi";
 
     public static HotelBuilder aHotel() {
         return new HotelBuilder();
     }
 
-    public HotelBuilder withNombre(String nombre) {
-        this.nombre = nombre;
+    public HotelBuilder withName(String name) {
+        this.name = name;
         return this;
     }
 
-    public HotelBuilder withDestino(String destino) {
-        this.destino = destino;
+    public HotelBuilder withDestination(String destination) {
+        this.destination = destination;
         return this;
     }
 
-    public HotelBuilder withFotoUrl(String fotoUrl) {
-        this.fotoUrl = fotoUrl;
+    public HotelBuilder withPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
         return this;
     }
 
-    public HotelBuilder withServicio(String servicio) {
-        this.servicio = servicio;
+    public HotelBuilder withServices(String services) {
+        this.services = services;
         return this;
     }
 
     public Hotel build() {
-        return new Hotel(nombre, destino, fotoUrl, servicio);
+        return new Hotel(name, destination, photoUrl, services);
     }
 }
-

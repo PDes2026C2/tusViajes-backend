@@ -13,32 +13,32 @@ import lombok.NoArgsConstructor;
 @PrimaryKeyJoinColumn(name = "id")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Admin extends Usuario {
+public class Admin extends User {
 
-    @Column(nullable = false, length = 100)
-    private String nombre;
+    @Column(name = "first_name", nullable = false, length = 100)
+    private String firstName;
 
-    @Column(nullable = false, length = 100)
-    private String apellido;
+    @Column(name = "last_name", nullable = false, length = 100)
+    private String lastName;
 
-    public Admin(String nombre, String apellido, String email, String passwordHash) {
+    public Admin(String firstName, String lastName, String email, String passwordHash) {
         super(email, passwordHash);
-        this.nombre = nombre;
-        this.apellido = apellido;
+        this.firstName = firstName;
+        this.lastName = lastName;
     }
 
-    public void actualizarDatos(String nombre, String apellido) {
-        this.nombre = nombre;
-        this.apellido = apellido;
-    }
-
-    @Override
-    public Rol getRol() {
-        return Rol.ADMIN;
+    public void updateData(String firstName, String lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
     }
 
     @Override
-    public String getIdentificadorVisual() {
-        return nombre + " " + apellido;
+    public Role getRole() {
+        return Role.ADMIN;
+    }
+
+    @Override
+    public String getVisualIdentifier() {
+        return firstName + " " + lastName;
     }
 }

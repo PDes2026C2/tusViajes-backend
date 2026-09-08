@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional 
@@ -39,111 +39,111 @@ class HotelControllerTest {
     private HotelRepository hotelRepository;
 
     @Test
-    void listar_retorna401_cuandoNoAutenticado() throws Exception {
-        mockMvc.perform(get("/api/hoteles"))
+    void getAll_returns401_whenUnauthenticated() throws Exception {
+        mockMvc.perform(get("/api/hotels"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void listar_retorna403_cuandoEsComprador() throws Exception {
-        mockMvc.perform(get("/api/hoteles").with(user("comprador").roles("COMPRADOR")))
+    void getAll_returns403_whenRoleIsBuyer() throws Exception {
+        mockMvc.perform(get("/api/hotels").with(user("buyer").roles("BUYER")))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void listar_retorna200YListaDeHoteles_cuandoEsAdmin() throws Exception {
-        hotelRepository.save(HotelBuilder.aHotel().withNombre("Hotel Central").withDestino("Bariloche").build());
+    void getAll_returns200AndListOfHotels_whenRoleIsAdmin() throws Exception {
+        hotelRepository.save(HotelBuilder.aHotel().withName("Hotel Central").withDestination("Bariloche").build());
 
-        mockMvc.perform(get("/api/hoteles").with(user("admin").roles("ADMIN")))
+        mockMvc.perform(get("/api/hotels").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").isNotEmpty())
-                .andExpect(jsonPath("$[0].nombre").value("Hotel Central"))
-                .andExpect(jsonPath("$[0].destino").value("Bariloche"));
+                .andExpect(jsonPath("$[0].name").value("Hotel Central"))
+                .andExpect(jsonPath("$[0].destination").value("Bariloche"));
     }
 
     @Test
-    void listar_retorna200YListaDeHoteles_cuandoEsAgencia() throws Exception {
-        hotelRepository.save(HotelBuilder.aHotel().withNombre("Hotel Costa").withDestino("Mar del Plata").build());
+    void getAll_returns200AndListOfHotels_whenRoleIsAgency() throws Exception {
+        hotelRepository.save(HotelBuilder.aHotel().withName("Hotel Costa").withDestination("Mar del Plata").build());
 
-        mockMvc.perform(get("/api/hoteles").with(user("agencia").roles("AGENCIA")))
+        mockMvc.perform(get("/api/hotels").with(user("agency").roles("AGENCY")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").isNotEmpty());
     }
 
     @Test
-    void buscarPorId_retorna401_cuandoNoAutenticado() throws Exception {
-        mockMvc.perform(get("/api/hoteles/1"))
+    void getById_returns401_whenUnauthenticated() throws Exception {
+        mockMvc.perform(get("/api/hotels/1"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void buscarPorId_retorna403_cuandoEsComprador() throws Exception {
-        mockMvc.perform(get("/api/hoteles/1").with(user("comprador").roles("COMPRADOR")))
+    void getById_returns403_whenRoleIsBuyer() throws Exception {
+        mockMvc.perform(get("/api/hotels/1").with(user("buyer").roles("BUYER")))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void buscarPorId_retorna200CuandoExiste_cuandoEsAdmin() throws Exception {
-        Hotel guardado = hotelRepository.save(
-                HotelBuilder.aHotel().withNombre("Hotel Central").withDestino("Bariloche").build()
+    void getById_returns200WhenExists_whenRoleIsAdmin() throws Exception {
+        Hotel saved = hotelRepository.save(
+                HotelBuilder.aHotel().withName("Hotel Central").withDestination("Bariloche").build()
         );
 
-        mockMvc.perform(get("/api/hoteles/" + guardado.getId()).with(user("admin").roles("ADMIN")))
+        mockMvc.perform(get("/api/hotels/" + saved.getId()).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(guardado.getId()))
-                .andExpect(jsonPath("$.nombre").value("Hotel Central"))
-                .andExpect(jsonPath("$.destino").value("Bariloche"));
+                .andExpect(jsonPath("$.id").value(saved.getId()))
+                .andExpect(jsonPath("$.name").value("Hotel Central"))
+                .andExpect(jsonPath("$.destination").value("Bariloche"));
     }
 
     @Test
-    void buscarPorId_retorna200CuandoExiste_cuandoEsAgencia() throws Exception {
-        Hotel guardado = hotelRepository.save(
-                HotelBuilder.aHotel().withNombre("Hotel Central").withDestino("Bariloche").build()
+    void getById_returns200WhenExists_whenRoleIsAgency() throws Exception {
+        Hotel saved = hotelRepository.save(
+                HotelBuilder.aHotel().withName("Hotel Central").withDestination("Bariloche").build()
         );
 
-        mockMvc.perform(get("/api/hoteles/" + guardado.getId()).with(user("agencia").roles("AGENCIA")))
+        mockMvc.perform(get("/api/hotels/" + saved.getId()).with(user("agency").roles("AGENCY")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(guardado.getId()));
+                .andExpect(jsonPath("$.id").value(saved.getId()));
     }
 
     @Test
-    void buscarPorId_retorna404CuandoNoExiste() throws Exception {
-        mockMvc.perform(get("/api/hoteles/99999").with(user("admin").roles("ADMIN")))
+    void getById_returns404WhenDoesNotExist() throws Exception {
+        mockMvc.perform(get("/api/hotels/99999").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void crear_retorna401_cuandoNoAutenticado() throws Exception {
+    void create_returns401_whenUnauthenticated() throws Exception {
         String json = """
                 {
-                    "nombre": "Hotel Nuevo",
-                    "destino": "Mendoza"
+                    "name": "Hotel Nuevo",
+                    "destination": "Mendoza"
                 }
                 """;
 
-        mockMvc.perform(post("/api/hoteles")
+        mockMvc.perform(post("/api/hotels")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void crear_retorna201YLocationHeader() throws Exception {
+    void create_returns201AndLocationHeader() throws Exception {
         String json = """
                 {
-                    "nombre": "Hotel Nuevo",
-                    "destino": "Mendoza"
+                    "name": "Hotel Nuevo",
+                    "destination": "Mendoza"
                 }
                 """;
 
-        mockMvc.perform(post("/api/hoteles")
+        mockMvc.perform(post("/api/hotels")
                         .with(user("user"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.nombre").value("Hotel Nuevo"))
-                .andExpect(jsonPath("$.destino").value("Mendoza"));
+                .andExpect(jsonPath("$.name").value("Hotel Nuevo"))
+                .andExpect(jsonPath("$.destination").value("Mendoza"));
     }
 }

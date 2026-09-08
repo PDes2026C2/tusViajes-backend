@@ -1,11 +1,11 @@
 package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.builder.AdminBuilder;
-import ar.edu.unq.tusViajes.builder.AgenciaBuilder;
+import ar.edu.unq.tusViajes.builder.AgencyBuilder;
 import ar.edu.unq.tusViajes.model.Admin;
-import ar.edu.unq.tusViajes.model.EstadoAgencia;
+import ar.edu.unq.tusViajes.model.AgencyStatus;
 import ar.edu.unq.tusViajes.repository.AdminRepository;
-import ar.edu.unq.tusViajes.repository.AgenciaRepository;
+import ar.edu.unq.tusViajes.repository.AgencyRepository;
 import ar.edu.unq.tusViajes.security.JwtTokenService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -40,7 +40,7 @@ class AuthControllerTest {
     private AdminRepository adminRepository;
 
     @Autowired
-    private AgenciaRepository agenciaRepository;
+    private AgencyRepository agencyRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -49,7 +49,7 @@ class AuthControllerTest {
     private JwtTokenService jwtTokenService;
 
     @Test
-    void login_retorna200YToken_cuandoAdminEsValido() throws Exception {
+    void login_returns200AndToken_whenAdminIsValid() throws Exception {
         adminRepository.save(AdminBuilder.anAdmin()
                 .withEmail("admin@test.com")
                 .withPasswordHash(passwordEncoder.encode("secretPassword123"))
@@ -68,16 +68,16 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty())
                 .andExpect(jsonPath("$.tokenType").value("Bearer"))
-                .andExpect(jsonPath("$.rol").value("ADMIN"))
+                .andExpect(jsonPath("$.role").value("ADMIN"))
                 .andExpect(jsonPath("$.email").value("admin@test.com"));
     }
 
     @Test
-    void login_retorna403_cuandoAgenciaEstaPendiente() throws Exception {
-        agenciaRepository.save(AgenciaBuilder.anAgencia()
+    void login_returns403_whenAgencyIsPending() throws Exception {
+        agencyRepository.save(AgencyBuilder.anAgency()
                 .withEmail("pendiente@agencia.com")
                 .withPasswordHash(passwordEncoder.encode("secretPassword123"))
-                .withEstado(EstadoAgencia.PENDIENTE)
+                .withStatus(AgencyStatus.PENDING)
                 .build());
 
         String json = """
@@ -91,15 +91,15 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.mensaje").value("La agencia se encuentra pendiente de autorizacion por un administrador"));
+                .andExpect(jsonPath("$.message").value("The agency is pending authorization by an administrator."));
     }
 
     @Test
-    void login_retorna200YToken_cuandoAgenciaEstaAutorizada() throws Exception {
-        agenciaRepository.save(AgenciaBuilder.anAgencia()
+    void login_returns200AndToken_whenAgencyIsAuthorized() throws Exception {
+        agencyRepository.save(AgencyBuilder.anAgency()
                 .withEmail("autorizada@agencia.com")
                 .withPasswordHash(passwordEncoder.encode("secretPassword123"))
-                .withEstado(EstadoAgencia.AUTORIZADA)
+                .withStatus(AgencyStatus.AUTHORIZED)
                 .build());
 
         String json = """
@@ -114,11 +114,11 @@ class AuthControllerTest {
                         .content(json))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty())
-                .andExpect(jsonPath("$.rol").value("AGENCIA"));
+                .andExpect(jsonPath("$.role").value("AGENCY"));
     }
 
     @Test
-    void login_retorna401_cuandoPasswordIncorrecto() throws Exception {
+    void login_returns401_whenPasswordIsIncorrect() throws Exception {
         adminRepository.save(AdminBuilder.anAdmin()
                 .withEmail("admin@test.com")
                 .withPasswordHash(passwordEncoder.encode("secretPassword123"))
@@ -138,57 +138,57 @@ class AuthControllerTest {
     }
 
     @Test
-    void registrarAgencia_retorna201YEstadoPendiente() throws Exception {
+    void registerAgency_returns201AndPendingStatus() throws Exception {
         String json = """
                 {
-                    "razonSocial": "Nueva Agencia SA",
-                    "cuit": "30-55667788-9",
+                    "businessName": "Nueva Agencia SA",
+                    "taxId": "30-55667788-9",
                     "email": "nueva@agencia.com",
                     "password": "secretPassword123"
                 }
                 """;
 
-        mockMvc.perform(post("/api/auth/registro/agencia")
+        mockMvc.perform(post("/api/auth/register/agency")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.estado").value("PENDIENTE"))
-                .andExpect(jsonPath("$.razonSocial").value("Nueva Agencia SA"))
-                .andExpect(jsonPath("$.mensaje").value("Propuesta de registro recibida. Pendiente de autorizacion por un administrador."));
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.businessName").value("Nueva Agencia SA"))
+                .andExpect(jsonPath("$.message").value("Registration request received. Pending authorization by an administrator."));
     }
 
     @Test
-    void registrarComprador_retorna201YDatosComprador() throws Exception {
+    void registerBuyer_returns201AndBuyerData() throws Exception {
         String json = """
                 {
-                    "nombre": "Agustin",
-                    "apellido": "Perez",
+                    "firstName": "Agustin",
+                    "lastName": "Perez",
                     "email": "agustin@comprador.com",
                     "password": "secretPassword123",
-                    "telefono": "1122334455",
-                    "dni": "39123456"
+                    "phoneNumber": "1122334455",
+                    "nationalId": "39123456"
                 }
                 """;
 
-        mockMvc.perform(post("/api/auth/registro/comprador")
+        mockMvc.perform(post("/api/auth/register/buyer")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.nombre").value("Agustin"))
+                .andExpect(jsonPath("$.firstName").value("Agustin"))
                 .andExpect(jsonPath("$.email").value("agustin@comprador.com"));
     }
 
     @Test
-    void refreshToken_retorna401_cuandoTokenEsDeAcceso() throws Exception {
+    void refreshToken_returns401_whenTokenIsAccessToken() throws Exception {
         Admin admin = adminRepository.save(AdminBuilder.anAdmin()
                 .withEmail("admin-access-ctrl@test.com")
                 .build());
 
-        String accessToken = jwtTokenService.generarToken(admin, false);
+        String accessToken = jwtTokenService.generateToken(admin, false);
 
         String json = """
                 {
@@ -200,11 +200,11 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.mensaje").value("El refresh token no es valido."));
+                .andExpect(jsonPath("$.message").value("Invalid refresh token."));
     }
 
     @Test
-    void refreshToken_retorna401_cuandoTokenExpirado() throws Exception {
+    void refreshToken_returns401_whenTokenIsExpired() throws Exception {
         Admin admin = adminRepository.save(AdminBuilder.anAdmin()
                 .withEmail("admin-exp-ctrl@test.com")
                 .build());
@@ -214,7 +214,7 @@ class AuthControllerTest {
                 86400000L,
                 -10000L
         );
-        String expiredRefreshToken = expiredService.generarToken(admin, true);
+        String expiredRefreshToken = expiredService.generateToken(admin, true);
 
         String json = """
                 {
@@ -226,16 +226,16 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.mensaje").value("El refresh token no es valido."));
+                .andExpect(jsonPath("$.message").value("Invalid refresh token."));
     }
 
     @Test
-    void refreshToken_retorna200YNuevosTokens_cuandoRefreshTokenEsValido() throws Exception {
+    void refreshToken_returns200AndNewTokens_whenRefreshTokenIsValid() throws Exception {
         Admin admin = adminRepository.save(AdminBuilder.anAdmin()
                 .withEmail("admin-valid-ctrl@test.com")
                 .build());
 
-        String refreshToken = jwtTokenService.generarToken(admin, true);
+        String refreshToken = jwtTokenService.generateToken(admin, true);
 
         String json = """
                 {
@@ -250,6 +250,6 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.token").isNotEmpty())
                 .andExpect(jsonPath("$.refreshToken").isNotEmpty())
                 .andExpect(jsonPath("$.email").value("admin-valid-ctrl@test.com"))
-                .andExpect(jsonPath("$.rol").value("ADMIN"));
+                .andExpect(jsonPath("$.role").value("ADMIN"));
     }
 }

@@ -4,8 +4,8 @@ import ar.edu.unq.tusViajes.model.Admin;
 
 public record AdminResponseDTO(
     Long id,
-    String nombre,
-    String apellido,
+    String firstName,
+    String lastName,
     String email
 ) {
     public static AdminResponseDTO from(Admin admin) {
@@ -14,8 +14,8 @@ public record AdminResponseDTO(
         }
         return new AdminResponseDTO(
                 admin.getId(),
-                admin.getNombre(),
-                admin.getApellido(),
+                admin.getFirstName(),
+                admin.getLastName(),
                 admin.getEmail()
         );
     }

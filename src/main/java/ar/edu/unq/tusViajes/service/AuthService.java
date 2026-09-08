@@ -1,108 +1,107 @@
 package ar.edu.unq.tusViajes.service;
 
+import ar.edu.unq.tusViajes.controller.dto.request.AgencyRegistrationRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.BuyerRegistrationRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.LoginRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.response.AgencyRegistrationResponseDTO;
+import ar.edu.unq.tusViajes.controller.dto.response.BuyerResponseDTO;
+import ar.edu.unq.tusViajes.controller.dto.response.LoginResponseDTO;
+import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
+import ar.edu.unq.tusViajes.exception.InvalidCredentialsException;
 import ar.edu.unq.tusViajes.exception.InvalidRefreshTokenException;
+import ar.edu.unq.tusViajes.exception.UnauthorizedAgencyException;
+import ar.edu.unq.tusViajes.model.Agency;
+import ar.edu.unq.tusViajes.model.User;
+import ar.edu.unq.tusViajes.repository.AgencyRepository;
+import ar.edu.unq.tusViajes.repository.UserRepository;
+import ar.edu.unq.tusViajes.security.JwtTokenService;
+import ar.edu.unq.tusViajes.validator.UserValidator;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import ar.edu.unq.tusViajes.controller.dto.request.RegistroCompradorRequestDTO;
-import ar.edu.unq.tusViajes.controller.dto.request.LoginRequestDTO;
-import ar.edu.unq.tusViajes.controller.dto.request.RegistroAgenciaRequestDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.CompradorResponseDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.LoginResponseDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.RegistroAgenciaResponseDTO;
-import ar.edu.unq.tusViajes.exception.AgenciaNoAutorizadaException;
-import ar.edu.unq.tusViajes.exception.CredencialesInvalidasException;
-import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
-import ar.edu.unq.tusViajes.model.Agencia;
-import ar.edu.unq.tusViajes.model.Usuario;
-import ar.edu.unq.tusViajes.repository.AgenciaRepository;
-import ar.edu.unq.tusViajes.repository.UsuarioRepository;
-import ar.edu.unq.tusViajes.security.JwtTokenService;
-import ar.edu.unq.tusViajes.validator.UsuarioValidator;
-import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UsuarioRepository usuarioRepository;
-    private final AgenciaRepository agenciaRepository;
-    private final CompradorService compradorService;
+    private final UserRepository userRepository;
+    private final AgencyRepository agencyRepository;
+    private final BuyerService buyerService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenService jwtTokenService;
-    private final UsuarioValidator usuarioValidator;
+    private final UserValidator userValidator;
 
     @Transactional(readOnly = true)
     public LoginResponseDTO login(LoginRequestDTO dto) {
-        Usuario usuario = usuarioRepository.findByEmail(dto.email())
-                .orElseThrow(() -> new CredencialesInvalidasException("Credenciales invalidas"));
+        User user = userRepository.findByEmail(dto.email())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
 
-        if (!passwordEncoder.matches(dto.password(), usuario.getPasswordHash())) {
-            throw new CredencialesInvalidasException("Credenciales invalidas");
+        if (!passwordEncoder.matches(dto.password(), user.getPasswordHash())) {
+            throw new InvalidCredentialsException("Invalid credentials");
         }
 
-        if (!usuario.isActivo()) {
-            throw new AgenciaNoAutorizadaException("La agencia se encuentra pendiente de autorizacion por un administrador");
+        if (!user.isActive()) {
+            throw new UnauthorizedAgencyException("The agency is pending authorization by an administrator.");
         }
 
-        String token = jwtTokenService.generarToken(usuario);
-        String refreshToken = jwtTokenService.generarToken(usuario, true);
+        String token = jwtTokenService.generateToken(user);
+        String refreshToken = jwtTokenService.generateToken(user, true);
 
         return new LoginResponseDTO(
                 token,
                 refreshToken,
                 "Bearer",
-                usuario.getId(),
-                usuario.getEmail(),
-                usuario.getIdentificadorVisual(),
-                usuario.getRol().name()
+                user.getId(),
+                user.getEmail(),
+                user.getVisualIdentifier(),
+                user.getRole().name()
         );
     }
 
     @Transactional
-    public RegistroAgenciaResponseDTO registrarAgencia(RegistroAgenciaRequestDTO dto) {
-        usuarioValidator.validarEmailDisponible(dto.email());
+    public AgencyRegistrationResponseDTO registerAgency(AgencyRegistrationRequestDTO dto) {
+        userValidator.validateEmailAvailable(dto.email());
 
-        if (agenciaRepository.existsByCuit(dto.cuit())) {
-            throw new DuplicateResourceException("Ya existe una agencia con el CUIT " + dto.cuit());
+        if (agencyRepository.existsByTaxId(dto.taxId())) {
+            throw new DuplicateResourceException("An agency already exists with tax ID " + dto.taxId());
         }
 
         String hash = passwordEncoder.encode(dto.password());
-        Agencia agencia = new Agencia(dto.email(), hash, dto.razonSocial(), dto.cuit());
-        Agencia guardada = agenciaRepository.save(agencia);
+        Agency agency = new Agency(dto.email(), hash, dto.businessName(), dto.taxId());
+        Agency savedAgency = agencyRepository.save(agency);
 
-        return RegistroAgenciaResponseDTO.from(
-                guardada,
-                "Propuesta de registro recibida. Pendiente de autorizacion por un administrador."
+        return AgencyRegistrationResponseDTO.from(
+                savedAgency,
+                "Registration request received. Pending authorization by an administrator."
         );
     }
 
     @Transactional
-    public CompradorResponseDTO registrarComprador(RegistroCompradorRequestDTO dto) {
-        return compradorService.registrar(dto);
+    public BuyerResponseDTO registerBuyer(BuyerRegistrationRequestDTO dto) {
+        return buyerService.register(dto);
     }
 
     public LoginResponseDTO refreshToken(String token) {
-        if (!jwtTokenService.esValido(token) || !jwtTokenService.esRefreshToken(token)) {
+        if (!jwtTokenService.isValid(token) || !jwtTokenService.isRefreshToken(token)) {
             throw new InvalidRefreshTokenException();
         }
 
-        String email = jwtTokenService.obtenerEmail(token);
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new CredencialesInvalidasException("Usuario no encontrado"));
+        String email = jwtTokenService.getEmail(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidCredentialsException("User not found"));
 
-        String nuevoToken = jwtTokenService.generarToken(usuario);
-        String refreshToken = jwtTokenService.generarToken(usuario, true);
+        String newToken = jwtTokenService.generateToken(user);
+        String refreshToken = jwtTokenService.generateToken(user, true);
 
         return new LoginResponseDTO(
-                nuevoToken,
+                newToken,
                 refreshToken,
                 "Bearer",
-                usuario.getId(),
-                usuario.getEmail(),
-                usuario.getIdentificadorVisual(),
-                usuario.getRol().name()
+                user.getId(),
+                user.getEmail(),
+                user.getVisualIdentifier(),
+                user.getRole().name()
         );
     }
 }

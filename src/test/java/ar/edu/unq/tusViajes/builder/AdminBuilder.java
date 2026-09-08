@@ -4,8 +4,8 @@ import ar.edu.unq.tusViajes.model.Admin;
 
 public class AdminBuilder {
 
-    private String nombre = "Admin";
-    private String apellido = "Root";
+    private String firstName = "Admin";
+    private String lastName = "Root";
     private String email = "admin-builder@tusviajes.com";
     private String passwordHash = "$2a$10$hashedPasswordPlaceholder";
 
@@ -13,13 +13,13 @@ public class AdminBuilder {
         return new AdminBuilder();
     }
 
-    public AdminBuilder withNombre(String nombre) {
-        this.nombre = nombre;
+    public AdminBuilder withFirstName(String firstName) {
+        this.firstName = firstName;
         return this;
     }
 
-    public AdminBuilder withApellido(String apellido) {
-        this.apellido = apellido;
+    public AdminBuilder withLastName(String lastName) {
+        this.lastName = lastName;
         return this;
     }
 
@@ -34,6 +34,6 @@ public class AdminBuilder {
     }
 
     public Admin build() {
-        return new Admin(nombre, apellido, email, passwordHash);
+        return new Admin(firstName, lastName, email, passwordHash);
     }
 }

@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "hotel")
+@Table(name = "hotels")
 @Getter
 @NoArgsConstructor
 public class Hotel {
@@ -20,22 +20,20 @@ public class Hotel {
     private Long id;
 
     @Column(nullable = false)
-    private String nombre;
+    private String name;
 
     @Column(nullable = false)
-    private String destino;
+    private String destination;
 
-    @Column(name = "foto_url", length = 300)
-    private String fotoUrl;
+    @Column(name = "photo_url", length = 300)
+    private String photoUrl;
 
-    private String servicio;
+    private String services;
 
-    public Hotel(String nombre, String destino, 
-                 String fotoUrl, String servicio) {
-        this.nombre = nombre;
-        this.destino = destino;
-        this.fotoUrl = fotoUrl;
-        this.servicio = servicio;
+    public Hotel(String name, String destination, String photoUrl, String services) {
+        this.name = name;
+        this.destination = destination;
+        this.photoUrl = photoUrl;
+        this.services = services;
     }
-
 }

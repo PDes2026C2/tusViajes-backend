@@ -24,13 +24,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorBody(ex.getMessage()));
     }
 
-    @ExceptionHandler(AgenciaNoAutorizadaException.class)
-    public ResponseEntity<Map<String, Object>> handleAgenciaNoAutorizada(AgenciaNoAutorizadaException ex) {
+    @ExceptionHandler(UnauthorizedAgencyException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorizedAgency(UnauthorizedAgencyException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorBody(ex.getMessage()));
     }
 
-    @ExceptionHandler(CredencialesInvalidasException.class)
-    public ResponseEntity<Map<String, Object>> handleCredencialesInvalidas(CredencialesInvalidasException ex) {
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidCredentials(InvalidCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorBody(ex.getMessage()));
     }
 
@@ -41,19 +41,19 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
-        Map<String, String> errores = new HashMap<>();
+        Map<String, String> errors = new HashMap<>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-            errores.put(error.getField(), error.getDefaultMessage());
+            errors.put(error.getField(), error.getDefaultMessage());
         }
-        Map<String, Object> body = errorBody("Datos invalidos");
-        body.put("errores", errores);
+        Map<String, Object> body = errorBody("Invalid data");
+        body.put("errors", errors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    private Map<String, Object> errorBody(String mensaje) {
+    private Map<String, Object> errorBody(String message) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", Instant.now().toString());
-        body.put("mensaje", mensaje);
+        body.put("message", message);
         return body;
     }
 }

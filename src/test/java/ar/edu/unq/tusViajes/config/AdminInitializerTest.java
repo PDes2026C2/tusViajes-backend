@@ -31,7 +31,7 @@ class AdminInitializerTest {
     }
 
     @Test
-    void run_creaAdminInicial_cuandoNoExistenAdmins() {
+    void run_createsInitialAdmin_whenNoAdminsExist() {
         when(adminRepository.count()).thenReturn(0L);
         when(passwordEncoder.encode("admin123")).thenReturn("encodedPassword");
 
@@ -40,15 +40,15 @@ class AdminInitializerTest {
         ArgumentCaptor<Admin> captor = ArgumentCaptor.forClass(Admin.class);
         verify(adminRepository).save(captor.capture());
 
-        Admin adminCreado = captor.getValue();
-        assertThat(adminCreado.getEmail()).isEqualTo("admin@tusviajes.com");
-        assertThat(adminCreado.getPasswordHash()).isEqualTo("encodedPassword");
-        assertThat(adminCreado.getNombre()).isEqualTo("Admin");
-        assertThat(adminCreado.getApellido()).isEqualTo("Sistema");
+        Admin createdAdmin = captor.getValue();
+        assertThat(createdAdmin.getEmail()).isEqualTo("admin@tusviajes.com");
+        assertThat(createdAdmin.getPasswordHash()).isEqualTo("encodedPassword");
+        assertThat(createdAdmin.getFirstName()).isEqualTo("Admin");
+        assertThat(createdAdmin.getLastName()).isEqualTo("System");
     }
 
     @Test
-    void run_noCreaAdmin_cuandoYaExistenAdmins() {
+    void run_doesNotCreateAdmin_whenAdminsAlreadyExist() {
         when(adminRepository.count()).thenReturn(1L);
 
         adminInitializer.run();

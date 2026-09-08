@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional 
@@ -39,111 +39,111 @@ class AdminControllerTest {
     private AdminRepository adminRepository;
 
     @Test
-    void listar_retorna401_cuandoNoAutenticado() throws Exception {
-        mockMvc.perform(get("/api/admin/administradores"))
+    void getAll_returns401_whenUnauthenticated() throws Exception {
+        mockMvc.perform(get("/api/admin/administrators"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void listar_retorna403_cuandoRolNoEsAdmin() throws Exception {
-        mockMvc.perform(get("/api/admin/administradores").with(user("comprador").roles("COMPRADOR")))
+    void getAll_returns403_whenRoleIsNotAdmin() throws Exception {
+        mockMvc.perform(get("/api/admin/administrators").with(user("buyer").roles("BUYER")))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void listar_retorna200YListaDeAdmins() throws Exception {
+    void getAll_returns200AndListOfAdmins() throws Exception {
         adminRepository.save(
                 AdminBuilder.anAdmin()
                         .withEmail("admin@tusviajes.com")
                         .build()
         );
 
-        mockMvc.perform(get("/api/admin/administradores").with(user("admin").roles("ADMIN")))
+        mockMvc.perform(get("/api/admin/administrators").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").isNotEmpty())
                 .andExpect(jsonPath("$[0].email").value("admin@tusviajes.com"));
     }
 
     @Test
-    void buscarPorId_retorna401_cuandoNoAutenticado() throws Exception {
-        mockMvc.perform(get("/api/admin/administradores/1"))
+    void getById_returns401_whenUnauthenticated() throws Exception {
+        mockMvc.perform(get("/api/admin/administrators/1"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void buscarPorId_retorna403_cuandoRolNoEsAdmin() throws Exception {
-        mockMvc.perform(get("/api/admin/administradores/1").with(user("agencia").roles("AGENCIA")))
+    void getById_returns403_whenRoleIsNotAdmin() throws Exception {
+        mockMvc.perform(get("/api/admin/administrators/1").with(user("agency").roles("AGENCY")))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void buscarPorId_retorna200CuandoExiste() throws Exception {
-        Admin guardado = adminRepository.save(
+    void getById_returns200WhenExists() throws Exception {
+        Admin saved = adminRepository.save(
                 AdminBuilder.anAdmin()
-                        .withNombre("Admin")
+                        .withFirstName("Admin")
                         .withEmail("admin@tusviajes.com")
                         .build()
         );
 
-        mockMvc.perform(get("/api/admin/administradores/" + guardado.getId()).with(user("admin").roles("ADMIN")))
+        mockMvc.perform(get("/api/admin/administrators/" + saved.getId()).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(guardado.getId()))
-                .andExpect(jsonPath("$.nombre").value("Admin"));
+                .andExpect(jsonPath("$.id").value(saved.getId()))
+                .andExpect(jsonPath("$.firstName").value("Admin"));
     }
 
     @Test
-    void buscarPorId_retorna404CuandoNoExiste() throws Exception {
-        mockMvc.perform(get("/api/admin/administradores/99999").with(user("admin").roles("ADMIN")))
+    void getById_returns404WhenDoesNotExist() throws Exception {
+        mockMvc.perform(get("/api/admin/administrators/99999").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void crear_retorna401_cuandoNoAutenticado() throws Exception {
+    void create_returns401_whenUnauthenticated() throws Exception {
         String json = """
                 {
-                    "nombre": "Admin",
-                    "apellido": "Root",
+                    "firstName": "Admin",
+                    "lastName": "Root",
                     "email": "admin@tusviajes.com",
                     "password": "rootPassword123"
                 }
                 """;
 
-        mockMvc.perform(post("/api/admin/administradores")
+        mockMvc.perform(post("/api/admin/administrators")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void crear_retorna403_cuandoRolNoEsAdmin() throws Exception {
+    void create_returns403_whenRoleIsNotAdmin() throws Exception {
         String json = """
                 {
-                    "nombre": "Admin",
-                    "apellido": "Root",
+                    "firstName": "Admin",
+                    "lastName": "Root",
                     "email": "admin@tusviajes.com",
                     "password": "rootPassword123"
                 }
                 """;
 
-        mockMvc.perform(post("/api/admin/administradores")
-                        .with(user("comprador").roles("COMPRADOR"))
+        mockMvc.perform(post("/api/admin/administrators")
+                        .with(user("buyer").roles("BUYER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void crear_retorna201YLocationHeader() throws Exception {
+    void create_returns201AndLocationHeader() throws Exception {
         String json = """
                 {
-                    "nombre": "Admin",
-                    "apellido": "Root",
+                    "firstName": "Admin",
+                    "lastName": "Root",
                     "email": "admin@tusviajes.com",
                     "password": "rootPassword123"
                 }
                 """;
 
-        mockMvc.perform(post("/api/admin/administradores")
+        mockMvc.perform(post("/api/admin/administrators")
                         .with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))

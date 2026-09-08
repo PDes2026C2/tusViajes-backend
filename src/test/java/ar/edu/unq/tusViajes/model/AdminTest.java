@@ -7,23 +7,23 @@ import org.junit.jupiter.api.Test;
 class AdminTest {
 
     @Test
-    void crearAdmin_asignaDatosCorrectamente() {
+    void createAdmin_assignsDataCorrectly() {
         Admin admin = new Admin("Root", "Admin", "root@tusviajes.com", "hash123");
 
-        assertThat(admin.getNombre()).isEqualTo("Root");
-        assertThat(admin.getApellido()).isEqualTo("Admin");
+        assertThat(admin.getFirstName()).isEqualTo("Root");
+        assertThat(admin.getLastName()).isEqualTo("Admin");
         assertThat(admin.getEmail()).isEqualTo("root@tusviajes.com");
-        assertThat(admin.getRol()).isEqualTo(Rol.ADMIN);
-        assertThat(admin.isActivo()).isTrue();
+        assertThat(admin.getRole()).isEqualTo(Role.ADMIN);
+        assertThat(admin.isActive()).isTrue();
     }
 
     @Test
-    void actualizarDatos_modificaNombreYApellido() {
+    void updateData_modifiesFirstAndLastName() {
         Admin admin = new Admin("Root", "Admin", "root@tusviajes.com", "hash123");
 
-        admin.actualizarDatos("Super", "Usuario");
+        admin.updateData("Super", "User");
 
-        assertThat(admin.getNombre()).isEqualTo("Super");
-        assertThat(admin.getApellido()).isEqualTo("Usuario");
+        assertThat(admin.getFirstName()).isEqualTo("Super");
+        assertThat(admin.getLastName()).isEqualTo("User");
     }
 }

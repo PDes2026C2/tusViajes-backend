@@ -10,30 +10,29 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ar.edu.unq.tusViajes.model.Usuario;
-import ar.edu.unq.tusViajes.repository.UsuarioRepository;
+import ar.edu.unq.tusViajes.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final UsuarioRepository usuarioRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
+        ar.edu.unq.tusViajes.model.User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         List<SimpleGrantedAuthority> authorities = List.of(
-                new SimpleGrantedAuthority("ROLE_" + usuario.getRol().name())
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
         );
 
         return new User(
-                usuario.getEmail(),
-                usuario.getPasswordHash(),
-                usuario.isActivo(),
+                user.getEmail(),
+                user.getPasswordHash(),
+                user.isActive(),
                 true,
                 true,
                 true,
