@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.unq.tusViajes.controller.dto.request.CreateCompradorRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.RegistroCompradorRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.CompradorResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.PaqueteResponseDTO;
 import ar.edu.unq.tusViajes.service.CompradorService;
@@ -37,7 +37,7 @@ public class CompradorController {
     }
 
     @PostMapping
-    public ResponseEntity<CompradorResponseDTO> registrar(@Valid @RequestBody CreateCompradorRequestDTO dto) {
+    public ResponseEntity<CompradorResponseDTO> registrar(@Valid @RequestBody RegistroCompradorRequestDTO dto) {
         CompradorResponseDTO creado = compradorService.registrar(dto);
         return ResponseEntity.created(URI.create("/api/compradores/" + creado.id())).body(creado);
     }

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.unq.tusViajes.controller.dto.request.CreateAdminRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.RegistroAdminRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AdminResponseDTO;
 import ar.edu.unq.tusViajes.service.AdminService;
 import jakarta.validation.Valid;
@@ -35,7 +35,7 @@ public class AdminController {
     }
 
     @PostMapping
-    public ResponseEntity<AdminResponseDTO> crear(@Valid @RequestBody CreateAdminRequestDTO dto) {
+    public ResponseEntity<AdminResponseDTO> crear(@Valid @RequestBody RegistroAdminRequestDTO dto) {
         AdminResponseDTO creado = adminService.crear(dto);
         return ResponseEntity.created(URI.create("/api/admin/administradores/" + creado.id())).body(creado);
     }

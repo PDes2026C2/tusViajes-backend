@@ -7,7 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ar.edu.unq.tusViajes.controller.dto.request.CreateAdminRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.RegistroAdminRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AdminResponseDTO;
 import ar.edu.unq.tusViajes.model.Admin;
 import ar.edu.unq.tusViajes.repository.AdminRepository;
@@ -37,7 +37,7 @@ public class AdminService {
     }
 
     @Transactional
-    public AdminResponseDTO crear(CreateAdminRequestDTO dto) {
+    public AdminResponseDTO crear(RegistroAdminRequestDTO dto) {
         usuarioValidator.validarEmailDisponible(dto.email());
         String hash = passwordEncoder.encode(dto.password());
         Admin admin = new Admin(dto.nombre(), dto.apellido(), dto.email(), hash);

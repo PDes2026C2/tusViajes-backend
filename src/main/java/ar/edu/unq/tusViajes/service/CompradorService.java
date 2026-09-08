@@ -8,7 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ar.edu.unq.tusViajes.controller.dto.request.CreateCompradorRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.RegistroCompradorRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.CompradorResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.PaqueteResponseDTO;
 import ar.edu.unq.tusViajes.model.Comprador;
@@ -55,7 +55,7 @@ public class CompradorService {
     }
 
     @Transactional
-    public CompradorResponseDTO registrar(CreateCompradorRequestDTO dto) {
+    public CompradorResponseDTO registrar(RegistroCompradorRequestDTO dto) {
         usuarioValidator.validarEmailDisponible(dto.email());
         String hash = passwordEncoder.encode(dto.password());
         Comprador comprador = new Comprador(dto.nombre(), dto.apellido(), dto.email(), hash,

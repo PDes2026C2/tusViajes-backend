@@ -1,7 +1,7 @@
 package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.builder.AgenciaBuilder;
-import ar.edu.unq.tusViajes.controller.dto.request.UpdateAgenciaRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.ActualizarAgenciaRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AgenciaResponseDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Agencia;
@@ -71,7 +71,7 @@ public class AgenciaServiceTest {
                 AgenciaBuilder.anAgencia().withRazonSocial("Viejo Nombre").build()
         );
 
-        UpdateAgenciaRequestDTO dto = new UpdateAgenciaRequestDTO("Nuevo Nombre SA");
+        ActualizarAgenciaRequestDTO dto = new ActualizarAgenciaRequestDTO("Nuevo Nombre SA");
 
         AgenciaResponseDTO resultado = agenciaService.actualizar(guardada.getId(), dto);
 

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.unq.tusViajes.controller.dto.request.UpdateAgenciaRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.ActualizarAgenciaRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AgenciaResponseDTO;
 import ar.edu.unq.tusViajes.service.AgenciaService;
 
@@ -36,7 +36,7 @@ public class AgenciaController {
     }
  
     @PutMapping("/{id}")
-    public ResponseEntity<AgenciaResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody UpdateAgenciaRequestDTO dto) {
+    public ResponseEntity<AgenciaResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody ActualizarAgenciaRequestDTO dto) {
         return ResponseEntity.ok(agenciaService.actualizar(id, dto));
     }
  

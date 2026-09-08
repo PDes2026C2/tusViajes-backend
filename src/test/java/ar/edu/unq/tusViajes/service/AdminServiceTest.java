@@ -1,7 +1,7 @@
 package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.builder.AdminBuilder;
-import ar.edu.unq.tusViajes.controller.dto.request.CreateAdminRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.RegistroAdminRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AdminResponseDTO;
 import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
@@ -64,7 +64,7 @@ class AdminServiceTest {
 
     @Test
     void crear_guardaYRetornaAdmin() {
-        CreateAdminRequestDTO dto = new CreateAdminRequestDTO("Super", "Admin", "newadmin@test.com", "secretPassword123");
+        RegistroAdminRequestDTO dto = new RegistroAdminRequestDTO("Super", "Admin", "newadmin@test.com", "secretPassword123");
 
         AdminResponseDTO resultado = adminService.crear(dto);
 
@@ -76,7 +76,7 @@ class AdminServiceTest {
     void crear_lanzaExcepcionCuandoEmailYaExiste() {
         adminRepository.save(AdminBuilder.anAdmin().withEmail("repetido@test.com").build());
 
-        CreateAdminRequestDTO dto = new CreateAdminRequestDTO("Otro", "Admin", "repetido@test.com", "secretPassword123");
+        RegistroAdminRequestDTO dto = new RegistroAdminRequestDTO("Otro", "Admin", "repetido@test.com", "secretPassword123");
 
         assertThatThrownBy(() -> adminService.crear(dto))
                 .isInstanceOf(DuplicateResourceException.class);

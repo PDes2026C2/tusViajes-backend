@@ -4,7 +4,7 @@ import ar.edu.unq.tusViajes.builder.AgenciaBuilder;
 import ar.edu.unq.tusViajes.builder.CompradorBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.PaqueteBuilder;
-import ar.edu.unq.tusViajes.controller.dto.request.CreateCompradorRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.RegistroCompradorRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.CompradorResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.PaqueteResponseDTO;
 import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
@@ -86,7 +86,7 @@ class CompradorServiceTest {
 
     @Test
     void registrar_guardaCompradorConPasswordHasheado() {
-        CreateCompradorRequestDTO dto = new CreateCompradorRequestDTO(
+        RegistroCompradorRequestDTO dto = new RegistroCompradorRequestDTO(
                 "Lucas", "Gomez", "lucas@example.com", "secret123", "1122334455", "37111222"
         );
 
@@ -107,7 +107,7 @@ class CompradorServiceTest {
                 .build();
         compradorRepository.save(compradorExistente);
 
-        CreateCompradorRequestDTO dto = new CreateCompradorRequestDTO(
+        RegistroCompradorRequestDTO dto = new RegistroCompradorRequestDTO(
                 "Lucas", "Gomez", "repetido@example.com", "secret123", "1122334455", "37111222"
         );
 
