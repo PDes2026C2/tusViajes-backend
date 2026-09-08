@@ -6,7 +6,7 @@ public class HotelBuilder {
 
     private String name = "Hotel Gran Central";
     private String destination = "Bariloche";
-    private String photoUrl = "https://ejemplo.com/hotel.jpg";
+    private String photoUrl = "https://example.com/hotel.jpg";
     private String services = "Breakfast included, WiFi";
 
     public static HotelBuilder aHotel() {

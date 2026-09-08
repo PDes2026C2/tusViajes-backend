@@ -5,9 +5,9 @@ import ar.edu.unq.tusViajes.model.AgencyStatus;
 
 public class AgencyBuilder {
 
-    private String email = "turismo@agencia.com";
+    private String email = "travel@agency.com";
     private String passwordHash = "$2a$10$hashedPasswordPlaceholder";
-    private String businessName = "Turismo Huryn SA";
+    private String businessName = "Huryn Travel SA";
     private String taxId = "30-12345678-9";
     private AgencyStatus status = AgencyStatus.AUTHORIZED;
 

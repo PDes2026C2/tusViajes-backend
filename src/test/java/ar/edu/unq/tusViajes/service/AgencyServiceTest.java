@@ -85,14 +85,14 @@ public class AgencyServiceTest {
         agencyRepository.save(AgencyBuilder.anAgency()
                 .withBusinessName("Pending Agency")
                 .withTaxId("30-11111111-1")
-                .withEmail("p1@agencia.com")
+                .withEmail("p1@agency.com")
                 .withStatus(AgencyStatus.PENDING)
                 .build());
 
         agencyRepository.save(AgencyBuilder.anAgency()
                 .withBusinessName("Authorized Agency")
                 .withTaxId("30-22222222-2")
-                .withEmail("a1@agencia.com")
+                .withEmail("a1@agency.com")
                 .withStatus(AgencyStatus.AUTHORIZED)
                 .build());
 

@@ -75,14 +75,14 @@ class AuthControllerTest {
     @Test
     void login_returns403_whenAgencyIsPending() throws Exception {
         agencyRepository.save(AgencyBuilder.anAgency()
-                .withEmail("pendiente@agencia.com")
+                .withEmail("pending@agency.com")
                 .withPasswordHash(passwordEncoder.encode("secretPassword123"))
                 .withStatus(AgencyStatus.PENDING)
                 .build());
 
         String json = """
                 {
-                    "email": "pendiente@agencia.com",
+                    "email": "pending@agency.com",
                     "password": "secretPassword123"
                 }
                 """;
@@ -97,14 +97,14 @@ class AuthControllerTest {
     @Test
     void login_returns200AndToken_whenAgencyIsAuthorized() throws Exception {
         agencyRepository.save(AgencyBuilder.anAgency()
-                .withEmail("autorizada@agencia.com")
+                .withEmail("authorized@agency.com")
                 .withPasswordHash(passwordEncoder.encode("secretPassword123"))
                 .withStatus(AgencyStatus.AUTHORIZED)
                 .build());
 
         String json = """
                 {
-                    "email": "autorizada@agencia.com",
+                    "email": "authorized@agency.com",
                     "password": "secretPassword123"
                 }
                 """;
@@ -141,9 +141,9 @@ class AuthControllerTest {
     void registerAgency_returns201AndPendingStatus() throws Exception {
         String json = """
                 {
-                    "businessName": "Nueva Agencia SA",
+                    "businessName": "New Agency SA",
                     "taxId": "30-55667788-9",
-                    "email": "nueva@agencia.com",
+                    "email": "new@agency.com",
                     "password": "secretPassword123"
                 }
                 """;
@@ -155,7 +155,7 @@ class AuthControllerTest {
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.status").value("PENDING"))
-                .andExpect(jsonPath("$.businessName").value("Nueva Agencia SA"))
+                .andExpect(jsonPath("$.businessName").value("New Agency SA"))
                 .andExpect(jsonPath("$.message").value("Registration request received. Pending authorization by an administrator."));
     }
 
@@ -165,7 +165,7 @@ class AuthControllerTest {
                 {
                     "firstName": "Agustin",
                     "lastName": "Perez",
-                    "email": "agustin@comprador.com",
+                    "email": "agustin@buyer.com",
                     "password": "secretPassword123",
                     "phoneNumber": "1122334455",
                     "nationalId": "39123456"
@@ -179,7 +179,7 @@ class AuthControllerTest {
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.firstName").value("Agustin"))
-                .andExpect(jsonPath("$.email").value("agustin@comprador.com"));
+                .andExpect(jsonPath("$.email").value("agustin@buyer.com"));
     }
 
     @Test

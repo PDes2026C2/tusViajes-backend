@@ -44,23 +44,23 @@ class AgencyControllerTest {
 
     @Test
     void getAll_returns403_whenRoleIsAgency() throws Exception {
-        mockMvc.perform(get("/api/agencies").with(user("agencia").roles("AGENCY")))
+        mockMvc.perform(get("/api/agencies").with(user("agency").roles("AGENCY")))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void getAll_returns403_whenRoleIsBuyer() throws Exception {
-        mockMvc.perform(get("/api/agencies").with(user("comprador").roles("BUYER")))
+        mockMvc.perform(get("/api/agencies").with(user("buyer").roles("BUYER")))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void getAll_returns200AndList_whenRoleIsAdmin() throws Exception {
-        agencyRepository.save(AgencyBuilder.anAgency().withBusinessName("Turismo Sur").build());
+        agencyRepository.save(AgencyBuilder.anAgency().withBusinessName("South Travel").build());
 
         mockMvc.perform(get("/api/agencies").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].businessName").value("Turismo Sur"));
+                .andExpect(jsonPath("$[0].businessName").value("South Travel"));
     }
 
     @Test
@@ -71,26 +71,26 @@ class AgencyControllerTest {
 
     @Test
     void getById_returns403_whenRoleIsAgency() throws Exception {
-        mockMvc.perform(get("/api/agencies/1").with(user("agencia").roles("AGENCY")))
+        mockMvc.perform(get("/api/agencies/1").with(user("agency").roles("AGENCY")))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void getById_returns403_whenRoleIsBuyer() throws Exception {
-        mockMvc.perform(get("/api/agencies/1").with(user("comprador").roles("BUYER")))
+        mockMvc.perform(get("/api/agencies/1").with(user("buyer").roles("BUYER")))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void getById_returns200WhenExists_whenRoleIsAdmin() throws Exception {
         Agency saved = agencyRepository.save(
-                AgencyBuilder.anAgency().withBusinessName("Turismo Sur").withTaxId("30-12345678-9").build()
+                AgencyBuilder.anAgency().withBusinessName("South Travel").withTaxId("30-12345678-9").build()
         );
 
         mockMvc.perform(get("/api/agencies/" + saved.getId()).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(saved.getId()))
-                .andExpect(jsonPath("$.businessName").value("Turismo Sur"));
+                .andExpect(jsonPath("$.businessName").value("South Travel"));
     }
 
     @Test
@@ -103,7 +103,7 @@ class AgencyControllerTest {
     void update_returns401_whenUnauthenticated() throws Exception {
         String json = """
                 {
-                    "businessName": "Modificada SA"
+                    "businessName": "Updated SA"
                 }
                 """;
 
@@ -119,7 +119,7 @@ class AgencyControllerTest {
 
         String json = """
                 {
-                    "businessName": "Modificada SA"
+                    "businessName": "Updated SA"
                 }
                 """;
 
@@ -129,7 +129,7 @@ class AgencyControllerTest {
                         .content(json))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(saved.getId()))
-                .andExpect(jsonPath("$.businessName").value("Modificada SA"));
+                .andExpect(jsonPath("$.businessName").value("Updated SA"));
     }
 
     @Test

@@ -8,9 +8,9 @@ class AgencyTest {
 
     @Test
     void constructor_assignsAllFields() {
-        Agency agency = new Agency("turismo@test.com", "hash123", "Huryn", "20-44576859-8");
+        Agency agency = new Agency("travel@test.com", "hash123", "Huryn", "20-44576859-8");
 
-        assertThat(agency.getEmail()).isEqualTo("turismo@test.com");
+        assertThat(agency.getEmail()).isEqualTo("travel@test.com");
         assertThat(agency.getPasswordHash()).isEqualTo("hash123");
         assertThat(agency.getBusinessName()).isEqualTo("Huryn");
         assertThat(agency.getTaxId()).isEqualTo("20-44576859-8");
@@ -22,7 +22,7 @@ class AgencyTest {
 
     @Test
     void updateBusinessName_onlyChangesBusinessName() {
-        Agency agency = new Agency("turismo@test.com", "hash123", "Huryn", "20-44576859-8");
+        Agency agency = new Agency("travel@test.com", "hash123", "Huryn", "20-44576859-8");
 
         agency.updateBusinessName("Metal");
 
@@ -31,7 +31,7 @@ class AgencyTest {
 
     @Test
     void authorize_changesStatusToAuthorizedAndActivatesUser() {
-        Agency agency = new Agency("turismo@test.com", "hash123", "Turismo Express", "30-12345678-9");
+        Agency agency = new Agency("travel@test.com", "hash123", "Travel Express", "30-12345678-9");
         assertThat(agency.isActive()).isFalse();
 
         agency.authorize();
@@ -43,7 +43,7 @@ class AgencyTest {
 
     @Test
     void reject_changesStatusToRejectedAndDeactivatesUser() {
-        Agency agency = new Agency("turismo@test.com", "hash123", "Turismo Express", "30-12345678-9");
+        Agency agency = new Agency("travel@test.com", "hash123", "Travel Express", "30-12345678-9");
 
         agency.reject();
 

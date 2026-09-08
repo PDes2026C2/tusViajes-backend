@@ -72,12 +72,12 @@ class AuthServiceTest {
     @Test
     void login_returnsToken_whenAgencyIsAuthorized() {
         agencyRepository.save(AgencyBuilder.anAgency()
-                .withEmail("agencia@test.com")
+                .withEmail("agency@test.com")
                 .withPasswordHash(passwordEncoder.encode("secretPassword"))
                 .withStatus(AgencyStatus.AUTHORIZED)
                 .build());
 
-        LoginResponseDTO response = authService.login(new LoginRequestDTO("agencia@test.com", "secretPassword"));
+        LoginResponseDTO response = authService.login(new LoginRequestDTO("agency@test.com", "secretPassword"));
 
         assertThat(response.token()).isNotBlank();
         assertThat(response.role()).isEqualTo(Role.AGENCY.name());
@@ -86,12 +86,12 @@ class AuthServiceTest {
     @Test
     void login_throwsUnauthorizedAgency_whenAgencyIsPending() {
         agencyRepository.save(AgencyBuilder.anAgency()
-                .withEmail("pendiente@test.com")
+                .withEmail("pending@test.com")
                 .withPasswordHash(passwordEncoder.encode("secretPassword"))
                 .withStatus(AgencyStatus.PENDING)
                 .build());
 
-        assertThatThrownBy(() -> authService.login(new LoginRequestDTO("pendiente@test.com", "secretPassword")))
+        assertThatThrownBy(() -> authService.login(new LoginRequestDTO("pending@test.com", "secretPassword")))
                 .isInstanceOf(UnauthorizedAgencyException.class)
                 .hasMessageContaining("pending authorization");
     }
@@ -109,21 +109,21 @@ class AuthServiceTest {
 
     @Test
     void login_throwsInvalidCredentials_whenEmailDoesNotExist() {
-        assertThatThrownBy(() -> authService.login(new LoginRequestDTO("noexiste@test.com", "anyPassword")))
+        assertThatThrownBy(() -> authService.login(new LoginRequestDTO("notfound@test.com", "anyPassword")))
                 .isInstanceOf(InvalidCredentialsException.class);
     }
 
     @Test
     void registerAgency_createsAgencyInPendingStatus() {
         AgencyRegistrationRequestDTO dto = new AgencyRegistrationRequestDTO(
-                "Despegar SRL", "30-55555555-5", "contacto@despegar.com", "secretPassword123"
+                "SkyTravel SRL", "30-55555555-5", "contact@skytravel.com", "secretPassword123"
         );
 
         AgencyRegistrationResponseDTO response = authService.registerAgency(dto);
 
         assertThat(response.id()).isNotNull();
         assertThat(response.status()).isEqualTo(AgencyStatus.PENDING);
-        assertThat(response.businessName()).isEqualTo("Despegar SRL");
+        assertThat(response.businessName()).isEqualTo("SkyTravel SRL");
 
         Agency inDb = agencyRepository.findById(response.id()).orElseThrow();
         assertThat(inDb.getStatus()).isEqualTo(AgencyStatus.PENDING);
@@ -135,7 +135,7 @@ class AuthServiceTest {
         agencyRepository.save(AgencyBuilder.anAgency().withTaxId("30-77777777-7").build());
 
         AgencyRegistrationRequestDTO dto = new AgencyRegistrationRequestDTO(
-                "Otra SRL", "30-77777777-7", "otra@test.com", "secretPassword123"
+                "Another SRL", "30-77777777-7", "another@test.com", "secretPassword123"
         );
 
         assertThatThrownBy(() -> authService.registerAgency(dto))
