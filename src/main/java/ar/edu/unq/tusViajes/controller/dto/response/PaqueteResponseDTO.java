@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+import ar.edu.unq.tusViajes.model.Paquete;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,4 +23,20 @@ public class PaqueteResponseDTO {
     private LocalDateTime fechaFin;
     private HotelResponseDTO hotel;
     private AgenciaResponseDTO agencia;
+
+    public static PaqueteResponseDTO from(Paquete paquete) {
+        if (paquete == null) {
+            return null;
+        }
+        return new PaqueteResponseDTO(
+                paquete.getId(),
+                paquete.getNombre(),
+                paquete.getDescripcion(),
+                paquete.getPrecio(),
+                paquete.getFechaInicio(),
+                paquete.getFechaFin(),
+                HotelResponseDTO.from(paquete.getHotel()),
+                AgenciaResponseDTO.from(paquete.getAgencia())
+        );
+    }
 }

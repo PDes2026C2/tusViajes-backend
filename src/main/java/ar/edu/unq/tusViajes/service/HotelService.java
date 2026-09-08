@@ -23,26 +23,22 @@ public class HotelService {
     @Transactional(readOnly = true)
     public List<HotelResponseDTO> listar() {
         return hotelRepository.findAll().stream()
-                .map(this::toResponseDTO)
+                .map(HotelResponseDTO::from)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public HotelResponseDTO buscarPorId(Long id) {
-        return toResponseDTO(buscarEntidadPorId(id));
+        return HotelResponseDTO.from(buscarEntidadPorId(id));
     }
 
     @Transactional
     public HotelResponseDTO crear(HotelRequestDTO dto) {
         Hotel hotel = new Hotel(dto.nombre(), dto.destino(), dto.fotoUrl(), dto.servicio());
-        return toResponseDTO(hotelRepository.save(hotel));
+        return HotelResponseDTO.from(hotelRepository.save(hotel));
     }
 
     public Hotel buscarEntidadPorId(Long id) {
-        return entityValidator.findByIdOrThrow(hotelRepository,id,"Hotel");
-    }
-
-    public HotelResponseDTO toResponseDTO(Hotel hotel) {
-        return new HotelResponseDTO(hotel.getId(), hotel.getNombre(), hotel.getDestino(), hotel.getFotoUrl(), hotel.getServicio());
+        return entityValidator.findByIdOrThrow(hotelRepository, id, "Hotel");
     }
 }
