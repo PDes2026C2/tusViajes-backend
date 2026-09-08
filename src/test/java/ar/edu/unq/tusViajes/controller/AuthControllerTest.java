@@ -2,9 +2,11 @@ package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.builder.AdminBuilder;
 import ar.edu.unq.tusViajes.builder.AgenciaBuilder;
+import ar.edu.unq.tusViajes.model.Admin;
 import ar.edu.unq.tusViajes.model.EstadoAgencia;
 import ar.edu.unq.tusViajes.repository.AdminRepository;
 import ar.edu.unq.tusViajes.repository.AgenciaRepository;
+import ar.edu.unq.tusViajes.security.JwtTokenService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,6 +44,9 @@ class AuthControllerTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtTokenService jwtTokenService;
 
     @Test
     void login_retorna200YToken_cuandoAdminEsValido() throws Exception {
@@ -175,5 +180,76 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.nombre").value("Agustin"))
                 .andExpect(jsonPath("$.email").value("agustin@comprador.com"));
+    }
+
+    @Test
+    void refreshToken_retorna401_cuandoTokenEsDeAcceso() throws Exception {
+        Admin admin = adminRepository.save(AdminBuilder.anAdmin()
+                .withEmail("admin-access-ctrl@test.com")
+                .build());
+
+        String accessToken = jwtTokenService.generarToken(admin, false);
+
+        String json = """
+                {
+                    "refreshToken": "%s"
+                }
+                """.formatted(accessToken);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.mensaje").value("El refresh token no es valido."));
+    }
+
+    @Test
+    void refreshToken_retorna401_cuandoTokenExpirado() throws Exception {
+        Admin admin = adminRepository.save(AdminBuilder.anAdmin()
+                .withEmail("admin-exp-ctrl@test.com")
+                .build());
+
+        JwtTokenService expiredService = new JwtTokenService(
+                "tusViajesSuperSecretKeyForJwtSigningMustBeAtLeast256BitsLong2026!",
+                86400000L,
+                -10000L
+        );
+        String expiredRefreshToken = expiredService.generarToken(admin, true);
+
+        String json = """
+                {
+                    "refreshToken": "%s"
+                }
+                """.formatted(expiredRefreshToken);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.mensaje").value("El refresh token no es valido."));
+    }
+
+    @Test
+    void refreshToken_retorna200YNuevosTokens_cuandoRefreshTokenEsValido() throws Exception {
+        Admin admin = adminRepository.save(AdminBuilder.anAdmin()
+                .withEmail("admin-valid-ctrl@test.com")
+                .build());
+
+        String refreshToken = jwtTokenService.generarToken(admin, true);
+
+        String json = """
+                {
+                    "refreshToken": "%s"
+                }
+                """.formatted(refreshToken);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
+                .andExpect(jsonPath("$.email").value("admin-valid-ctrl@test.com"))
+                .andExpect(jsonPath("$.rol").value("ADMIN"));
     }
 }

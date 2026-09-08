@@ -2,13 +2,14 @@ package ar.edu.unq.tusViajes.controller;
 
 import java.net.URI;
 
+import ar.edu.unq.tusViajes.controller.dto.request.RefreshTokenRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.unq.tusViajes.controller.dto.request.CreateCompradorRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.RegistroCompradorRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.LoginRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.RegistroAgenciaRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.CompradorResponseDTO;
@@ -37,8 +38,13 @@ public class AuthController {
     }
 
     @PostMapping("/registro/comprador")
-    public ResponseEntity<CompradorResponseDTO> registrarComprador(@Valid @RequestBody CreateCompradorRequestDTO dto) {
+    public ResponseEntity<CompradorResponseDTO> registrarComprador(@Valid @RequestBody RegistroCompradorRequestDTO dto) {
         CompradorResponseDTO respuesta = authService.registrarComprador(dto);
         return ResponseEntity.created(URI.create("/api/compradores/" + respuesta.id())).body(respuesta);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponseDTO> refreshToken(@Valid @RequestBody RefreshTokenRequest dto) {
+        return ResponseEntity.ok(authService.refreshToken(dto.refreshToken()));
     }
 }

@@ -1,10 +1,11 @@
 package ar.edu.unq.tusViajes.service;
 
+import ar.edu.unq.tusViajes.exception.InvalidRefreshTokenException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ar.edu.unq.tusViajes.controller.dto.request.CreateCompradorRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.RegistroCompradorRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.LoginRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.RegistroAgenciaRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.CompradorResponseDTO;
@@ -46,9 +47,11 @@ public class AuthService {
         }
 
         String token = jwtTokenService.generarToken(usuario);
+        String refreshToken = jwtTokenService.generarToken(usuario, true);
 
         return new LoginResponseDTO(
                 token,
+                refreshToken,
                 "Bearer",
                 usuario.getId(),
                 usuario.getEmail(),
@@ -76,7 +79,30 @@ public class AuthService {
     }
 
     @Transactional
-    public CompradorResponseDTO registrarComprador(CreateCompradorRequestDTO dto) {
+    public CompradorResponseDTO registrarComprador(RegistroCompradorRequestDTO dto) {
         return compradorService.registrar(dto);
+    }
+
+    public LoginResponseDTO refreshToken(String token) {
+        if (!jwtTokenService.esValido(token) || !jwtTokenService.esRefreshToken(token)) {
+            throw new InvalidRefreshTokenException();
+        }
+
+        String email = jwtTokenService.obtenerEmail(token);
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new CredencialesInvalidasException("Usuario no encontrado"));
+
+        String nuevoToken = jwtTokenService.generarToken(usuario);
+        String refreshToken = jwtTokenService.generarToken(usuario, true);
+
+        return new LoginResponseDTO(
+                nuevoToken,
+                refreshToken,
+                "Bearer",
+                usuario.getId(),
+                usuario.getEmail(),
+                usuario.getIdentificadorVisual(),
+                usuario.getRol().name()
+        );
     }
 }

@@ -91,6 +91,26 @@ class PaqueteControllerTest {
     }
 
     @Test
+    void crear_retorna401_cuandoNoAutenticado() throws Exception {
+        String json = """
+                {
+                    "nombre": "Bariloche 7d",
+                    "descripcion": "Desc",
+                    "precio": 150000.0,
+                    "fechaInicio": "2026-10-01T10:00:00",
+                    "fechaFin": "2026-10-08T10:00:00",
+                    "hotelId": 1,
+                    "agenciaId": 1
+                }
+                """;
+
+        mockMvc.perform(post("/api/paquetes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void crear_retorna201YLocationHeader() throws Exception {
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agencia agencia = agenciaRepository.save(AgenciaBuilder.anAgencia().build());
@@ -115,6 +135,51 @@ class PaqueteControllerTest {
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.nombre").value("Bariloche 7d"));
+    }
+
+    @Test
+    void actualizar_retorna401_cuandoNoAutenticado() throws Exception {
+        mockMvc.perform(put("/api/paquetes/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void actualizar_retorna200_cuandoAutenticado() throws Exception {
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Agencia agencia = agenciaRepository.save(AgenciaBuilder.anAgencia().build());
+
+        Paquete paquete = PaqueteBuilder.aPaquete()
+                .withHotel(hotel)
+                .withAgencia(agencia)
+                .build();
+        Paquete guardado = paqueteRepository.save(paquete);
+
+        String json = """
+                {
+                    "nombre": "Bariloche 10d",
+                    "descripcion": "Desc extendida",
+                    "precio": 200000.0,
+                    "fechaInicio": "2026-11-01T10:00:00",
+                    "fechaFin": "2026-11-10T10:00:00",
+                    "hotelId": %d,
+                    "agenciaId": %d
+                }
+                """.formatted(hotel.getId(), agencia.getId());
+
+        mockMvc.perform(put("/api/paquetes/" + guardado.getId())
+                        .with(user("user"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombre").value("Bariloche 10d"));
+    }
+
+    @Test
+    void eliminar_retorna401_cuandoNoAutenticado() throws Exception {
+        mockMvc.perform(delete("/api/paquetes/1"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

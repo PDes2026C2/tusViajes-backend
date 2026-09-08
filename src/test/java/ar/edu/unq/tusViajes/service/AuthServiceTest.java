@@ -9,12 +9,14 @@ import ar.edu.unq.tusViajes.controller.dto.response.RegistroAgenciaResponseDTO;
 import ar.edu.unq.tusViajes.exception.AgenciaNoAutorizadaException;
 import ar.edu.unq.tusViajes.exception.CredencialesInvalidasException;
 import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
+import ar.edu.unq.tusViajes.exception.InvalidRefreshTokenException;
 import ar.edu.unq.tusViajes.model.Admin;
 import ar.edu.unq.tusViajes.model.Agencia;
 import ar.edu.unq.tusViajes.model.EstadoAgencia;
 import ar.edu.unq.tusViajes.model.Rol;
 import ar.edu.unq.tusViajes.repository.AdminRepository;
 import ar.edu.unq.tusViajes.repository.AgenciaRepository;
+import ar.edu.unq.tusViajes.security.JwtTokenService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -48,6 +50,9 @@ class AuthServiceTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtTokenService jwtTokenService;
 
     @Test
     void login_retornaTokenYDatos_cuandoAdminValido() {
@@ -136,5 +141,50 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.registrarAgencia(dto))
                 .isInstanceOf(DuplicateResourceException.class)
                 .hasMessageContaining("30-77777777-7");
+    }
+
+    @Test
+    void refreshToken_lanzaInvalidRefreshToken_cuandoTokenEsDeAcceso() {
+        Admin admin = adminRepository.save(AdminBuilder.anAdmin()
+                .withEmail("admin-access-token@test.com")
+                .build());
+
+        String accessToken = jwtTokenService.generarToken(admin, false);
+
+        assertThatThrownBy(() -> authService.refreshToken(accessToken))
+                .isInstanceOf(InvalidRefreshTokenException.class);
+    }
+
+    @Test
+    void refreshToken_lanzaInvalidRefreshToken_cuandoTokenExpiradoOInvalido() {
+        Admin admin = adminRepository.save(AdminBuilder.anAdmin()
+                .withEmail("admin-expired-token@test.com")
+                .build());
+
+        JwtTokenService expiredService = new JwtTokenService(
+                "tusViajesSuperSecretKeyForJwtSigningMustBeAtLeast256BitsLong2026!",
+                86400000L,
+                -10000L
+        );
+        String expiredRefreshToken = expiredService.generarToken(admin, true);
+
+        assertThatThrownBy(() -> authService.refreshToken(expiredRefreshToken))
+                .isInstanceOf(InvalidRefreshTokenException.class);
+    }
+
+    @Test
+    void refreshToken_retornaNuevosTokensYDatos_cuandoRefreshTokenEsValido() {
+        Admin admin = adminRepository.save(AdminBuilder.anAdmin()
+                .withEmail("admin-valid-refresh@test.com")
+                .build());
+
+        String refreshToken = jwtTokenService.generarToken(admin, true);
+
+        LoginResponseDTO respuesta = authService.refreshToken(refreshToken);
+
+        assertThat(respuesta.token()).isNotBlank();
+        assertThat(respuesta.refreshToken()).isNotBlank();
+        assertThat(respuesta.email()).isEqualTo("admin-valid-refresh@test.com");
+        assertThat(respuesta.rol()).isEqualTo(Rol.ADMIN.name());
     }
 }

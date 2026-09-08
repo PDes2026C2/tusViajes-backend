@@ -19,37 +19,55 @@ public class JwtTokenService {
 
     private final SecretKey key;
     private final long expirationMs;
+    private final long refreshExpirationMs;
 
     public JwtTokenService(
             @Value("${jwt.secret:tusViajesSuperSecretKeyForJwtSigningMustBeAtLeast256BitsLong2026!}") String secret,
-            @Value("${jwt.expiration-ms:86400000}") long expirationMs) {
+            @Value("${jwt.expiration-ms:86400000}") long expirationMs,
+            @Value("${jwt.refresh-expiration-ms:86400000}") long refreshExpirationMs) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
+        this.refreshExpirationMs = refreshExpirationMs;
+
     }
 
-    public String generarToken(Usuario usuario) {
+    public String generarToken(Usuario usuario, Boolean isRefresh) {
         Date ahora = new Date();
-        Date expiracion = new Date(ahora.getTime() + expirationMs);
+        Date expiracion = new Date(ahora.getTime() + (isRefresh ? refreshExpirationMs : expirationMs));
 
         return Jwts.builder()
                 .subject(usuario.getEmail())
                 .claim("id", usuario.getId())
                 .claim("rol", usuario.getRol().name())
                 .claim("nombre", usuario.getIdentificadorVisual())
+                .claim("type", isRefresh ? "refresh" : "access")
                 .issuedAt(ahora)
                 .expiration(expiracion)
                 .signWith(key)
                 .compact();
     }
 
+    public String generarToken(Usuario usuario) {
+        return generarToken(usuario, false);
+    }
+
     public String obtenerEmail(String token) {
         return obtenerClaims(token).getSubject();
     }
 
-    public boolean validarToken(String token) {
+    public boolean esValido(String token) {
         try {
             Claims claims = obtenerClaims(token);
             return claims.getExpiration().after(new Date());
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public boolean esRefreshToken(String token) {
+        try {
+            Claims claims = obtenerClaims(token);
+            return "refresh".equals(claims.get("type"));
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
