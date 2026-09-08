@@ -57,6 +57,12 @@ class CompradorControllerTest {
     private AgenciaRepository agenciaRepository;
 
     @Test
+    void listar_retorna401_cuandoNoAutenticado() throws Exception {
+        mockMvc.perform(get("/api/compradores"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void listar_retorna200YListaDeCompradores() throws Exception {
         compradorRepository.save(
                 CompradorBuilder.aComprador()
@@ -69,6 +75,12 @@ class CompradorControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").isNotEmpty())
                 .andExpect(jsonPath("$[0].nombre").value("Lucas"));
+    }
+
+    @Test
+    void buscarPorId_retorna401_cuandoNoAutenticado() throws Exception {
+        mockMvc.perform(get("/api/compradores/1"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -114,6 +126,12 @@ class CompradorControllerTest {
     }
 
     @Test
+    void agregarFavorito_retorna401_cuandoNoAutenticado() throws Exception {
+        mockMvc.perform(post("/api/compradores/1/favoritos/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void agregarFavorito_retorna200Ok() throws Exception {
         Comprador comprador = compradorRepository.save(CompradorBuilder.aComprador()
                         .withNombre("Lucas")
@@ -129,6 +147,12 @@ class CompradorControllerTest {
 
         Comprador compradorActualizado = compradorRepository.findById(comprador.getId()).orElseThrow();
         assertThat(compradorActualizado.getPaquetesFavoritos()).hasSize(1);
+    }
+
+    @Test
+    void quitarFavorito_retorna401_cuandoNoAutenticado() throws Exception {
+        mockMvc.perform(delete("/api/compradores/1/favoritos/1"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -150,6 +174,12 @@ class CompradorControllerTest {
 
         Comprador compradorActualizado = compradorRepository.findById(comprador.getId()).orElseThrow();
         assertThat(compradorActualizado.getPaquetesFavoritos()).isEmpty();
+    }
+
+    @Test
+    void listarFavoritos_retorna401_cuandoNoAutenticado() throws Exception {
+        mockMvc.perform(get("/api/compradores/1/favoritos"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

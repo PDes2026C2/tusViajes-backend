@@ -37,21 +37,57 @@ class AgenciaControllerTest {
     private AgenciaRepository agenciaRepository;
 
     @Test
-    void listar_retorna200YLista() throws Exception {
+    void listar_retorna401_cuandoNoAutenticado() throws Exception {
+        mockMvc.perform(get("/api/agencias"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void listar_retorna403_cuandoEsAgencia() throws Exception {
+        mockMvc.perform(get("/api/agencias").with(user("agencia").roles("AGENCIA")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void listar_retorna403_cuandoEsComprador() throws Exception {
+        mockMvc.perform(get("/api/agencias").with(user("comprador").roles("COMPRADOR")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void listar_retorna200YLista_cuandoEsAdmin() throws Exception {
         agenciaRepository.save(AgenciaBuilder.anAgencia().withRazonSocial("Turismo Sur").build());
 
-        mockMvc.perform(get("/api/agencias"))
+        mockMvc.perform(get("/api/agencias").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].razonSocial").value("Turismo Sur"));
     }
 
     @Test
-    void buscarPorId_retorna200CuandoExiste() throws Exception {
+    void buscarPorId_retorna401_cuandoNoAutenticado() throws Exception {
+        mockMvc.perform(get("/api/agencias/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void buscarPorId_retorna403_cuandoEsAgencia() throws Exception {
+        mockMvc.perform(get("/api/agencias/1").with(user("agencia").roles("AGENCIA")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void buscarPorId_retorna403_cuandoEsComprador() throws Exception {
+        mockMvc.perform(get("/api/agencias/1").with(user("comprador").roles("COMPRADOR")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void buscarPorId_retorna200CuandoExiste_cuandoEsAdmin() throws Exception {
         Agencia guardada = agenciaRepository.save(
                 AgenciaBuilder.anAgencia().withRazonSocial("Turismo Sur").withCuit("30-12345678-9").build()
         );
 
-        mockMvc.perform(get("/api/agencias/" + guardada.getId()))
+        mockMvc.perform(get("/api/agencias/" + guardada.getId()).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(guardada.getId()))
                 .andExpect(jsonPath("$.razonSocial").value("Turismo Sur"));
@@ -59,8 +95,22 @@ class AgenciaControllerTest {
 
     @Test
     void buscarPorId_retorna404CuandoNoExiste() throws Exception {
-        mockMvc.perform(get("/api/agencias/99999"))
+        mockMvc.perform(get("/api/agencias/99999").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void actualizar_retorna401_cuandoNoAutenticado() throws Exception {
+        String json = """
+                {
+                    "razonSocial": "Modificada SA"
+                }
+                """;
+
+        mockMvc.perform(put("/api/agencias/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -74,7 +124,7 @@ class AgenciaControllerTest {
                 """;
 
         mockMvc.perform(put("/api/agencias/" + guardada.getId())
-                        .with(user("user"))
+                        .with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -83,10 +133,16 @@ class AgenciaControllerTest {
     }
 
     @Test
+    void eliminar_retorna401_cuandoNoAutenticado() throws Exception {
+        mockMvc.perform(delete("/api/agencias/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void eliminar_retorna204NoContent() throws Exception {
         Agencia guardada = agenciaRepository.save(AgenciaBuilder.anAgencia().build());
 
-        mockMvc.perform(delete("/api/agencias/" + guardada.getId()).with(user("user")))
+        mockMvc.perform(delete("/api/agencias/" + guardada.getId()).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNoContent());
 
         assertThat(agenciaRepository.existsById(guardada.getId())).isFalse();

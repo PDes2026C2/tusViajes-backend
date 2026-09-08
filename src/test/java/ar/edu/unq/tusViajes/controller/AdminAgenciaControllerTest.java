@@ -65,6 +65,18 @@ class AdminAgenciaControllerTest {
     }
 
     @Test
+    void autorizar_retorna401_cuandoNoAutenticado() throws Exception {
+        mockMvc.perform(post("/api/admin/agencias/1/autorizar"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void autorizar_retorna403_cuandoRolNoEsAdmin() throws Exception {
+        mockMvc.perform(post("/api/admin/agencias/1/autorizar").with(user("agencia").roles("AGENCIA")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void autorizar_retorna200YCambiaEstadoAAutorizada() throws Exception {
         Agencia guardada = agenciaRepository.save(AgenciaBuilder.anAgencia()
                 .withEstado(EstadoAgencia.PENDIENTE)
@@ -76,6 +88,18 @@ class AdminAgenciaControllerTest {
 
         Agencia enDb = agenciaRepository.findById(guardada.getId()).orElseThrow();
         assertThat(enDb.isAutorizada()).isTrue();
+    }
+
+    @Test
+    void rechazar_retorna401_cuandoNoAutenticado() throws Exception {
+        mockMvc.perform(post("/api/admin/agencias/1/rechazar"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void rechazar_retorna403_cuandoRolNoEsAdmin() throws Exception {
+        mockMvc.perform(post("/api/admin/agencias/1/rechazar").with(user("comprador").roles("COMPRADOR")))
+                .andExpect(status().isForbidden());
     }
 
     @Test
