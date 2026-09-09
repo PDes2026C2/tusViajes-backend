@@ -2,6 +2,7 @@ package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
 import ar.edu.unq.tusViajes.builder.BuyerBuilder;
+import ar.edu.unq.tusViajes.builder.CustomUserDetailsBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
 import ar.edu.unq.tusViajes.model.Agency;
@@ -27,6 +28,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.core.authority.AuthorityUtils.createAuthorityList;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -127,7 +129,7 @@ class BuyerControllerTest {
 
     @Test
     void addFavorite_returns401_whenUnauthenticated() throws Exception {
-        mockMvc.perform(post("/api/buyers/1/favorites/1"))
+                mockMvc.perform(post("/api/buyers/favorites/1"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -141,8 +143,12 @@ class BuyerControllerTest {
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).build());
 
-        mockMvc.perform(post("/api/buyers/" + buyer.getId() + "/favorites/" + travelPackage.getId())
-                        .with(user("lucas").roles("BUYER")))
+        mockMvc.perform(post("/api/buyers/favorites/" + travelPackage.getId())
+                        .with(user(CustomUserDetailsBuilder.aUserDetails()
+                                .withId(buyer.getId())
+                                .withEmail(buyer.getEmail())
+                                .withAuthorities(createAuthorityList("ROLE_BUYER"))
+                                .build())))
                 .andExpect(status().isOk());
 
         Buyer updatedBuyer = buyerRepository.findById(buyer.getId()).orElseThrow();
@@ -151,7 +157,7 @@ class BuyerControllerTest {
 
     @Test
     void removeFavorite_returns401_whenUnauthenticated() throws Exception {
-        mockMvc.perform(delete("/api/buyers/1/favorites/1"))
+                mockMvc.perform(delete("/api/buyers/favorites/1"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -168,8 +174,12 @@ class BuyerControllerTest {
         buyer.addFavorite(travelPackage);
         buyer = buyerRepository.save(buyer);
 
-        mockMvc.perform(delete("/api/buyers/" + buyer.getId() + "/favorites/" + travelPackage.getId())
-                        .with(user("lucas").roles("BUYER")))
+        mockMvc.perform(delete("/api/buyers/favorites/" + travelPackage.getId())
+                        .with(user(CustomUserDetailsBuilder.aUserDetails()
+                                .withId(buyer.getId())
+                                .withEmail(buyer.getEmail())
+                                .withAuthorities(createAuthorityList("ROLE_BUYER"))
+                                .build())))
                 .andExpect(status().isNoContent());
 
         Buyer updatedBuyer = buyerRepository.findById(buyer.getId()).orElseThrow();
@@ -178,7 +188,7 @@ class BuyerControllerTest {
 
     @Test
     void getFavorites_returns401_whenUnauthenticated() throws Exception {
-        mockMvc.perform(get("/api/buyers/1/favorites"))
+                mockMvc.perform(get("/api/buyers/favorites"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -195,8 +205,12 @@ class BuyerControllerTest {
         buyer.addFavorite(travelPackage);
         buyer = buyerRepository.save(buyer);
 
-        mockMvc.perform(get("/api/buyers/" + buyer.getId() + "/favorites")
-                        .with(user("lucas").roles("BUYER")))
+        mockMvc.perform(get("/api/buyers/favorites")
+                        .with(user(CustomUserDetailsBuilder.aUserDetails()
+                                .withId(buyer.getId())
+                                .withEmail(buyer.getEmail())
+                                .withAuthorities(createAuthorityList("ROLE_BUYER"))
+                                .build())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(travelPackage.getId()))
                 .andExpect(jsonPath("$[0].name").value("Ushuaia Invierno"));
