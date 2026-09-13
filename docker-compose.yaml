@@ -10,6 +10,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-shared:5432/${DB_NAME:-postgres}
       - SPRING_DATASOURCE_USERNAME=${DB_USER:-admin}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-password}
+      - FLIGHTS_API_BASE_URL=http://flights-api:8081
     networks:
       - local-dev-network
 
