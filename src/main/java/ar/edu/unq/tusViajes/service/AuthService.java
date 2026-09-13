@@ -4,15 +4,16 @@ import ar.edu.unq.tusViajes.controller.dto.request.AgencyRegistrationRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.BuyerRegistrationRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.LoginRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AgencyRegistrationResponseDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.BuyerResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.LoginResponseDTO;
 import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.exception.InvalidCredentialsException;
 import ar.edu.unq.tusViajes.exception.InvalidRefreshTokenException;
 import ar.edu.unq.tusViajes.exception.UnauthorizedAgencyException;
 import ar.edu.unq.tusViajes.model.Agency;
+import ar.edu.unq.tusViajes.model.Buyer;
 import ar.edu.unq.tusViajes.model.User;
 import ar.edu.unq.tusViajes.repository.AgencyRepository;
+import ar.edu.unq.tusViajes.repository.BuyerRepository;
 import ar.edu.unq.tusViajes.repository.UserRepository;
 import ar.edu.unq.tusViajes.security.JwtTokenService;
 import ar.edu.unq.tusViajes.validator.UserValidator;
@@ -27,7 +28,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final AgencyRepository agencyRepository;
-    private final BuyerService buyerService;
+    private final BuyerRepository buyerRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenService jwtTokenService;
     private final UserValidator userValidator;
@@ -78,8 +79,25 @@ public class AuthService {
     }
 
     @Transactional
-    public BuyerResponseDTO registerBuyer(BuyerRegistrationRequestDTO dto) {
-        return buyerService.register(dto);
+    public LoginResponseDTO registerBuyer(BuyerRegistrationRequestDTO dto) {
+        userValidator.validateEmailAvailable(dto.email());
+        String hash = passwordEncoder.encode(dto.password());
+        Buyer buyer = new Buyer(dto.firstName(), dto.lastName(), dto.email(), hash,
+                dto.phoneNumber(), dto.nationalId());
+        Buyer saved = buyerRepository.save(buyer);
+
+        String token = jwtTokenService.generateToken(saved);
+        String refreshToken = jwtTokenService.generateToken(saved, true);
+
+        return new LoginResponseDTO(
+                token,
+                refreshToken,
+                "Bearer",
+                saved.getId(),
+                saved.getEmail(),
+                saved.getVisualIdentifier(),
+                saved.getRole().name()
+        );
     }
 
     public LoginResponseDTO refreshToken(String token) {

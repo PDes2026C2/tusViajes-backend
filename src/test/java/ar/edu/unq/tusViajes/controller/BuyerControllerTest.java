@@ -106,7 +106,8 @@ class BuyerControllerTest {
     }
 
     @Test
-    void register_returns201AndLocationHeader() throws Exception {
+    @SuppressWarnings("deprecation")
+    void register_deprecated_returns201AndLocationHeader() throws Exception {
         String json = """
                 {
                     "firstName": "Lucas",
@@ -123,6 +124,7 @@ class BuyerControllerTest {
                         .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
+                .andExpect(header().string("Deprecation", "true"))
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.nationalId").value("38123456"));
     }
