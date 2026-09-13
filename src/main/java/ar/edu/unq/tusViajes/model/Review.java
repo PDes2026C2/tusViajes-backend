@@ -45,14 +45,13 @@ public class Review {
 
     public Review(Integer score, String comment, Buyer buyer, TravelPackage travelPackage) {
         this.score = score;
-        this.comment = comment;
+        this.comment = normalizeComment(comment);
         this.createdAt = LocalDateTime.now();
         this.buyer = buyer;
         this.travelPackage = travelPackage;
     }
 
-    public void update(Integer score, String comment) {
-        this.score = score;
-        this.comment = comment;
+    private String normalizeComment(String comment) {
+        return comment == null ? "" : comment;
     }
 }

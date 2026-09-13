@@ -2,7 +2,6 @@ package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
 import ar.edu.unq.tusViajes.builder.BuyerBuilder;
-import ar.edu.unq.tusViajes.builder.CustomUserDetailsBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
 import ar.edu.unq.tusViajes.model.Agency;
@@ -13,6 +12,7 @@ import ar.edu.unq.tusViajes.repository.AgencyRepository;
 import ar.edu.unq.tusViajes.repository.BuyerRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
 import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
+import ar.edu.unq.tusViajes.security.CustomUserDetails;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -26,9 +26,9 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.core.authority.AuthorityUtils.createAuthorityList;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -61,92 +61,104 @@ class ReviewControllerTest {
     @Test
     void create_returns201WithReview() throws Exception {
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
-        TravelPackage travelPackage = saveTravelPackage();
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel)
+                .withAgency(agency)
+                .build());;
         buyer.addFavorite(travelPackage);
         buyerRepository.save(buyer);
 
         mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
-                        .with(user(CustomUserDetailsBuilder.aUserDetails()
-                                .withId(buyer.getId())
-                                .withEmail(buyer.getEmail())
-                                .withAuthorities(org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_BUYER"))
-                                .build()))
+                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
+                                createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":9,\"comment\":\"Excellent\"}"))
+                        .content("{\"score\":5,\"comment\":\"Excellent\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
-                .andExpect(jsonPath("$.score").value(9))
+                .andExpect(jsonPath("$.score").value(5))
                 .andExpect(jsonPath("$.comment").value("Excellent"))
                 .andExpect(jsonPath("$.buyerId").value(buyer.getId()));
     }
 
     @Test
-    void create_returns400WhenScoreIsOutOfRange() throws Exception {
+        void create_returns400WhenScoreIsGreaterThan5() throws Exception {
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
-        TravelPackage travelPackage = saveTravelPackage();
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel)
+                .withAgency(agency)
+                .build());;
         buyer.addFavorite(travelPackage);
         buyerRepository.save(buyer);
 
         mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
-                        .with(user(CustomUserDetailsBuilder.aUserDetails()
-                                .withId(buyer.getId())
-                                .withAuthorities(org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_BUYER"))
-                                .build()))
+                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
+                                createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":11}"))
+                        .content("{\"score\":6}"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void create_returns201WithScoreOnly() throws Exception {
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
-        TravelPackage travelPackage = saveTravelPackage();
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel)
+                .withAgency(agency)
+                .build());
         buyer.addFavorite(travelPackage);
         buyerRepository.save(buyer);
 
         mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
-                        .with(user(CustomUserDetailsBuilder.aUserDetails()
-                                .withId(buyer.getId())
-                                .withAuthorities(org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_BUYER"))
-                                .build()))
+                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
+                                createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":8}"))
+                        .content("{\"score\":4}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.score").value(8))
-                .andExpect(jsonPath("$.comment").doesNotExist());
+                .andExpect(jsonPath("$.score").value(4))
+                .andExpect(jsonPath("$.comment").value(""));
     }
 
     @Test
-    void create_returns201WithCommentOnly() throws Exception {
+        void create_returns400WhenScoreIsMissing() throws Exception {
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
-        TravelPackage travelPackage = saveTravelPackage();
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel)
+                .withAgency(agency)
+                .build());;
         buyer.addFavorite(travelPackage);
         buyerRepository.save(buyer);
 
         mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
-                        .with(user(CustomUserDetailsBuilder.aUserDetails()
-                                .withId(buyer.getId())
-                                .withAuthorities(org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_BUYER"))
-                                .build()))
+                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
+                                createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"comment\":\"Excellent\"}"))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.score").doesNotExist())
-                .andExpect(jsonPath("$.comment").value("Excellent"));
+                        .andExpect(status().isBadRequest());
     }
 
     @Test
     void create_returns400WhenScoreAndCommentAreMissing() throws Exception {
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
-        TravelPackage travelPackage = saveTravelPackage();
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel)
+                .withAgency(agency)
+                .build());;
         buyer.addFavorite(travelPackage);
         buyerRepository.save(buyer);
 
         mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
-                        .with(user(CustomUserDetailsBuilder.aUserDetails()
-                                .withId(buyer.getId())
-                                .withAuthorities(org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_BUYER"))
-                                .build()))
+                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
+                                createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest());
@@ -155,15 +167,18 @@ class ReviewControllerTest {
     @Test
     void create_returns403WhenPackageIsNotFavorite() throws Exception {
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
-        TravelPackage travelPackage = saveTravelPackage();
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel)
+                .withAgency(agency)
+                .build());;
 
         mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
-                        .with(user(CustomUserDetailsBuilder.aUserDetails()
-                                .withId(buyer.getId())
-                                .withAuthorities(org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_BUYER"))
-                                .build()))
+                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
+                                createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":8}"))
+                        .content("{\"score\":4}"))
                 .andExpect(status().isForbidden());
     }
 
@@ -171,62 +186,53 @@ class ReviewControllerTest {
     void create_returns401WhenUnauthenticated() throws Exception {
         mockMvc.perform(post("/api/travel-packages/1/reviews")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":8}"))
+                        .content("{\"score\":4}"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void getByTravelPackageId_returnsReviews() throws Exception {
-        TravelPackage travelPackage = saveTravelPackage();
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel)
+                .withAgency(agency)
+                .build());;
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
                 buyer.addFavorite(travelPackage);
                 buyerRepository.save(buyer);
 
         mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
-                        .with(user(CustomUserDetailsBuilder.aUserDetails()
-                                .withId(buyer.getId())
-                                .withAuthorities(org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_BUYER"))
-                                .build()))
+                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
+                                createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":7,\"comment\":\"Good\"}"))
+                        .content("{\"score\":3,\"comment\":\"Good\"}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/travel-packages/" + travelPackage.getId() + "/reviews"))
+        mockMvc.perform(get("/api/travel-packages/" + travelPackage.getId() + "/reviews")
+                        .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].score").value(7))
+                .andExpect(jsonPath("$[0].score").value(3))
                 .andExpect(jsonPath("$[0].comment").value("Good"));
     }
 
     @Test
-    void update_returns200AndUpdatesReview() throws Exception {
-        TravelPackage travelPackage = saveTravelPackage();
-        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
-        buyer.addFavorite(travelPackage);
-        buyerRepository.save(buyer);
-
-        mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
-                        .with(user(CustomUserDetailsBuilder.aUserDetails().withId(buyer.getId())
-                                .withAuthorities(org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_BUYER")).build()))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":7}"))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(put("/api/travel-packages/" + travelPackage.getId() + "/reviews")
-                        .with(user(CustomUserDetailsBuilder.aUserDetails().withId(buyer.getId())
-                                .withAuthorities(org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_BUYER")).build()))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"comment\":\"Updated comment\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.score").doesNotExist())
-                .andExpect(jsonPath("$.comment").value("Updated comment"));
+    void getByTravelPackageId_returns401WhenUnauthenticated() throws Exception {
+        mockMvc.perform(get("/api/travel-packages/1/reviews"))
+                .andExpect(status().isUnauthorized());
     }
 
-    private TravelPackage saveTravelPackage() {
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
-        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
-        return travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
-                .withHotel(hotel)
-                .withAgency(agency)
-                .build());
+    @Test
+    void getByTravelPackageId_returns403ForBuyer() throws Exception {
+        mockMvc.perform(get("/api/travel-packages/1/reviews")
+                        .with(user("buyer").roles("BUYER")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getByTravelPackageId_returns403ForAgency() throws Exception {
+        mockMvc.perform(get("/api/travel-packages/1/reviews")
+                        .with(user("agency").roles("AGENCY")))
+                .andExpect(status().isForbidden());
     }
 }

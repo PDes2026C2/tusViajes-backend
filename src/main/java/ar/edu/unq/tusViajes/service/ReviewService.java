@@ -45,17 +45,6 @@ public class ReviewService {
         return ReviewResponseDTO.from(reviewRepository.save(review));
     }
 
-    @Transactional
-    public ReviewResponseDTO update(Long buyerId, Long travelPackageId, ReviewRequestDTO dto) {
-        Buyer buyer = buyerService.getEntityById(buyerId);
-        TravelPackage travelPackage = travelPackageService.getEntityById(travelPackageId);
-        ensureFavorite(buyer, travelPackage);
-        Review review = reviewRepository.findByBuyerIdAndTravelPackageId(buyerId, travelPackageId)
-                .orElseThrow(() -> new IllegalArgumentException("Review not found for buyer and travel package"));
-        review.update(dto.score(), dto.comment());
-        return ReviewResponseDTO.from(review);
-    }
-
     @Transactional(readOnly = true)
     public List<ReviewResponseDTO> getByTravelPackageId(Long travelPackageId) {
         travelPackageService.getEntityById(travelPackageId);

@@ -10,7 +10,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     boolean existsByBuyerIdAndTravelPackageId(Long buyerId, Long travelPackageId);
 
-    java.util.Optional<Review> findByBuyerIdAndTravelPackageId(Long buyerId, Long travelPackageId);
-
     List<Review> findByTravelPackageIdOrderByCreatedAtDesc(Long travelPackageId);
 }
