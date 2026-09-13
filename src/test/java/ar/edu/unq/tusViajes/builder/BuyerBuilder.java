@@ -4,12 +4,12 @@ import ar.edu.unq.tusViajes.model.Buyer;
 
 public class BuyerBuilder {
 
-    private String firstName = "Lucas";
-    private String lastName = "Gomez";
-    private String email = "lucas@example.com";
+    private String firstName = "FirstName";
+    private String lastName = "LastName";
+    private String email = "buyer@example.com";
     private String passwordHash = "$2a$10$hashedPasswordPlaceholder";
     private String phoneNumber = "11223344";
-    private String nationalId = "38123456";
+    private String nationalId = "12345678";
 
     public static BuyerBuilder aBuyer() {
         return new BuyerBuilder();

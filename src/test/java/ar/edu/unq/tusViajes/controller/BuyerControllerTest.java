@@ -2,7 +2,6 @@ package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
 import ar.edu.unq.tusViajes.builder.BuyerBuilder;
-import ar.edu.unq.tusViajes.builder.CustomUserDetailsBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
 import ar.edu.unq.tusViajes.model.Agency;
@@ -13,6 +12,7 @@ import ar.edu.unq.tusViajes.repository.AgencyRepository;
 import ar.edu.unq.tusViajes.repository.BuyerRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
 import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
+import ar.edu.unq.tusViajes.security.CustomUserDetails;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -144,11 +144,8 @@ class BuyerControllerTest {
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).build());
 
         mockMvc.perform(post("/api/buyers/favorites/" + travelPackage.getId())
-                        .with(user(CustomUserDetailsBuilder.aUserDetails()
-                                .withId(buyer.getId())
-                                .withEmail(buyer.getEmail())
-                                .withAuthorities(createAuthorityList("ROLE_BUYER"))
-                                .build())))
+                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
+                                createAuthorityList("ROLE_BUYER"), true))))
                 .andExpect(status().isOk());
 
         Buyer updatedBuyer = buyerRepository.findById(buyer.getId()).orElseThrow();
@@ -175,11 +172,8 @@ class BuyerControllerTest {
         buyer = buyerRepository.save(buyer);
 
         mockMvc.perform(delete("/api/buyers/favorites/" + travelPackage.getId())
-                        .with(user(CustomUserDetailsBuilder.aUserDetails()
-                                .withId(buyer.getId())
-                                .withEmail(buyer.getEmail())
-                                .withAuthorities(createAuthorityList("ROLE_BUYER"))
-                                .build())))
+                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
+                                createAuthorityList("ROLE_BUYER"), true))))
                 .andExpect(status().isNoContent());
 
         Buyer updatedBuyer = buyerRepository.findById(buyer.getId()).orElseThrow();
@@ -206,13 +200,10 @@ class BuyerControllerTest {
         buyer = buyerRepository.save(buyer);
 
         mockMvc.perform(get("/api/buyers/favorites")
-                        .with(user(CustomUserDetailsBuilder.aUserDetails()
-                                .withId(buyer.getId())
-                                .withEmail(buyer.getEmail())
-                                .withAuthorities(createAuthorityList("ROLE_BUYER"))
-                                .build())))
+                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
+                                createAuthorityList("ROLE_BUYER"), true))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(travelPackage.getId()))
                 .andExpect(jsonPath("$[0].name").value("Ushuaia Invierno"));
-    }
+        }
 }
