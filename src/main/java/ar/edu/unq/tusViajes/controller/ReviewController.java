@@ -1,8 +1,11 @@
 package ar.edu.unq.tusViajes.controller;
 
 import java.net.URI;
-import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,8 +30,10 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @GetMapping
-    public ResponseEntity<List<ReviewResponseDTO>> getByTravelPackageId(@PathVariable Long travelPackageId) {
-        return ResponseEntity.ok(reviewService.getByTravelPackageId(travelPackageId));
+    public ResponseEntity<Page<ReviewResponseDTO>> getByTravelPackageId(
+            @PathVariable Long travelPackageId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(reviewService.getByTravelPackageId(travelPackageId, pageable));
     }
 
     @PostMapping

@@ -74,16 +74,16 @@ class ReviewControllerTest {
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":5,\"comment\":\"Excellent\"}"))
+                        .content("{\"score\":9,\"comment\":\"Excellent\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
-                .andExpect(jsonPath("$.score").value(5))
+                .andExpect(jsonPath("$.score").value(9))
                 .andExpect(jsonPath("$.comment").value("Excellent"))
                 .andExpect(jsonPath("$.buyerId").value(buyer.getId()));
     }
 
     @Test
-        void create_returns400WhenScoreIsGreaterThan5() throws Exception {
+        void create_returns400WhenScoreIsGreaterThan10() throws Exception {
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
@@ -98,7 +98,7 @@ class ReviewControllerTest {
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":6}"))
+                        .content("{\"score\":11}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -206,14 +206,16 @@ class ReviewControllerTest {
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":3,\"comment\":\"Good\"}"))
+                        .content("{\"score\":7,\"comment\":\"Good\"}"))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/travel-packages/" + travelPackage.getId() + "/reviews")
                         .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].score").value(3))
-                .andExpect(jsonPath("$[0].comment").value("Good"));
+                .andExpect(jsonPath("$.content[0].score").value(7))
+                .andExpect(jsonPath("$.content[0].comment").value("Good"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
     }
 
     @Test
