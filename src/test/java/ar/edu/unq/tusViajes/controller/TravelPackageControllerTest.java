@@ -62,8 +62,10 @@ class TravelPackageControllerTest {
 
         mockMvc.perform(get("/api/travel-packages"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").isNotEmpty())
-                .andExpect(jsonPath("$[0].name").value("Bariloche 7d"));
+                .andExpect(jsonPath("$.content[0].id").isNotEmpty())
+                .andExpect(jsonPath("$.content[0].name").value("Bariloche 7d"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
     }
 
     @Test
