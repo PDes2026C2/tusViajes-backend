@@ -20,24 +20,24 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/travel-packages/{travelPackageId}/reviews")
+@RequestMapping("/api/reviews")
 @RequiredArgsConstructor
 public class ReviewController {
 
     private final ReviewService reviewService;
 
-    @GetMapping
+    @GetMapping("/{travelPackageId}")
     public ResponseEntity<List<ReviewResponseDTO>> getByTravelPackageId(@PathVariable Long travelPackageId) {
         return ResponseEntity.ok(reviewService.getByTravelPackageId(travelPackageId));
     }
 
-    @PostMapping
+    @PostMapping("/{travelPackageId}")
     public ResponseEntity<ReviewResponseDTO> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long travelPackageId,
             @Valid @RequestBody ReviewRequestDTO dto) {
-        ReviewResponseDTO created = reviewService.create(userDetails.getId(), travelPackageId, dto);
-        return ResponseEntity.created(URI.create("/api/travel-packages/" + travelPackageId + "/reviews/" + created.id()))
+        ReviewResponseDTO created = reviewService.create(userDetails, travelPackageId, dto);
+        return ResponseEntity.created(URI.create("/api/reviews/" + travelPackageId + created.id()))
                 .body(created);
     }
 

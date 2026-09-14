@@ -3,14 +3,8 @@ package ar.edu.unq.tusViajes.model;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.Table;
+import ar.edu.unq.tusViajes.exception.ReviewNotAllowedException;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -42,6 +36,14 @@ public class Buyer extends User {
     )
     private Set<TravelPackage> favoriteTravelPackages = new HashSet<>();
 
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "buyer_travel_packages_purchased",
+            joinColumns = @JoinColumn(name = "buyer_id"),
+            inverseJoinColumns = @JoinColumn(name = "purchase_id")
+    )
+    private Set<Purchase> travelPackagesPurchased = new HashSet<>();
+
     public Buyer(String firstName, String lastName, String email,
                  String passwordHash, String phoneNumber, String nationalId) {
         super(email, passwordHash);
@@ -49,6 +51,11 @@ public class Buyer extends User {
         this.lastName = lastName;
         this.phoneNumber = phoneNumber;
         this.nationalId = nationalId;
+    }
+
+    public void buy(TravelPackage travelPackage) {
+        Purchase purchase = new Purchase(travelPackage);
+        this.travelPackagesPurchased.add(purchase);
     }
 
     public void addFavorite(TravelPackage travelPackage) {
@@ -68,4 +75,21 @@ public class Buyer extends User {
     public String getVisualIdentifier() {
         return firstName + " " + lastName;
     }
+
+    public boolean hasAcquired(TravelPackage travelPackage) {
+        return this.travelPackagesPurchased.stream()
+                .anyMatch(purchase -> purchase.getTravelPackage() != null
+                        && travelPackage.equals(purchase.getTravelPackage()));
+    }
+
+
+    public void ensureCanReview(TravelPackage travelPackage) {
+        if (!hasAcquired(travelPackage)) {
+            throw new ReviewNotAllowedException("Buyer didn't purchase this travel package yet");
+        }
+        if (!travelPackage.hasEnded()) {
+            throw new ReviewNotAllowedException("Can't review a travel package before end date.");
+        }
+    }
+
 }

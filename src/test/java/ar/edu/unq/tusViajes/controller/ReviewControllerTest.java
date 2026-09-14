@@ -1,9 +1,6 @@
 package ar.edu.unq.tusViajes.controller;
 
-import ar.edu.unq.tusViajes.builder.AgencyBuilder;
-import ar.edu.unq.tusViajes.builder.BuyerBuilder;
-import ar.edu.unq.tusViajes.builder.HotelBuilder;
-import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
+import ar.edu.unq.tusViajes.builder.*;
 import ar.edu.unq.tusViajes.model.Agency;
 import ar.edu.unq.tusViajes.model.Buyer;
 import ar.edu.unq.tusViajes.model.Hotel;
@@ -24,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.time.LocalDateTime;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.core.authority.AuthorityUtils.createAuthorityList;
@@ -60,17 +59,18 @@ class ReviewControllerTest {
 
     @Test
     void create_returns201WithReview() throws Exception {
-        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
-                .build());;
-        buyer.addFavorite(travelPackage);
+                .withEndDate(LocalDateTime.now().minusDays(7))
+                .build());
+        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
+        buyer.buy(travelPackage);
         buyerRepository.save(buyer);
 
-        mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
+        mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -84,17 +84,17 @@ class ReviewControllerTest {
 
     @Test
         void create_returns400WhenScoreIsGreaterThan5() throws Exception {
-        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
-                .build());;
-        buyer.addFavorite(travelPackage);
+                .build());
+        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
+        buyer.buy(travelPackage);
         buyerRepository.save(buyer);
 
-        mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
+        mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -104,17 +104,18 @@ class ReviewControllerTest {
 
     @Test
     void create_returns201WithScoreOnly() throws Exception {
-        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withEndDate(LocalDateTime.now().minusDays(7))
                 .build());
-        buyer.addFavorite(travelPackage);
+        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
+        buyer.buy(travelPackage);
         buyerRepository.save(buyer);
 
-        mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
+        mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -126,17 +127,18 @@ class ReviewControllerTest {
 
     @Test
         void create_returns400WhenScoreIsMissing() throws Exception {
-        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
-                .build());;
-        buyer.addFavorite(travelPackage);
+                .withEndDate(LocalDateTime.now().minusDays(7))
+                .build());
+        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
+        buyer.buy(travelPackage);
         buyerRepository.save(buyer);
 
-        mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
+        mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -146,17 +148,18 @@ class ReviewControllerTest {
 
     @Test
     void create_returns400WhenScoreAndCommentAreMissing() throws Exception {
-        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
-                .build());;
-        buyer.addFavorite(travelPackage);
+                .withEndDate(LocalDateTime.now().minusDays(7))
+                .build());
+        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
+        buyer.buy(travelPackage);
         buyerRepository.save(buyer);
 
-        mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
+        mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -165,16 +168,17 @@ class ReviewControllerTest {
     }
 
     @Test
-    void create_returns403WhenPackageIsNotFavorite() throws Exception {
-        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
+    void create_returns403WhenPackageIsNotAcquired() throws Exception {
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
-                .build());;
+                .withEndDate(LocalDateTime.now().minusDays(7))
+                .build());
+        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
 
-        mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
+        mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -184,7 +188,7 @@ class ReviewControllerTest {
 
     @Test
     void create_returns401WhenUnauthenticated() throws Exception {
-        mockMvc.perform(post("/api/travel-packages/1/reviews")
+        mockMvc.perform(post("/api/reviews/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"score\":4}"))
                 .andExpect(status().isUnauthorized());
@@ -197,19 +201,20 @@ class ReviewControllerTest {
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
-                .build());;
+                .withEndDate(LocalDateTime.now().minusDays(7))
+                .build());
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
-                buyer.addFavorite(travelPackage);
-                buyerRepository.save(buyer);
+        buyer.buy(travelPackage);
+        buyerRepository.save(buyer);
 
-        mockMvc.perform(post("/api/travel-packages/" + travelPackage.getId() + "/reviews")
+        mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"score\":3,\"comment\":\"Good\"}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/travel-packages/" + travelPackage.getId() + "/reviews")
+        mockMvc.perform(get("/api/reviews/" + travelPackage.getId())
                         .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].score").value(3))
@@ -218,20 +223,20 @@ class ReviewControllerTest {
 
     @Test
     void getByTravelPackageId_returns401WhenUnauthenticated() throws Exception {
-        mockMvc.perform(get("/api/travel-packages/1/reviews"))
+        mockMvc.perform(get("/api/reviews/1"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void getByTravelPackageId_returns403ForBuyer() throws Exception {
-        mockMvc.perform(get("/api/travel-packages/1/reviews")
+        mockMvc.perform(get("/api/reviews/1")
                         .with(user("buyer").roles("BUYER")))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void getByTravelPackageId_returns403ForAgency() throws Exception {
-        mockMvc.perform(get("/api/travel-packages/1/reviews")
+        mockMvc.perform(get("/api/reviews/1")
                         .with(user("agency").roles("AGENCY")))
                 .andExpect(status().isForbidden());
     }
