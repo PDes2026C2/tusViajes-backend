@@ -46,14 +46,14 @@ public class FlightService {
     }
 
     public Flight toEntity(FlightDTO dto) {
-
-        Country originCountry = new Country(dto.originCity().country().isoCode(), dto.originCity().country().name());
-        City originCity = new City(dto.id(), dto.originCity().name(), originCountry);
-
-        Country destinationCountry = new Country(dto.destinationCity().country().isoCode(), dto.destinationCity().country().name());
-        City destinationCity = new City(dto.id(), dto.destinationCity().name(), destinationCountry);
-
-        return new Flight(dto.id(), dto.airline(), originCity, destinationCity, dto.departureDate(), dto.arrivalDate());
+        return new Flight(
+                dto.id(),
+                dto.airline(),
+                CityDTO.to(dto.originCity()),
+                CityDTO.to(dto.destinationCity()),
+                dto.departureDate(),
+                dto.arrivalDate()
+        );
     }
 
     public Flight getOrCreateFlight(Long flightId) {
