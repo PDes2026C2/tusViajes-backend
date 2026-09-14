@@ -1,9 +1,10 @@
 package ar.edu.unq.tusViajes.service;
 
+import ar.edu.unq.tusViajes.repository.CityRepository;
+import ar.edu.unq.tusViajes.repository.CountryRepository;
 import ar.edu.unq.tusViajes.adapters.dto.CityDTO;
 import ar.edu.unq.tusViajes.adapters.dto.CountryDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightDTO;
-import ar.edu.unq.tusViajes.builder.FlightBuilder;
 import ar.edu.unq.tusViajes.controller.dto.response.FlightResponseDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.City;
@@ -23,6 +24,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static ar.edu.unq.tusViajes.builder.CityBuilder.aCity;
+import static ar.edu.unq.tusViajes.builder.CountryBuilder.aCountry;
+import static ar.edu.unq.tusViajes.builder.FlightBuilder.aFlight;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -42,13 +46,23 @@ class FlightServiceTest {
     @Autowired
     private FlightRepository flightRepository;
 
+    @Autowired
+    private CityRepository cityRepository;
+
+    @Autowired
+    private CountryRepository countryRepository;
+
     @MockitoBean
     private FlightsApiService flightsApiService;
 
     @Test
     void getAll_returnsAllFlightsFromDatabase() {
-        Flight flight1 = flightRepository.save(FlightBuilder.aFlight().withId(1L).withAirline("Aerolíneas").build());
-        Flight flight2 = flightRepository.save(FlightBuilder.aFlight().withId(2L).withAirline("Flybondi").build());
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Flight flight1 = flightRepository.save(aFlight().withId(1L).withAirline("Aerolíneas").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight flight2 = flightRepository.save(aFlight().withId(2L).withAirline("Flybondi").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
 
         List<FlightResponseDTO> result = flightService.getAll();
 
@@ -58,7 +72,11 @@ class FlightServiceTest {
 
     @Test
     void getById_returnsFlightWhenExists() {
-        Flight flight = flightRepository.save(FlightBuilder.aFlight().withId(10L).withAirline("JetSMART").build());
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Flight flight = flightRepository.save(aFlight().withId(10L).withAirline("JetSMART").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
 
         FlightResponseDTO result = flightService.getById(10L);
 
@@ -75,7 +93,11 @@ class FlightServiceTest {
 
     @Test
     void getEntityById_returnsFlightEntity() {
-        Flight flight = flightRepository.save(FlightBuilder.aFlight().withId(20L).build());
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Flight flight = flightRepository.save(aFlight().withId(20L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
 
         Flight result = flightService.getEntityById(20L);
 
@@ -85,10 +107,14 @@ class FlightServiceTest {
 
     @Test
     void create_savesAndReturnsCreatedFlight() {
-        CountryDTO originCountry = new CountryDTO("AR", "Argentina");
-        CityDTO originCity = new CityDTO(1L, "Buenos Aires", originCountry);
-        CountryDTO destCountry = new CountryDTO("BR", "Brasil");
-        CityDTO destCity = new CityDTO(2L, "Rio de Janeiro", destCountry);
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        Country brasil = countryRepository.save(aCountry().withIsoCode("BR").withName("Brasil").build());
+        City rio = cityRepository.save(aCity().withName("Rio de Janeiro").withCountry(brasil).build());
+
+        CityDTO originCity = CityDTO.from(buenosAires);
+        CityDTO destCity = CityDTO.from(rio);
+
         LocalDateTime departure = LocalDateTime.now().plusDays(5);
         LocalDateTime arrival = LocalDateTime.now().plusDays(5).plusHours(3);
 
@@ -122,7 +148,11 @@ class FlightServiceTest {
 
     @Test
     void getOrCreateFlight_returnsExistingFlightWhenAlreadyInRepository() {
-        Flight saved = flightRepository.save(FlightBuilder.aFlight().withId(50L).withAirline("Aerolíneas").build());
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Flight saved = flightRepository.save(aFlight().withId(50L).withAirline("Aerolíneas").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
 
         Flight result = flightService.getOrCreateFlight(50L);
 
@@ -133,14 +163,15 @@ class FlightServiceTest {
 
     @Test
     void getOrCreateFlight_fetchesFromApiAndSavesWhenNotInRepository() {
-        CountryDTO originCountry = new CountryDTO("AR", "Argentina");
-        CityDTO originCity = new CityDTO(1L, "Buenos Aires", originCountry);
-        CountryDTO destCountry = new CountryDTO("AR", "Argentina");
-        CityDTO destCity = new CityDTO(2L, "Bariloche", destCountry);
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        Country spain = countryRepository.save(aCountry().withIsoCode("ES").withName("España").build());
+
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City madrid = cityRepository.save(aCity().withName("Madrid").withCountry(spain).build());
         LocalDateTime departure = LocalDateTime.now().plusDays(7);
         LocalDateTime arrival = LocalDateTime.now().plusDays(7).plusHours(2);
 
-        FlightDTO apiFlight = new FlightDTO(60L, "Flybondi", originCity, destCity, departure, arrival);
+        FlightDTO apiFlight = new FlightDTO(60L, "Flybondi", CityDTO.from(buenosAires), CityDTO.from(madrid), departure, arrival);
         when(flightsApiService.getFlight(60L)).thenReturn(apiFlight);
 
         Flight result = flightService.getOrCreateFlight(60L);
