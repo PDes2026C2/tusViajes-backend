@@ -1,12 +1,15 @@
 package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
+import ar.edu.unq.tusViajes.builder.FlightBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
 import ar.edu.unq.tusViajes.model.Agency;
+import ar.edu.unq.tusViajes.model.Flight;
 import ar.edu.unq.tusViajes.model.Hotel;
 import ar.edu.unq.tusViajes.model.TravelPackage;
 import ar.edu.unq.tusViajes.repository.AgencyRepository;
+import ar.edu.unq.tusViajes.repository.FlightRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
 import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
 import org.junit.jupiter.api.Test;
@@ -48,15 +51,22 @@ class TravelPackageControllerTest {
     @Autowired
     private AgencyRepository agencyRepository;
 
+    @Autowired
+    private FlightRepository flightRepository;
+
     @Test
     void getAll_returns200AndListOfTravelPackages() throws Exception {
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).build());
         
         TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
                 .withName("Bariloche 7d")
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(depFlight)
+                .withReturnFlight(retFlight)
                 .build();
         travelPackageRepository.save(travelPackage);
 
@@ -70,11 +80,15 @@ class TravelPackageControllerTest {
     void getById_returns200WhenExists() throws Exception {
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).build());
         
         TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
                 .withName("Bariloche 7d")
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(depFlight)
+                .withReturnFlight(retFlight)
                 .build();
         TravelPackage saved = travelPackageRepository.save(travelPackage);
 
@@ -100,7 +114,9 @@ class TravelPackageControllerTest {
                     "startDate": "2026-10-01T10:00:00",
                     "endDate": "2026-10-08T10:00:00",
                     "hotelId": 1,
-                    "agencyId": 1
+                    "agencyId": 1,
+                    "departureFlightId": 1,
+                    "returnFlightId": 2
                 }
                 """;
 
@@ -114,6 +130,8 @@ class TravelPackageControllerTest {
     void create_returns201AndLocationHeader() throws Exception {
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).build());
 
         String json = """
                 {
@@ -123,9 +141,11 @@ class TravelPackageControllerTest {
                     "startDate": "2026-10-01T10:00:00",
                     "endDate": "2026-10-08T10:00:00",
                     "hotelId": %d,
-                    "agencyId": %d
+                    "agencyId": %d,
+                    "departureFlightId": %d,
+                    "returnFlightId": %d
                 }
-                """.formatted(hotel.getId(), agency.getId());
+                """.formatted(hotel.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
 
         mockMvc.perform(post("/api/travel-packages")
                         .with(user("user"))
@@ -149,10 +169,14 @@ class TravelPackageControllerTest {
     void update_returns200_whenAuthenticated() throws Exception {
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).build());
 
         TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(depFlight)
+                .withReturnFlight(retFlight)
                 .build();
         TravelPackage saved = travelPackageRepository.save(travelPackage);
 
@@ -164,9 +188,11 @@ class TravelPackageControllerTest {
                     "startDate": "2026-11-01T10:00:00",
                     "endDate": "2026-11-10T10:00:00",
                     "hotelId": %d,
-                    "agencyId": %d
+                    "agencyId": %d,
+                    "departureFlightId": %d,
+                    "returnFlightId": %d
                 }
-                """.formatted(hotel.getId(), agency.getId());
+                """.formatted(hotel.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
 
         mockMvc.perform(put("/api/travel-packages/" + saved.getId())
                         .with(user("user"))
@@ -186,10 +212,14 @@ class TravelPackageControllerTest {
     void delete_returns204NoContent() throws Exception {
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).build());
         
         TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(depFlight)
+                .withReturnFlight(retFlight)
                 .build();
         TravelPackage saved = travelPackageRepository.save(travelPackage);
 

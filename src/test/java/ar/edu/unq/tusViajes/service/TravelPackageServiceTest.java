@@ -1,15 +1,18 @@
 package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
+import ar.edu.unq.tusViajes.builder.FlightBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
 import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Agency;
+import ar.edu.unq.tusViajes.model.Flight;
 import ar.edu.unq.tusViajes.model.Hotel;
 import ar.edu.unq.tusViajes.model.TravelPackage;
 import ar.edu.unq.tusViajes.repository.AgencyRepository;
+import ar.edu.unq.tusViajes.repository.FlightRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
 import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
 import org.junit.jupiter.api.Test;
@@ -48,12 +51,22 @@ class TravelPackageServiceTest {
     @Autowired
     private AgencyRepository agencyRepository;
 
+    @Autowired
+    private FlightRepository flightRepository;
+
     @Test
     void getAll_returnsAllAvailableTravelPackages() {
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
-        
-        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).build();
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).build());
+
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel)
+                .withAgency(agency)
+                .withDepartureFlight(depFlight)
+                .withReturnFlight(retFlight)
+                .build();
         travelPackageRepository.save(travelPackage);
 
         List<TravelPackageResponseDTO> result = travelPackageService.getAll();
@@ -66,8 +79,15 @@ class TravelPackageServiceTest {
     void getById_returnsTravelPackageWhenExists() {
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
-        
-        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).build();
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).build());
+
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel)
+                .withAgency(agency)
+                .withDepartureFlight(depFlight)
+                .withReturnFlight(retFlight)
+                .build();
         TravelPackage saved = travelPackageRepository.save(travelPackage);
 
         TravelPackageResponseDTO result = travelPackageService.getById(saved.getId());
@@ -87,11 +107,14 @@ class TravelPackageServiceTest {
     void create_savesAndReturnsTravelPackageWithHotelAndAgency() {
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).build());
 
         TravelPackageRequestDTO dto = new TravelPackageRequestDTO(
                 "Viaje a Cataratas", "All inclusive", 200000.0,
                 LocalDateTime.now().plusDays(5), LocalDateTime.now().plusDays(10),
-                hotel.getId(), agency.getId()
+                hotel.getId(), agency.getId(),
+                depFlight.getId(), retFlight.getId()
         );
 
         TravelPackageResponseDTO result = travelPackageService.create(dto);
