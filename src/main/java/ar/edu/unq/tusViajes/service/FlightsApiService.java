@@ -11,7 +11,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class FlightsService {
+public class FlightsApiService {
 
     private final FlightsApiClient flightsApiClient;
 
@@ -25,5 +25,9 @@ public class FlightsService {
 
     public FlightDTO sellFlight(Long flightId, PassengerDTO passenger) {
         return flightsApiClient.sellFlight(flightId, passenger);
+    }
+
+    public FlightDTO getFlight(Long flightId) {
+        return flightsApiClient.getFlight(flightId);
     }
 }

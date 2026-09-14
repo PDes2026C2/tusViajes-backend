@@ -1,22 +1,15 @@
 package ar.edu.unq.tusViajes.service;
 
-import ar.edu.unq.tusViajes.builder.AgencyBuilder;
-import ar.edu.unq.tusViajes.builder.BuyerBuilder;
-import ar.edu.unq.tusViajes.builder.HotelBuilder;
-import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
+import ar.edu.unq.tusViajes.repository.CityRepository;
+import ar.edu.unq.tusViajes.repository.CountryRepository;
+import ar.edu.unq.tusViajes.builder.*;
 import ar.edu.unq.tusViajes.controller.dto.request.BuyerRegistrationRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.BuyerResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
-import ar.edu.unq.tusViajes.model.Agency;
-import ar.edu.unq.tusViajes.model.Buyer;
-import ar.edu.unq.tusViajes.model.Hotel;
-import ar.edu.unq.tusViajes.model.TravelPackage;
-import ar.edu.unq.tusViajes.repository.AgencyRepository;
-import ar.edu.unq.tusViajes.repository.BuyerRepository;
-import ar.edu.unq.tusViajes.repository.HotelRepository;
-import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
+import ar.edu.unq.tusViajes.model.*;
+import ar.edu.unq.tusViajes.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,6 +21,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 
+import static ar.edu.unq.tusViajes.builder.CityBuilder.aCity;
+import static ar.edu.unq.tusViajes.builder.CountryBuilder.aCountry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -54,6 +49,17 @@ class BuyerServiceTest {
 
     @Autowired
     private AgencyRepository agencyRepository;
+
+    @Autowired
+    private FlightRepository flightRepository;
+
+    @Autowired
+    private CityRepository cityRepository;
+
+    @Autowired
+    private CountryRepository countryRepository;
+
+
 
     @Test
     void getAll_returnsAllBuyers() {
@@ -118,11 +124,17 @@ class BuyerServiceTest {
 
     @Test
     void addFavorite_associatesPackageToBuyer() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
 
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
-        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).build());
+        Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).withDepartureFlight(departureFlight).withReturnFlight(returnFlight).build());
 
         buyerService.addFavorite(buyer.getId(), travelPackage.getId());
 
@@ -133,10 +145,16 @@ class BuyerServiceTest {
 
     @Test
     void removeFavorite_disassociatesPackageFromBuyer() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
-        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).build());
+        Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).withDepartureFlight(departureFlight).withReturnFlight(returnFlight).build());
 
         buyer.addFavorite(travelPackage);
         buyer = buyerRepository.save(buyer);
@@ -149,10 +167,16 @@ class BuyerServiceTest {
 
     @Test
     void getFavorites_returnsListOfTravelPackageResponseDTOs() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
-        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withName("Promo Bariloche").withHotel(hotel).withAgency(agency).build());
+        Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withName("Promo Bariloche").withHotel(hotel).withAgency(agency).withDepartureFlight(departureFlight).withReturnFlight(returnFlight).build());
 
         buyer.addFavorite(travelPackage);
         buyerRepository.save(buyer);

@@ -1,18 +1,10 @@
 package ar.edu.unq.tusViajes.controller;
 
-import ar.edu.unq.tusViajes.builder.AgencyBuilder;
-import ar.edu.unq.tusViajes.builder.BuyerBuilder;
-import ar.edu.unq.tusViajes.builder.HotelBuilder;
-import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
-import ar.edu.unq.tusViajes.model.Agency;
-import ar.edu.unq.tusViajes.model.Buyer;
-import ar.edu.unq.tusViajes.model.Hotel;
-import ar.edu.unq.tusViajes.model.TravelPackage;
-import ar.edu.unq.tusViajes.repository.AgencyRepository;
-import ar.edu.unq.tusViajes.repository.BuyerRepository;
-import ar.edu.unq.tusViajes.repository.HotelRepository;
-import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
-import ar.edu.unq.tusViajes.security.CustomUserDetails;
+import ar.edu.unq.tusViajes.repository.CityRepository;
+import ar.edu.unq.tusViajes.repository.CountryRepository;
+import ar.edu.unq.tusViajes.builder.*;
+import ar.edu.unq.tusViajes.model.*;
+import ar.edu.unq.tusViajes.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,10 +17,14 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import static ar.edu.unq.tusViajes.builder.CityBuilder.aCity;
+import static ar.edu.unq.tusViajes.builder.CountryBuilder.aCountry;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.core.authority.AuthorityUtils.createAuthorityList;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -57,6 +53,17 @@ class BuyerControllerTest {
 
     @Autowired
     private AgencyRepository agencyRepository;
+
+    @Autowired
+    private FlightRepository flightRepository;
+
+    @Autowired
+    private CityRepository cityRepository;
+
+    @Autowired
+    private CountryRepository countryRepository;
+
+
 
     @Test
     void getAll_returns401_whenUnauthenticated() throws Exception {
@@ -135,17 +142,27 @@ class BuyerControllerTest {
 
     @Test
     void addFavorite_returns200Ok() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer()
                         .withFirstName("Lucas")
                         .withEmail("lucas@example.com")
                         .build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
-        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).build());
+        Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).withDepartureFlight(departureFlight).withReturnFlight(returnFlight).build());
 
         mockMvc.perform(post("/api/buyers/favorites/" + travelPackage.getId())
-                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
-                                createAuthorityList("ROLE_BUYER"), true))))
+                        .with(user(CustomUserDetailsBuilder.aUserDetails()
+                                .withId(buyer.getId())
+                                .withEmail(buyer.getEmail())
+                                .withAuthorities(createAuthorityList("ROLE_BUYER"))
+                                .build())))
                 .andExpect(status().isOk());
 
         Buyer updatedBuyer = buyerRepository.findById(buyer.getId()).orElseThrow();
@@ -160,20 +177,29 @@ class BuyerControllerTest {
 
     @Test
     void removeFavorite_returns204NoContent() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
         Buyer buyer = BuyerBuilder.aBuyer()
                         .withFirstName("Lucas")
                         .withEmail("lucas@example.com")
                         .build();
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
-        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).build());
+        Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).withDepartureFlight(departureFlight).withReturnFlight(returnFlight).build());
 
         buyer.addFavorite(travelPackage);
         buyer = buyerRepository.save(buyer);
 
         mockMvc.perform(delete("/api/buyers/favorites/" + travelPackage.getId())
-                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
-                                createAuthorityList("ROLE_BUYER"), true))))
+                        .with(user(CustomUserDetailsBuilder.aUserDetails()
+                                .withId(buyer.getId())
+                                .withEmail(buyer.getEmail())
+                                .withAuthorities(createAuthorityList("ROLE_BUYER"))
+                                .build())))
                 .andExpect(status().isNoContent());
 
         Buyer updatedBuyer = buyerRepository.findById(buyer.getId()).orElseThrow();
@@ -188,22 +214,31 @@ class BuyerControllerTest {
 
     @Test
     void getFavorites_returns200AndListOfPackages() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
         Buyer buyer = BuyerBuilder.aBuyer()
                         .withFirstName("Lucas")
                         .withEmail("lucas@example.com")
                         .build();
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
-        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withName("Ushuaia Invierno").withHotel(hotel).withAgency(agency).build());
+        Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+        TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withName("Ushuaia Invierno").withHotel(hotel).withAgency(agency).withDepartureFlight(departureFlight).withReturnFlight(returnFlight).build());
 
         buyer.addFavorite(travelPackage);
         buyer = buyerRepository.save(buyer);
 
         mockMvc.perform(get("/api/buyers/favorites")
-                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
-                                createAuthorityList("ROLE_BUYER"), true))))
+                        .with(user(CustomUserDetailsBuilder.aUserDetails()
+                                .withId(buyer.getId())
+                                .withEmail(buyer.getEmail())
+                                .withAuthorities(createAuthorityList("ROLE_BUYER"))
+                                .build())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(travelPackage.getId()))
                 .andExpect(jsonPath("$[0].name").value("Ushuaia Invierno"));
-        }
+    }
 }
