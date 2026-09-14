@@ -66,4 +66,16 @@ class FlightsApiServiceTest {
         assertThat(result).isEqualTo(flight);
         verify(flightsApiClient).sellFlight(1L, passenger);
     }
+
+    @Test
+    void getFlight_delegatesToClient() {
+        FlightDTO flight = new FlightDTO(1L, "Aerolíneas Argentinas", null, null, LocalDateTime.parse("2026-10-15T08:00"), LocalDateTime.parse("2026-10-15T21:00"));
+
+        when(flightsApiClient.getFlight(1L)).thenReturn(flight);
+
+        FlightDTO result = flightsApiService.getFlight(1L);
+
+        assertThat(result).isEqualTo(flight);
+        verify(flightsApiClient).getFlight(1L);
+    }
 }

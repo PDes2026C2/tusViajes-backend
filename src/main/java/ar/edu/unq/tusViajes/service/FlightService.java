@@ -9,6 +9,7 @@ import ar.edu.unq.tusViajes.repository.FlightRepository;
 import ar.edu.unq.tusViajes.validator.EntityValidator;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,20 +59,26 @@ public class FlightService {
     }
 
     public Flight getOrCreateFlight(Long flightId) {
-        if (!flightRepository.existsById(flightId)) {
-            FlightDTO flightDTO = flightsApiService.getFlight(flightId);
+        return flightRepository.findById(flightId)
+                .orElseGet(() -> {
+                    FlightDTO flightDTO = flightsApiService.getFlight(flightId);
 
-            City originCity = entityManager.getReference(City.class, flightDTO.originCity().id());
-            City destinationCity = entityManager.getReference(City.class, flightDTO.destinationCity().id());
+                    City originCity = entityManager.getReference(City.class, flightDTO.originCity().id());
+                    City destinationCity = entityManager.getReference(City.class, flightDTO.destinationCity().id());
 
-            return flightRepository.save(new Flight(
-                    flightDTO.id(),
-                    flightDTO.airline(),
-                    originCity,
-                    destinationCity,
-                    flightDTO.departureDate(),
-                    flightDTO.arrivalDate()));
-        }
-        return this.getEntityById(flightId);
+                    Flight flight = new Flight(
+                            flightDTO.id(),
+                            flightDTO.airline(),
+                            originCity,
+                            destinationCity,
+                            flightDTO.departureDate(),
+                            flightDTO.arrivalDate());
+
+                    try {
+                        return flightRepository.saveAndFlush(flight);
+                    } catch (DataIntegrityViolationException e) {
+                        return getEntityById(flightId);
+                    }
+                });
     }
 }
