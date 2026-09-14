@@ -70,4 +70,12 @@ public class FlightsApiClient {
                 .retrieve()
                 .body(FlightDTO.class);
     }
+
+    public FlightDTO getFlight(Long flightId) {
+        return restClient.get()
+                .uri("/flights/{id}", flightId)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .body(FlightDTO.class);
+    }
 }
