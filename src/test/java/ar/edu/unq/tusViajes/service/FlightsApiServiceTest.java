@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,24 +20,24 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class FlightsServiceTest {
+class FlightsApiServiceTest {
 
     @Mock
     private FlightsApiClient flightsApiClient;
 
     @InjectMocks
-    private FlightsService flightsService;
+    private FlightsApiService flightsApiService;
 
     @Test
     void searchFlights_callsClientAndReturnsFlights() {
         CountryDTO country = new CountryDTO("AR", "Argentina");
         CityDTO origin = new CityDTO(1L, "Buenos Aires", country);
         CityDTO destination = new CityDTO(2L, "Madrid", new CountryDTO("ES", "España"));
-        FlightDTO flight = new FlightDTO(1L, "Aerolíneas Argentinas", origin, destination, "2026-10-15T08:00", "2026-10-15T21:00");
+        FlightDTO flight = new FlightDTO(1L, "Aerolíneas Argentinas", origin, destination, LocalDateTime.parse("2026-10-15T08:00"), LocalDateTime.parse("2026-10-15T21:00"));
 
         when(flightsApiClient.searchFlights()).thenReturn(List.of(flight));
 
-        List<FlightDTO> result = flightsService.searchFlights();
+        List<FlightDTO> result = flightsApiService.searchFlights();
 
         assertThat(result).containsExactly(flight);
         verify(flightsApiClient).searchFlights();
@@ -47,7 +48,7 @@ class FlightsServiceTest {
         FlightFilterDTO filter = FlightFilterDTO.empty();
         when(flightsApiClient.searchFlights(filter, 0, 10)).thenReturn(List.of());
 
-        List<FlightDTO> result = flightsService.searchFlights(filter, 0, 10);
+        List<FlightDTO> result = flightsApiService.searchFlights(filter, 0, 10);
 
         assertThat(result).isEmpty();
         verify(flightsApiClient).searchFlights(filter, 0, 10);
@@ -56,13 +57,25 @@ class FlightsServiceTest {
     @Test
     void sellFlight_delegatesToClient() {
         PassengerDTO passenger = new PassengerDTO(12345678, "Lionel", "Messi");
-        FlightDTO flight = new FlightDTO(1L, "Aerolíneas Argentinas", null, null, "2026-10-15T08:00", "2026-10-15T21:00");
+        FlightDTO flight = new FlightDTO(1L, "Aerolíneas Argentinas", null, null, LocalDateTime.parse("2026-10-15T08:00"), LocalDateTime.parse("2026-10-15T21:00"));
 
         when(flightsApiClient.sellFlight(1L, passenger)).thenReturn(flight);
 
-        FlightDTO result = flightsService.sellFlight(1L, passenger);
+        FlightDTO result = flightsApiService.sellFlight(1L, passenger);
 
         assertThat(result).isEqualTo(flight);
         verify(flightsApiClient).sellFlight(1L, passenger);
+    }
+
+    @Test
+    void getFlight_delegatesToClient() {
+        FlightDTO flight = new FlightDTO(1L, "Aerolíneas Argentinas", null, null, LocalDateTime.parse("2026-10-15T08:00"), LocalDateTime.parse("2026-10-15T21:00"));
+
+        when(flightsApiClient.getFlight(1L)).thenReturn(flight);
+
+        FlightDTO result = flightsApiService.getFlight(1L);
+
+        assertThat(result).isEqualTo(flight);
+        verify(flightsApiClient).getFlight(1L);
     }
 }
