@@ -56,7 +56,7 @@ public class TravelPackage {
     private Flight returnFlight;
 
     public TravelPackage(String name, String description, Double price, LocalDateTime startDate,
-                         LocalDateTime endDate, Hotel hotel, Agency agency) {
+                         LocalDateTime endDate, Hotel hotel, Agency agency, Flight departureFlight, Flight returnFlight) {
         this.name = name;
         this.description = description;
         this.price = price;
@@ -64,10 +64,12 @@ public class TravelPackage {
         this.endDate = endDate;
         this.hotel = hotel;
         this.agency = agency;
+        this.departureFlight = departureFlight;
+        this.returnFlight = returnFlight;
     }
 
     public void updateData(String name, String description, Double price, LocalDateTime startDate,
-                           LocalDateTime endDate, Hotel hotel, Agency agency) {
+                           LocalDateTime endDate, Hotel hotel, Agency agency, Flight departureFlight, Flight returnFlight) {
         this.name = name;
         this.description = description;
         this.price = price;
@@ -75,5 +77,7 @@ public class TravelPackage {
         this.endDate = endDate;
         this.hotel = hotel;
         this.agency = agency;
+        this.departureFlight = departureFlight;
+        this.returnFlight = returnFlight;
     }
 }

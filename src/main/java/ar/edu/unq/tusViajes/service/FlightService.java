@@ -1,5 +1,6 @@
 package ar.edu.unq.tusViajes.service;
 
+import ar.edu.unq.tusViajes.adapters.dto.CityDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.FlightResponseDTO;
 import ar.edu.unq.tusViajes.model.City;
@@ -11,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,6 +21,7 @@ public class FlightService {
 
     private final EntityValidator entityValidator;
     private final FlightRepository flightRepository;
+    private final FlightsApiService flightsApiService;
 
     @Transactional(readOnly = true)
     public List<FlightResponseDTO> getAll() {
@@ -53,5 +54,19 @@ public class FlightService {
         City destinationCity = new City(dto.id(), dto.destinationCity().name(), destinationCountry);
 
         return new Flight(dto.id(), dto.airline(), originCity, destinationCity, dto.departureDate(), dto.arrivalDate());
+    }
+
+    public Flight getOrCreateFlight(Long flightId) {
+        if (!flightRepository.existsById(flightId)) {
+            FlightDTO flightDTO = flightsApiService.getFlight(flightId);
+            return flightRepository.save(new Flight(
+                    flightDTO.id(),
+                    flightDTO.airline(),
+                    CityDTO.to(flightDTO.originCity()),
+                    CityDTO.to(flightDTO.destinationCity()),
+                    flightDTO.departureDate(),
+                    flightDTO.arrivalDate()));
+        }
+        return this.getEntityById(flightId);
     }
 }

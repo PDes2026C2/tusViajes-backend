@@ -4,6 +4,7 @@ import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Agency;
+import ar.edu.unq.tusViajes.model.Flight;
 import ar.edu.unq.tusViajes.model.Hotel;
 import ar.edu.unq.tusViajes.model.TravelPackage;
 import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
@@ -21,6 +22,7 @@ public class TravelPackageService {
     private final TravelPackageRepository travelPackageRepository;
     private final HotelService hotelService;
     private final AgencyService agencyService;
+    private final FlightService flightService;
 
     @Transactional(readOnly = true)
     public List<TravelPackageResponseDTO> getAll() {
@@ -39,6 +41,9 @@ public class TravelPackageService {
         Hotel hotel = hotelService.getEntityById(dto.getHotelId());
         Agency agency = agencyService.getEntityById(dto.getAgencyId());
 
+        Flight departureFlight = flightService.getOrCreateFlight(dto.getDepartureFlightId());
+        Flight returnFlight = flightService.getOrCreateFlight(dto.getReturnFlightId());
+
         TravelPackage travelPackage = new TravelPackage(
                 dto.getName(),
                 dto.getDescription(),
@@ -46,7 +51,9 @@ public class TravelPackageService {
                 dto.getStartDate(),
                 dto.getEndDate(),
                 hotel,
-                agency
+                agency,
+                departureFlight,
+                returnFlight
         );
         return TravelPackageResponseDTO.from(travelPackageRepository.save(travelPackage));
     }
@@ -56,6 +63,8 @@ public class TravelPackageService {
         TravelPackage travelPackage = getEntityById(id);
         Hotel hotel = hotelService.getEntityById(dto.getHotelId());
         Agency agency = agencyService.getEntityById(dto.getAgencyId());
+        Flight departureFlight = flightService.getOrCreateFlight(dto.getDepartureFlightId());
+        Flight returnFlight = flightService.getOrCreateFlight(dto.getReturnFlightId());
 
         travelPackage.updateData(
                 dto.getName(),
@@ -64,7 +73,9 @@ public class TravelPackageService {
                 dto.getStartDate(),
                 dto.getEndDate(),
                 hotel,
-                agency
+                agency,
+                departureFlight,
+                returnFlight
         );
 
         return TravelPackageResponseDTO.from(travelPackageRepository.save(travelPackage));

@@ -17,4 +17,15 @@ public record CityDTO(
                 CountryDTO.from(city.getCountry())
         );
     }
+
+    public static City to(CityDTO cityDTO) {
+        if (cityDTO == null) {
+            return null;
+        }
+        return new City(
+                cityDTO.id(),
+                cityDTO.name(),
+                CountryDTO.to(cityDTO.country())
+        );
+    }
 }

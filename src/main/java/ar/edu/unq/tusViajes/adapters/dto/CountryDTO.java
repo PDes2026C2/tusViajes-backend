@@ -15,4 +15,13 @@ public record CountryDTO(
                 country.getName()
         );
     }
+    public static Country to(CountryDTO countryDTO) {
+        if (countryDTO == null) {
+            return null;
+        }
+        return new Country(
+                countryDTO.isoCode(),
+                countryDTO.name()
+        );
+    }
 }
