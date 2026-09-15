@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "travel_packages")
 @Getter
+@EqualsAndHashCode
 @NoArgsConstructor
 public class TravelPackage {
 
@@ -47,8 +49,16 @@ public class TravelPackage {
     @JoinColumn(name = "agency_id", nullable = false)
     private Agency agency;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "departure_flight_id", nullable = false)
+    private Flight departureFlight;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "return_flight_id", nullable = false)
+    private Flight returnFlight;
+
     public TravelPackage(String name, String description, Double price, LocalDateTime startDate,
-                         LocalDateTime endDate, Hotel hotel, Agency agency) {
+                         LocalDateTime endDate, Hotel hotel, Agency agency, Flight departureFlight, Flight returnFlight) {
         this.name = name;
         this.description = description;
         this.price = price;
@@ -56,10 +66,12 @@ public class TravelPackage {
         this.endDate = endDate;
         this.hotel = hotel;
         this.agency = agency;
+        this.departureFlight = departureFlight;
+        this.returnFlight = returnFlight;
     }
 
     public void updateData(String name, String description, Double price, LocalDateTime startDate,
-                           LocalDateTime endDate, Hotel hotel, Agency agency) {
+                           LocalDateTime endDate, Hotel hotel, Agency agency, Flight departureFlight, Flight returnFlight) {
         this.name = name;
         this.description = description;
         this.price = price;
@@ -67,5 +79,11 @@ public class TravelPackage {
         this.endDate = endDate;
         this.hotel = hotel;
         this.agency = agency;
+        this.departureFlight = departureFlight;
+        this.returnFlight = returnFlight;
+    }
+
+    public boolean hasEnded(){
+        return endDate.isBefore(LocalDateTime.now());
     }
 }

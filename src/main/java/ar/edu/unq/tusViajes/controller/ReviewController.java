@@ -1,7 +1,12 @@
 package ar.edu.unq.tusViajes.controller;
 
 import java.net.URI;
+import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,26 +28,26 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/travel-packages/{travelPackageId}/reviews")
+@RequestMapping("/api/reviews")
 @RequiredArgsConstructor
 public class ReviewController {
 
     private final ReviewService reviewService;
 
-    @GetMapping
+    @GetMapping("/{travelPackageId}")
     public ResponseEntity<Page<ReviewResponseDTO>> getByTravelPackageId(
             @PathVariable Long travelPackageId,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(reviewService.getByTravelPackageId(travelPackageId, pageable));
     }
 
-    @PostMapping
+    @PostMapping("/{travelPackageId}")
     public ResponseEntity<ReviewResponseDTO> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long travelPackageId,
             @Valid @RequestBody ReviewRequestDTO dto) {
-        ReviewResponseDTO created = reviewService.create(userDetails.getId(), travelPackageId, dto);
-        return ResponseEntity.created(URI.create("/api/travel-packages/" + travelPackageId + "/reviews/" + created.id()))
+        ReviewResponseDTO created = reviewService.create(userDetails, travelPackageId, dto);
+        return ResponseEntity.created(URI.create("/api/reviews/" + travelPackageId + created.id()))
                 .body(created);
     }
 

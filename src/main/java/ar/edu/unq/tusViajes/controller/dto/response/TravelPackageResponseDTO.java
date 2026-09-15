@@ -23,6 +23,9 @@ public class TravelPackageResponseDTO {
     private LocalDateTime endDate;
     private HotelResponseDTO hotel;
     private AgencyResponseDTO agency;
+    private FlightResponseDTO departureFlight;
+    private FlightResponseDTO arrivalFlight;
+
 
     public static TravelPackageResponseDTO from(TravelPackage travelPackage) {
         if (travelPackage == null) {
@@ -36,7 +39,9 @@ public class TravelPackageResponseDTO {
                 travelPackage.getStartDate(),
                 travelPackage.getEndDate(),
                 HotelResponseDTO.from(travelPackage.getHotel()),
-                AgencyResponseDTO.from(travelPackage.getAgency())
+                AgencyResponseDTO.from(travelPackage.getAgency()),
+                FlightResponseDTO.from(travelPackage.getDepartureFlight()),
+                FlightResponseDTO.from(travelPackage.getReturnFlight())
         );
     }
 }

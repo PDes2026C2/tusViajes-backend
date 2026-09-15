@@ -1,5 +1,9 @@
 package ar.edu.unq.tusViajes.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import ar.edu.unq.tusViajes.security.CustomUserDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -8,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ar.edu.unq.tusViajes.controller.dto.request.ReviewRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.ReviewResponseDTO;
 import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
-import ar.edu.unq.tusViajes.exception.ReviewNotAllowedException;
 import ar.edu.unq.tusViajes.model.Buyer;
 import ar.edu.unq.tusViajes.model.Review;
 import ar.edu.unq.tusViajes.model.TravelPackage;
@@ -23,7 +26,6 @@ public class ReviewService {
     private final TravelPackageService travelPackageService;
 
     public ReviewService(ReviewRepository reviewRepository,
-                         EntityValidator entityValidator,
                          BuyerService buyerService,
                          TravelPackageService travelPackageService) {
         this.reviewRepository = reviewRepository;
@@ -32,14 +34,15 @@ public class ReviewService {
     }
 
     @Transactional
-    public ReviewResponseDTO create(Long buyerId, Long travelPackageId, ReviewRequestDTO dto) {
+    public ReviewResponseDTO create(CustomUserDetails userDetails, Long travelPackageId, ReviewRequestDTO dto) {
+        Long buyerId = userDetails.getId();
         if (reviewRepository.existsByBuyerIdAndTravelPackageId(buyerId, travelPackageId)) {
             throw new DuplicateResourceException("Buyer already reviewed this travel package");
         }
 
         Buyer buyer = buyerService.getEntityById(buyerId);
         TravelPackage travelPackage = travelPackageService.getEntityById(travelPackageId);
-        ensureFavorite(buyer, travelPackage);
+        buyer.ensureCanReview(travelPackage);
         Review review = new Review(dto.score(), dto.comment(), buyer, travelPackage);
         return ReviewResponseDTO.from(reviewRepository.save(review));
     }
@@ -49,11 +52,5 @@ public class ReviewService {
         travelPackageService.getEntityById(travelPackageId);
         return reviewRepository.findByTravelPackageIdOrderByCreatedAtDesc(travelPackageId, pageable)
                 .map(ReviewResponseDTO::from);
-    }
-
-    private void ensureFavorite(Buyer buyer, TravelPackage travelPackage) {
-        if (!buyer.getFavoriteTravelPackages().contains(travelPackage)) {
-            throw new ReviewNotAllowedException();
-        }
     }
 }

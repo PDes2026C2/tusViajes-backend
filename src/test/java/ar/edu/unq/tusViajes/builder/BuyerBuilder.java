@@ -1,6 +1,10 @@
 package ar.edu.unq.tusViajes.builder;
 
 import ar.edu.unq.tusViajes.model.Buyer;
+import ar.edu.unq.tusViajes.model.Purchase;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class BuyerBuilder {
 
@@ -10,6 +14,7 @@ public class BuyerBuilder {
     private String passwordHash = "$2a$10$hashedPasswordPlaceholder";
     private String phoneNumber = "11223344";
     private String nationalId = "12345678";
+    private Set<Purchase> purchases = new HashSet<Purchase>();
 
     public static BuyerBuilder aBuyer() {
         return new BuyerBuilder();

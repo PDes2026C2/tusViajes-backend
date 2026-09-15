@@ -4,6 +4,7 @@ import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Agency;
+import ar.edu.unq.tusViajes.model.Flight;
 import ar.edu.unq.tusViajes.model.Hotel;
 import ar.edu.unq.tusViajes.model.TravelPackage;
 import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +22,8 @@ public class TravelPackageService {
     private final TravelPackageRepository travelPackageRepository;
     private final HotelService hotelService;
     private final AgencyService agencyService;
+    private final FlightService flightService;
+    private final TransactionTemplate transactionTemplate;
 
     @Transactional(readOnly = true)
     public Page<TravelPackageResponseDTO> search(Pageable pageable) {
@@ -31,40 +35,52 @@ public class TravelPackageService {
         return TravelPackageResponseDTO.from(getEntityById(id));
     }
 
-    @Transactional
     public TravelPackageResponseDTO create(TravelPackageRequestDTO dto) {
-        Hotel hotel = hotelService.getEntityById(dto.getHotelId());
-        Agency agency = agencyService.getEntityById(dto.getAgencyId());
+        Flight departureFlight = flightService.getOrCreateFlight(dto.getDepartureFlightId());
+        Flight returnFlight = flightService.getOrCreateFlight(dto.getReturnFlightId());
 
-        TravelPackage travelPackage = new TravelPackage(
-                dto.getName(),
-                dto.getDescription(),
-                dto.getPrice(),
-                dto.getStartDate(),
-                dto.getEndDate(),
-                hotel,
-                agency
-        );
-        return TravelPackageResponseDTO.from(travelPackageRepository.save(travelPackage));
+        return transactionTemplate.execute(status -> {
+            Hotel hotel = hotelService.getEntityById(dto.getHotelId());
+            Agency agency = agencyService.getEntityById(dto.getAgencyId());
+
+            TravelPackage travelPackage = new TravelPackage(
+                    dto.getName(),
+                    dto.getDescription(),
+                    dto.getPrice(),
+                    dto.getStartDate(),
+                    dto.getEndDate(),
+                    hotel,
+                    agency,
+                    departureFlight,
+                    returnFlight
+            );
+            return TravelPackageResponseDTO.from(travelPackageRepository.save(travelPackage));
+        });
     }
 
-    @Transactional
     public TravelPackageResponseDTO update(Long id, TravelPackageRequestDTO dto) {
-        TravelPackage travelPackage = getEntityById(id);
-        Hotel hotel = hotelService.getEntityById(dto.getHotelId());
-        Agency agency = agencyService.getEntityById(dto.getAgencyId());
+        Flight departureFlight = flightService.getOrCreateFlight(dto.getDepartureFlightId());
+        Flight returnFlight = flightService.getOrCreateFlight(dto.getReturnFlightId());
 
-        travelPackage.updateData(
-                dto.getName(),
-                dto.getDescription(),
-                dto.getPrice(),
-                dto.getStartDate(),
-                dto.getEndDate(),
-                hotel,
-                agency
-        );
+        return transactionTemplate.execute(status -> {
+            TravelPackage travelPackage = getEntityById(id);
+            Hotel hotel = hotelService.getEntityById(dto.getHotelId());
+            Agency agency = agencyService.getEntityById(dto.getAgencyId());
 
-        return TravelPackageResponseDTO.from(travelPackageRepository.save(travelPackage));
+            travelPackage.updateData(
+                    dto.getName(),
+                    dto.getDescription(),
+                    dto.getPrice(),
+                    dto.getStartDate(),
+                    dto.getEndDate(),
+                    hotel,
+                    agency,
+                    departureFlight,
+                    returnFlight
+            );
+
+            return TravelPackageResponseDTO.from(travelPackageRepository.save(travelPackage));
+        });
     }
 
     @Transactional
