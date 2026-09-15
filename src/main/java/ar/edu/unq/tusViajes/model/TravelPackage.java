@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "travel_packages")
 @Getter
+@EqualsAndHashCode
 @NoArgsConstructor
 public class TravelPackage {
 
@@ -79,5 +81,9 @@ public class TravelPackage {
         this.agency = agency;
         this.departureFlight = departureFlight;
         this.returnFlight = returnFlight;
+    }
+
+    public boolean hasEnded(){
+        return endDate.isBefore(LocalDateTime.now());
     }
 }
