@@ -3,7 +3,6 @@ package ar.edu.unq.tusViajes.service;
 import ar.edu.unq.tusViajes.repository.CityRepository;
 import ar.edu.unq.tusViajes.repository.CountryRepository;
 import ar.edu.unq.tusViajes.builder.*;
-import ar.edu.unq.tusViajes.controller.dto.request.BuyerRegistrationRequestDTO;
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
 import ar.edu.unq.tusViajes.builder.BuyerBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
@@ -101,7 +100,7 @@ class BuyerServiceTest {
 
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
 
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
@@ -121,7 +120,7 @@ class BuyerServiceTest {
         City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
 
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
@@ -143,7 +142,7 @@ class BuyerServiceTest {
         City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
 
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());

@@ -2,6 +2,7 @@ package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
+import ar.edu.unq.tusViajes.exception.InvalidTravelPackageException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Agency;
 import ar.edu.unq.tusViajes.model.Flight;
@@ -43,6 +44,8 @@ public class TravelPackageService {
             Hotel hotel = hotelService.getEntityById(dto.getHotelId());
             Agency agency = agencyService.getEntityById(dto.getAgencyId());
 
+            validateHotelAndFlights(hotel, departureFlight, returnFlight);
+
             TravelPackage travelPackage = new TravelPackage(
                     dto.getName(),
                     dto.getDescription(),
@@ -67,6 +70,8 @@ public class TravelPackageService {
             Hotel hotel = hotelService.getEntityById(dto.getHotelId());
             Agency agency = agencyService.getEntityById(dto.getAgencyId());
 
+            validateHotelAndFlights(hotel, departureFlight, returnFlight);
+
             travelPackage.updateData(
                     dto.getName(),
                     dto.getDescription(),
@@ -81,6 +86,19 @@ public class TravelPackageService {
 
             return TravelPackageResponseDTO.from(travelPackageRepository.save(travelPackage));
         });
+    }
+
+    private void validateHotelAndFlights(Hotel hotel, Flight departureFlight, Flight returnFlight) {
+        Long hotelCityId = hotel.getCity().getId();
+        Long departureDestinationCityId = departureFlight.getDestinationCity().getId();
+        Long returnOriginCityId = returnFlight.getOriginCity().getId();
+
+        if (!hotelCityId.equals(departureDestinationCityId) || !hotelCityId.equals(returnOriginCityId)) {
+            throw new InvalidTravelPackageException(
+                    "Hotel city must match destination of departure flight and origin of return flight. Hotel city id: "
+                            + hotelCityId + ", departure destination id: " + departureDestinationCityId
+                            + ", return origin id: " + returnOriginCityId);
+        }
     }
 
     @Transactional

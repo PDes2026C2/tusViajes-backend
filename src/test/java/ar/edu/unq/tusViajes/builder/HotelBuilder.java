@@ -1,11 +1,13 @@
 package ar.edu.unq.tusViajes.builder;
 
+import ar.edu.unq.tusViajes.model.City;
+import ar.edu.unq.tusViajes.model.Country;
 import ar.edu.unq.tusViajes.model.Hotel;
 
 public class HotelBuilder {
 
     private String name = "Hotel Gran Central";
-    private String destination = "Bariloche";
+    private City city = new City("Bariloche", new Country("AR", "Argentina"));
     private String photoUrl = "https://example.com/hotel.jpg";
     private String services = "Breakfast included, WiFi";
 
@@ -18,8 +20,8 @@ public class HotelBuilder {
         return this;
     }
 
-    public HotelBuilder withDestination(String destination) {
-        this.destination = destination;
+    public HotelBuilder withCity(City city) {
+        this.city = city;
         return this;
     }
 
@@ -34,6 +36,6 @@ public class HotelBuilder {
     }
 
     public Hotel build() {
-        return new Hotel(name, destination, photoUrl, services);
+        return new Hotel(name, city, photoUrl, services);
     }
 }
