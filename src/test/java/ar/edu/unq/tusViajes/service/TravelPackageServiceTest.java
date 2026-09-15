@@ -29,7 +29,9 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
-import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import static ar.edu.unq.tusViajes.builder.CityBuilder.aCity;
 import static ar.edu.unq.tusViajes.builder.CountryBuilder.aCountry;
@@ -85,10 +87,10 @@ class TravelPackageServiceTest {
                 .build();
         travelPackageRepository.save(travelPackage);
 
-        List<TravelPackageResponseDTO> result = travelPackageService.getAll();
+        Page<TravelPackageResponseDTO> result = travelPackageService.search(PageRequest.of(0, 10));
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getName()).isEqualTo(travelPackage.getName());
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getName()).isEqualTo(travelPackage.getName());
     }
 
     @Test

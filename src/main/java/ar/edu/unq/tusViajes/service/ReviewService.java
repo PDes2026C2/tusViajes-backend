@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,10 +48,9 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public List<ReviewResponseDTO> getByTravelPackageId(Long travelPackageId) {
+    public Page<ReviewResponseDTO> getByTravelPackageId(Long travelPackageId, Pageable pageable) {
         travelPackageService.getEntityById(travelPackageId);
-        return reviewRepository.findByTravelPackageIdOrderByCreatedAtDesc(travelPackageId).stream()
-                .map(ReviewResponseDTO::from)
-                .collect(Collectors.toList());
+        return reviewRepository.findByTravelPackageIdOrderByCreatedAtDesc(travelPackageId, pageable)
+                .map(ReviewResponseDTO::from);
     }
 }

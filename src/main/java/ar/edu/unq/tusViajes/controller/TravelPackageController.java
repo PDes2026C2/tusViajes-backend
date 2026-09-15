@@ -9,7 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 @RestController
 @RequestMapping({"/api/travel-packages"})
@@ -19,8 +22,8 @@ public class TravelPackageController {
     private final TravelPackageService travelPackageService;
 
     @GetMapping
-    public ResponseEntity<List<TravelPackageResponseDTO>> getAll() {
-        return ResponseEntity.ok(travelPackageService.getAll());
+    public ResponseEntity<Page<TravelPackageResponseDTO>> search(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(travelPackageService.search(pageable));
     }
 
     @GetMapping("/{id}")
