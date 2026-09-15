@@ -77,9 +77,10 @@ public class Buyer extends User {
     }
 
     public boolean hasAcquired(TravelPackage travelPackage) {
+        if (travelPackage == null || travelPackage.getId() == null) return false;
         return this.travelPackagesPurchased.stream()
                 .anyMatch(purchase -> purchase.getTravelPackage() != null
-                        && travelPackage.equals(purchase.getTravelPackage()));
+                        && travelPackage.getId().equals(purchase.getTravelPackage().getId()));
     }
 
 

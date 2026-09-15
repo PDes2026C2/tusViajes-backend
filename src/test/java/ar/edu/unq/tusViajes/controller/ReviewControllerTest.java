@@ -1,14 +1,8 @@
 package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.builder.*;
-import ar.edu.unq.tusViajes.model.Agency;
-import ar.edu.unq.tusViajes.model.Buyer;
-import ar.edu.unq.tusViajes.model.Hotel;
-import ar.edu.unq.tusViajes.model.TravelPackage;
-import ar.edu.unq.tusViajes.repository.AgencyRepository;
-import ar.edu.unq.tusViajes.repository.BuyerRepository;
-import ar.edu.unq.tusViajes.repository.HotelRepository;
-import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
+import ar.edu.unq.tusViajes.model.*;
+import ar.edu.unq.tusViajes.repository.*;
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,14 +50,27 @@ class ReviewControllerTest {
 
     @Autowired
     private AgencyRepository agencyRepository;
+    @Autowired
+    private FlightRepository flightRepository;
+    @Autowired
+    private CountryRepository countryRepository;
+    @Autowired
+    private CityRepository cityRepository;
 
     @Test
     void create_returns201WithReview() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City originCity = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
+        City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(departureFlight)
+                .withReturnFlight(returnFlight)
                 .withEndDate(LocalDateTime.now().minusDays(7))
                 .build());
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
@@ -83,12 +90,20 @@ class ReviewControllerTest {
     }
 
     @Test
-        void create_returns400WhenScoreIsGreaterThan5() throws Exception {
+    void create_returns400WhenScoreIsGreaterThan5() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City originCity = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
+        City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(departureFlight)
+                .withReturnFlight(returnFlight)
+                .withEndDate(LocalDateTime.now().minusDays(7))
                 .build());
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
         buyer.buy(travelPackage);
@@ -104,11 +119,18 @@ class ReviewControllerTest {
 
     @Test
     void create_returns201WithScoreOnly() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City originCity = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
+        City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(departureFlight)
+                .withReturnFlight(returnFlight)
                 .withEndDate(LocalDateTime.now().minusDays(7))
                 .build());
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
@@ -126,12 +148,19 @@ class ReviewControllerTest {
     }
 
     @Test
-        void create_returns400WhenScoreIsMissing() throws Exception {
+    void create_returns400WhenScoreIsMissing() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City originCity = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
+        City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(departureFlight)
+                .withReturnFlight(returnFlight)
                 .withEndDate(LocalDateTime.now().minusDays(7))
                 .build());
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
@@ -143,16 +172,23 @@ class ReviewControllerTest {
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"comment\":\"Excellent\"}"))
-                        .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     void create_returns400WhenScoreAndCommentAreMissing() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City originCity = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
+        City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(departureFlight)
+                .withReturnFlight(returnFlight)
                 .withEndDate(LocalDateTime.now().minusDays(7))
                 .build());
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
@@ -169,11 +205,18 @@ class ReviewControllerTest {
 
     @Test
     void create_returns403WhenPackageIsNotAcquired() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City originCity = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
+        City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(departureFlight)
+                .withReturnFlight(returnFlight)
                 .withEndDate(LocalDateTime.now().minusDays(7))
                 .build());
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
@@ -196,11 +239,18 @@ class ReviewControllerTest {
 
     @Test
     void getByTravelPackageId_returnsReviews() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City originCity = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
+        City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(departureFlight)
+                .withReturnFlight(returnFlight)
                 .withEndDate(LocalDateTime.now().minusDays(7))
                 .build());
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
