@@ -4,9 +4,12 @@ import ar.edu.unq.tusViajes.repository.CityRepository;
 import ar.edu.unq.tusViajes.repository.CountryRepository;
 import ar.edu.unq.tusViajes.builder.*;
 import ar.edu.unq.tusViajes.controller.dto.request.BuyerRegistrationRequestDTO;
+import ar.edu.unq.tusViajes.builder.AgencyBuilder;
+import ar.edu.unq.tusViajes.builder.BuyerBuilder;
+import ar.edu.unq.tusViajes.builder.HotelBuilder;
+import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
 import ar.edu.unq.tusViajes.controller.dto.response.BuyerResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
-import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.*;
 import ar.edu.unq.tusViajes.repository.*;
@@ -88,38 +91,6 @@ class BuyerServiceTest {
         assertThatThrownBy(() -> buyerService.getById(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("99");
-    }
-
-    @Test
-    void register_savesBuyerWithHashedPassword() {
-        BuyerRegistrationRequestDTO dto = new BuyerRegistrationRequestDTO(
-                "Lucas", "Gomez", "lucas@example.com", "secret123", "1122334455", "37111222"
-        );
-
-        BuyerResponseDTO result = buyerService.register(dto);
-
-        assertThat(result.firstName()).isEqualTo("Lucas");
-        assertThat(result.email()).isEqualTo("lucas@example.com");
-        assertThat(result.nationalId()).isEqualTo("37111222");
-
-        Buyer savedInDb = buyerRepository.findById(result.id()).orElseThrow();
-        assertThat(savedInDb.getPasswordHash()).isNotEqualTo("secret123");
-    }
-
-    @Test
-    void register_throwsExceptionIfEmailIsDuplicated() {
-        Buyer existingBuyer = BuyerBuilder.aBuyer()
-                .withEmail("repetido@example.com")
-                .build();
-        buyerRepository.save(existingBuyer);
-
-        BuyerRegistrationRequestDTO dto = new BuyerRegistrationRequestDTO(
-                "Lucas", "Gomez", "repetido@example.com", "secret123", "1122334455", "37111222"
-        );
-
-        assertThatThrownBy(() -> buyerService.register(dto))
-                .isInstanceOf(DuplicateResourceException.class)
-                .hasMessageContaining("repetido@example.com");
     }
 
     @Test

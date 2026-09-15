@@ -13,7 +13,6 @@ import ar.edu.unq.tusViajes.controller.dto.request.BuyerRegistrationRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.LoginRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.RefreshTokenRequest;
 import ar.edu.unq.tusViajes.controller.dto.response.AgencyRegistrationResponseDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.BuyerResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.LoginResponseDTO;
 import ar.edu.unq.tusViajes.service.AuthService;
 import jakarta.validation.Valid;
@@ -38,8 +37,8 @@ public class AuthController {
     }
 
     @PostMapping("/register/buyer")
-    public ResponseEntity<BuyerResponseDTO> registerBuyer(@Valid @RequestBody BuyerRegistrationRequestDTO dto) {
-        BuyerResponseDTO response = authService.registerBuyer(dto);
+    public ResponseEntity<LoginResponseDTO> registerBuyer(@Valid @RequestBody BuyerRegistrationRequestDTO dto) {
+        LoginResponseDTO response = authService.registerBuyer(dto);
         return ResponseEntity.created(URI.create("/api/buyers/" + response.id())).body(response);
     }
 

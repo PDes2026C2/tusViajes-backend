@@ -160,7 +160,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void registerBuyer_returns201AndBuyerData() throws Exception {
+    void registerBuyer_returns201WithTokens() throws Exception {
         String json = """
                 {
                     "firstName": "Agustin",
@@ -178,8 +178,12 @@ class AuthControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.firstName").value("Agustin"))
-                .andExpect(jsonPath("$.email").value("agustin@buyer.com"));
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.email").value("agustin@buyer.com"))
+                .andExpect(jsonPath("$.role").value("BUYER"))
+                .andExpect(jsonPath("$.name").value("Agustin Perez"));
     }
 
     @Test

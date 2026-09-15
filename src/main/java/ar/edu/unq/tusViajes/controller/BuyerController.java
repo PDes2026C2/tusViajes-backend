@@ -1,6 +1,5 @@
 package ar.edu.unq.tusViajes.controller;
 
-import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -9,16 +8,13 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.unq.tusViajes.controller.dto.request.BuyerRegistrationRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.BuyerResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
-import ar.edu.unq.tusViajes.service.BuyerService;
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
-import jakarta.validation.Valid;
+import ar.edu.unq.tusViajes.service.BuyerService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -36,12 +32,6 @@ public class BuyerController {
     @GetMapping("/{id}")
     public ResponseEntity<BuyerResponseDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(buyerService.getById(id));
-    }
-
-    @PostMapping
-    public ResponseEntity<BuyerResponseDTO> register(@Valid @RequestBody BuyerRegistrationRequestDTO dto) {
-        BuyerResponseDTO created = buyerService.register(dto);
-        return ResponseEntity.created(URI.create("/api/buyers/" + created.id())).body(created);
     }
 
     @PostMapping("/favorites/{travelPackageId}")

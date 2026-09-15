@@ -114,28 +114,6 @@ class BuyerControllerTest {
     }
 
     @Test
-    void register_returns201AndLocationHeader() throws Exception {
-        String json = """
-                {
-                    "firstName": "Lucas",
-                    "lastName": "Gomez",
-                    "email": "lucas@example.com",
-                    "password": "secretPassword123",
-                    "phoneNumber": "11223344",
-                    "nationalId": "38123456"
-                }
-                """;
-
-        mockMvc.perform(post("/api/buyers")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isCreated())
-                .andExpect(header().exists("Location"))
-                .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.nationalId").value("38123456"));
-    }
-
-    @Test
     void addFavorite_returns401_whenUnauthenticated() throws Exception {
                 mockMvc.perform(post("/api/buyers/favorites/1"))
                 .andExpect(status().isUnauthorized());
