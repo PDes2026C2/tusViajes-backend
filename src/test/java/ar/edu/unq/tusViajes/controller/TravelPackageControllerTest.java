@@ -1,12 +1,19 @@
 package ar.edu.unq.tusViajes.controller;
 
+import ar.edu.unq.tusViajes.repository.CityRepository;
+import ar.edu.unq.tusViajes.repository.CountryRepository;
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
+import ar.edu.unq.tusViajes.builder.FlightBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
 import ar.edu.unq.tusViajes.model.Agency;
+import ar.edu.unq.tusViajes.model.City;
+import ar.edu.unq.tusViajes.model.Country;
+import ar.edu.unq.tusViajes.model.Flight;
 import ar.edu.unq.tusViajes.model.Hotel;
 import ar.edu.unq.tusViajes.model.TravelPackage;
 import ar.edu.unq.tusViajes.repository.AgencyRepository;
+import ar.edu.unq.tusViajes.repository.FlightRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
 import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
 import org.junit.jupiter.api.Test;
@@ -21,6 +28,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import static ar.edu.unq.tusViajes.builder.CityBuilder.aCity;
+import static ar.edu.unq.tusViajes.builder.CountryBuilder.aCountry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -48,33 +57,60 @@ class TravelPackageControllerTest {
     @Autowired
     private AgencyRepository agencyRepository;
 
+    @Autowired
+    private FlightRepository flightRepository;
+
+    @Autowired
+    private CityRepository cityRepository;
+
+    @Autowired
+    private CountryRepository countryRepository;
+
     @Test
     void getAll_returns200AndListOfTravelPackages() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
         
         TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
                 .withName("Bariloche 7d")
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(depFlight)
+                .withReturnFlight(retFlight)
                 .build();
         travelPackageRepository.save(travelPackage);
 
         mockMvc.perform(get("/api/travel-packages"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").isNotEmpty())
-                .andExpect(jsonPath("$[0].name").value("Bariloche 7d"));
+                .andExpect(jsonPath("$.content[0].id").isNotEmpty())
+                .andExpect(jsonPath("$.content[0].name").value("Bariloche 7d"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
     }
 
     @Test
     void getById_returns200WhenExists() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
         
         TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
                 .withName("Bariloche 7d")
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(depFlight)
+                .withReturnFlight(retFlight)
                 .build();
         TravelPackage saved = travelPackageRepository.save(travelPackage);
 
@@ -100,7 +136,9 @@ class TravelPackageControllerTest {
                     "startDate": "2026-10-01T10:00:00",
                     "endDate": "2026-10-08T10:00:00",
                     "hotelId": 1,
-                    "agencyId": 1
+                    "agencyId": 1,
+                    "departureFlightId": 1,
+                    "returnFlightId": 2
                 }
                 """;
 
@@ -112,8 +150,14 @@ class TravelPackageControllerTest {
 
     @Test
     void create_returns201AndLocationHeader() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
         String json = """
                 {
@@ -123,9 +167,11 @@ class TravelPackageControllerTest {
                     "startDate": "2026-10-01T10:00:00",
                     "endDate": "2026-10-08T10:00:00",
                     "hotelId": %d,
-                    "agencyId": %d
+                    "agencyId": %d,
+                    "departureFlightId": %d,
+                    "returnFlightId": %d
                 }
-                """.formatted(hotel.getId(), agency.getId());
+                """.formatted(hotel.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
 
         mockMvc.perform(post("/api/travel-packages")
                         .with(user("user"))
@@ -147,12 +193,20 @@ class TravelPackageControllerTest {
 
     @Test
     void update_returns200_whenAuthenticated() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
         TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(depFlight)
+                .withReturnFlight(retFlight)
                 .build();
         TravelPackage saved = travelPackageRepository.save(travelPackage);
 
@@ -164,9 +218,11 @@ class TravelPackageControllerTest {
                     "startDate": "2026-11-01T10:00:00",
                     "endDate": "2026-11-10T10:00:00",
                     "hotelId": %d,
-                    "agencyId": %d
+                    "agencyId": %d,
+                    "departureFlightId": %d,
+                    "returnFlightId": %d
                 }
-                """.formatted(hotel.getId(), agency.getId());
+                """.formatted(hotel.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
 
         mockMvc.perform(put("/api/travel-packages/" + saved.getId())
                         .with(user("user"))
@@ -184,12 +240,20 @@ class TravelPackageControllerTest {
 
     @Test
     void delete_returns204NoContent() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
         
         TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(depFlight)
+                .withReturnFlight(retFlight)
                 .build();
         TravelPackage saved = travelPackageRepository.save(travelPackage);
 
@@ -199,3 +263,4 @@ class TravelPackageControllerTest {
         assertThat(travelPackageRepository.existsById(saved.getId())).isFalse();
     }
 }
+

@@ -1,6 +1,7 @@
 package ar.edu.unq.tusViajes.model;
 
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
+import ar.edu.unq.tusViajes.builder.FlightBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,8 @@ class TravelPackageTest {
     void createTravelPackage_assignsAllFieldsCorrectly() {
         Hotel hotel = HotelBuilder.aHotel().withName("Hotel Alvear").build();
         Agency agency = AgencyBuilder.anAgency().withBusinessName("Viajes SA").build();
+        Flight departureFlight = FlightBuilder.aFlight().withId(1L).withAirline("Aerolíneas").build();
+        Flight returnFlight = FlightBuilder.aFlight().withId(2L).withAirline("Flybondi").build();
 
         LocalDateTime start = LocalDateTime.now().plusDays(5);
         LocalDateTime end = LocalDateTime.now().plusDays(12);
@@ -27,6 +30,8 @@ class TravelPackageTest {
                 .withEndDate(end)
                 .withHotel(hotel)
                 .withAgency(agency)
+                .withDepartureFlight(departureFlight)
+                .withReturnFlight(returnFlight)
                 .build();
 
         assertThat(travelPackage.getName()).isEqualTo("Cataratas Premium");
@@ -36,6 +41,8 @@ class TravelPackageTest {
         assertThat(travelPackage.getEndDate()).isEqualTo(end);
         assertThat(travelPackage.getHotel()).isEqualTo(hotel);
         assertThat(travelPackage.getAgency()).isEqualTo(agency);
+        assertThat(travelPackage.getDepartureFlight()).isEqualTo(departureFlight);
+        assertThat(travelPackage.getReturnFlight()).isEqualTo(returnFlight);
     }
 
     @Test
@@ -44,10 +51,12 @@ class TravelPackageTest {
 
         Hotel newHotel = HotelBuilder.aHotel().withName("Nuevo Hotel").build();
         Agency newAgency = AgencyBuilder.anAgency().withBusinessName("Nueva Agencia").build();
+        Flight newDeparture = FlightBuilder.aFlight().withId(201L).withAirline("LATAM").build();
+        Flight newReturn = FlightBuilder.aFlight().withId(202L).withAirline("JetSMART").build();
         LocalDateTime newStart = LocalDateTime.now().plusDays(20);
         LocalDateTime newEnd = LocalDateTime.now().plusDays(27);
 
-        travelPackage.updateData("New Name", "New Desc", 300000.0, newStart, newEnd, newHotel, newAgency);
+        travelPackage.updateData("New Name", "New Desc", 300000.0, newStart, newEnd, newHotel, newAgency, newDeparture, newReturn);
 
         assertThat(travelPackage.getName()).isEqualTo("New Name");
         assertThat(travelPackage.getDescription()).isEqualTo("New Desc");
@@ -56,5 +65,7 @@ class TravelPackageTest {
         assertThat(travelPackage.getEndDate()).isEqualTo(newEnd);
         assertThat(travelPackage.getHotel()).isEqualTo(newHotel);
         assertThat(travelPackage.getAgency()).isEqualTo(newAgency);
+        assertThat(travelPackage.getDepartureFlight()).isEqualTo(newDeparture);
+        assertThat(travelPackage.getReturnFlight()).isEqualTo(newReturn);
     }
 }

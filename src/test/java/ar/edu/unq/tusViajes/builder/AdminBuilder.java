@@ -4,9 +4,9 @@ import ar.edu.unq.tusViajes.model.Admin;
 
 public class AdminBuilder {
 
-    private String firstName = "Admin";
-    private String lastName = "Root";
-    private String email = "admin-builder@tusviajes.com";
+    private String firstName = "John";
+    private String lastName = "Doe";
+    private String email = "admin@example.com";
     private String passwordHash = "$2a$10$hashedPasswordPlaceholder";
 
     public static AdminBuilder anAdmin() {

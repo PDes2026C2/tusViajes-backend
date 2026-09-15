@@ -3,6 +3,7 @@ package ar.edu.unq.tusViajes.adapters;
 import ar.edu.unq.tusViajes.adapters.dto.FlightDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightFilterDTO;
 import ar.edu.unq.tusViajes.adapters.dto.PassengerDTO;
+import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -68,6 +69,17 @@ public class FlightsApiClient {
                 .accept(MediaType.APPLICATION_JSON)
                 .body(passenger)
                 .retrieve()
+                .body(FlightDTO.class);
+    }
+
+    public FlightDTO getFlight(Long flightId) {
+        return restClient.get()
+                .uri("/flights/{id}", flightId)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .onStatus(status -> status.value() == 404, (request, response) -> {
+                    throw new ResourceNotFoundException("Flight with id " + flightId + " not found");
+                })
                 .body(FlightDTO.class);
     }
 }
