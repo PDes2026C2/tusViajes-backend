@@ -90,7 +90,7 @@ class ReviewControllerTest {
     }
 
     @Test
-    void create_returns400WhenScoreIsGreaterThan5() throws Exception {
+    void create_returns400WhenScoreIsGreaterThan10() throws Exception {
         Country country = countryRepository.save(CountryBuilder.aCountry().build());
         City originCity = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
         City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
@@ -113,7 +113,7 @@ class ReviewControllerTest {
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":6}"))
+                        .content("{\"score\":11}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -267,8 +267,8 @@ class ReviewControllerTest {
         mockMvc.perform(get("/api/reviews/" + travelPackage.getId())
                         .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].score").value(3))
-                .andExpect(jsonPath("$[0].comment").value("Good"))
+                .andExpect(jsonPath("$.content[0].score").value(3))
+                .andExpect(jsonPath("$.content[0].comment").value("Good"))
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.totalPages").value(1));
     }
