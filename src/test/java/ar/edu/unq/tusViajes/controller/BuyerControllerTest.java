@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -26,7 +25,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -129,7 +127,7 @@ class BuyerControllerTest {
                         .withFirstName("Lucas")
                         .withEmail("lucas@example.com")
                         .build());
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
@@ -161,7 +159,7 @@ class BuyerControllerTest {
                         .withFirstName("Lucas")
                         .withEmail("lucas@example.com")
                         .build();
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
@@ -195,7 +193,7 @@ class BuyerControllerTest {
                         .withFirstName("Lucas")
                         .withEmail("lucas@example.com")
                         .build();
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());

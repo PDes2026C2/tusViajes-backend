@@ -64,7 +64,7 @@ class ReviewControllerTest {
         City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
         Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
         Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(destinationCity).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
@@ -96,7 +96,7 @@ class ReviewControllerTest {
         City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
         Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
         Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(destinationCity).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
@@ -128,7 +128,7 @@ class ReviewControllerTest {
         City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
         Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
         Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(destinationCity).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
@@ -158,7 +158,7 @@ class ReviewControllerTest {
         City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
         Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
         Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(destinationCity).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
@@ -186,7 +186,7 @@ class ReviewControllerTest {
         City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
         Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
         Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(destinationCity).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
@@ -214,7 +214,7 @@ class ReviewControllerTest {
         City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
         Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
         Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(destinationCity).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)
@@ -248,7 +248,7 @@ class ReviewControllerTest {
         City destinationCity = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
         Flight departureFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(originCity).withDestinationCity(destinationCity).build());
         Flight returnFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(destinationCity).withDestinationCity(originCity).build());
-        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(destinationCity).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel)

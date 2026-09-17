@@ -1,8 +1,5 @@
 package ar.edu.unq.tusViajes.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,7 +13,6 @@ import ar.edu.unq.tusViajes.model.Buyer;
 import ar.edu.unq.tusViajes.model.Review;
 import ar.edu.unq.tusViajes.model.TravelPackage;
 import ar.edu.unq.tusViajes.repository.ReviewRepository;
-import ar.edu.unq.tusViajes.validator.EntityValidator;
 
 @Service
 public class ReviewService {

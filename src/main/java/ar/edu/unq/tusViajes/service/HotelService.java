@@ -8,7 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ar.edu.unq.tusViajes.controller.dto.request.HotelRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.HotelResponseDTO;
+import ar.edu.unq.tusViajes.model.City;
 import ar.edu.unq.tusViajes.model.Hotel;
+import ar.edu.unq.tusViajes.repository.CityRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
 import ar.edu.unq.tusViajes.validator.EntityValidator;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ public class HotelService {
 
     private final EntityValidator entityValidator;
     private final HotelRepository hotelRepository;
+    private final CityRepository cityRepository;
 
     @Transactional(readOnly = true)
     public List<HotelResponseDTO> getAll() {
@@ -34,7 +37,8 @@ public class HotelService {
 
     @Transactional
     public HotelResponseDTO create(HotelRequestDTO dto) {
-        Hotel hotel = new Hotel(dto.name(), dto.destination(), dto.photoUrl(), dto.services());
+        City city = entityValidator.findByIdOrThrow(cityRepository, dto.cityId(), "City");
+        Hotel hotel = new Hotel(dto.name(), city, dto.photoUrl(), dto.services());
         return HotelResponseDTO.from(hotelRepository.save(hotel));
     }
 

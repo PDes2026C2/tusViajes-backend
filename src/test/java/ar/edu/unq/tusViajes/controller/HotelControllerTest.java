@@ -1,7 +1,13 @@
 package ar.edu.unq.tusViajes.controller;
 
+import ar.edu.unq.tusViajes.builder.CityBuilder;
+import ar.edu.unq.tusViajes.builder.CountryBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
+import ar.edu.unq.tusViajes.model.City;
+import ar.edu.unq.tusViajes.model.Country;
 import ar.edu.unq.tusViajes.model.Hotel;
+import ar.edu.unq.tusViajes.repository.CityRepository;
+import ar.edu.unq.tusViajes.repository.CountryRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +44,12 @@ class HotelControllerTest {
     @Autowired
     private HotelRepository hotelRepository;
 
+    @Autowired
+    private CityRepository cityRepository;
+
+    @Autowired
+    private CountryRepository countryRepository;
+
     @Test
     void getAll_returns401_whenUnauthenticated() throws Exception {
         mockMvc.perform(get("/api/hotels"))
@@ -52,18 +64,22 @@ class HotelControllerTest {
 
     @Test
     void getAll_returns200AndListOfHotels_whenRoleIsAdmin() throws Exception {
-        hotelRepository.save(HotelBuilder.aHotel().withName("Hotel Central").withDestination("Bariloche").build());
+        Country country = countryRepository.save(CountryBuilder.aCountry().withIsoCode("AR").withName("Argentina").build());
+        City city = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        hotelRepository.save(HotelBuilder.aHotel().withName("Hotel Central").withCity(city).build());
 
         mockMvc.perform(get("/api/hotels").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").isNotEmpty())
                 .andExpect(jsonPath("$[0].name").value("Hotel Central"))
-                .andExpect(jsonPath("$[0].destination").value("Bariloche"));
+                .andExpect(jsonPath("$[0].city.name").value("Bariloche"));
     }
 
     @Test
     void getAll_returns200AndListOfHotels_whenRoleIsAgency() throws Exception {
-        hotelRepository.save(HotelBuilder.aHotel().withName("Hotel Costa").withDestination("Mar del Plata").build());
+        Country country = countryRepository.save(CountryBuilder.aCountry().withIsoCode("AR").withName("Argentina").build());
+        City city = cityRepository.save(CityBuilder.aCity().withName("Mar del Plata").withCountry(country).build());
+        hotelRepository.save(HotelBuilder.aHotel().withName("Hotel Costa").withCity(city).build());
 
         mockMvc.perform(get("/api/hotels").with(user("agency").roles("AGENCY")))
                 .andExpect(status().isOk())
@@ -84,21 +100,25 @@ class HotelControllerTest {
 
     @Test
     void getById_returns200WhenExists_whenRoleIsAdmin() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().withIsoCode("AR").withName("Argentina").build());
+        City city = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
         Hotel saved = hotelRepository.save(
-                HotelBuilder.aHotel().withName("Hotel Central").withDestination("Bariloche").build()
+                HotelBuilder.aHotel().withName("Hotel Central").withCity(city).build()
         );
 
         mockMvc.perform(get("/api/hotels/" + saved.getId()).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(saved.getId()))
                 .andExpect(jsonPath("$.name").value("Hotel Central"))
-                .andExpect(jsonPath("$.destination").value("Bariloche"));
+                .andExpect(jsonPath("$.city.name").value("Bariloche"));
     }
 
     @Test
     void getById_returns200WhenExists_whenRoleIsAgency() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().withIsoCode("AR").withName("Argentina").build());
+        City city = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
         Hotel saved = hotelRepository.save(
-                HotelBuilder.aHotel().withName("Hotel Central").withDestination("Bariloche").build()
+                HotelBuilder.aHotel().withName("Hotel Central").withCity(city).build()
         );
 
         mockMvc.perform(get("/api/hotels/" + saved.getId()).with(user("agency").roles("AGENCY")))
@@ -117,7 +137,7 @@ class HotelControllerTest {
         String json = """
                 {
                     "name": "Hotel Nuevo",
-                    "destination": "Mendoza"
+                    "cityId": 99999
                 }
                 """;
 
@@ -129,12 +149,14 @@ class HotelControllerTest {
 
     @Test
     void create_returns201AndLocationHeader() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().withIsoCode("AR").withName("Argentina").build());
+        City city = cityRepository.save(CityBuilder.aCity().withName("Mendoza").withCountry(country).build());
         String json = """
                 {
                     "name": "Hotel Nuevo",
-                    "destination": "Mendoza"
+                    "cityId": %d
                 }
-                """;
+                """.formatted(city.getId());
 
         mockMvc.perform(post("/api/hotels")
                         .with(user("user"))
@@ -144,6 +166,6 @@ class HotelControllerTest {
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.name").value("Hotel Nuevo"))
-                .andExpect(jsonPath("$.destination").value("Mendoza"));
+                .andExpect(jsonPath("$.city.name").value("Mendoza"));
     }
 }
