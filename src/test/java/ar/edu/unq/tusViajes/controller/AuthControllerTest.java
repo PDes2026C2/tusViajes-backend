@@ -91,7 +91,9 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("The agency is pending authorization by an administrator."));
+                .andExpect(jsonPath("$.code").value(403))
+                .andExpect(jsonPath("$.message").value("The agency is pending authorization by an administrator."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }
 
     @Test
@@ -134,7 +136,10 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.message").value("Invalid credentials"))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }
 
     @Test
@@ -204,7 +209,9 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Invalid refresh token."));
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.message").value("Invalid refresh token."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }
 
     @Test
@@ -230,7 +237,9 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Invalid refresh token."));
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.message").value("Invalid refresh token."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }
 
     @Test

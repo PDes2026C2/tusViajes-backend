@@ -114,7 +114,11 @@ class ReviewControllerTest {
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"score\":11}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("Invalid data"))
+                .andExpect(jsonPath("$.errors.score").isNotEmpty())
+                .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }
 
     @Test
