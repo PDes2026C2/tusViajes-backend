@@ -54,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/reviews/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/travel-packages/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cities/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/countries/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/hotels/**").hasAnyRole("ADMIN", "AGENCY")
                         .requestMatchers(HttpMethod.GET, "/api/agencies/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
