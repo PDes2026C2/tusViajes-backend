@@ -36,12 +36,7 @@ public class Buyer extends User {
     )
     private Set<TravelPackage> favoriteTravelPackages = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "buyer_travel_packages_purchased",
-            joinColumns = @JoinColumn(name = "buyer_id"),
-            inverseJoinColumns = @JoinColumn(name = "purchase_id")
-    )
+    @OneToMany(mappedBy = "buyer", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Purchase> travelPackagesPurchased = new HashSet<>();
 
     public Buyer(String firstName, String lastName, String email,
@@ -54,7 +49,14 @@ public class Buyer extends User {
     }
 
     public void buy(TravelPackage travelPackage) {
-        Purchase purchase = new Purchase(travelPackage);
+        if (travelPackage == null || travelPackage.getPrice() == null) {
+            throw new IllegalArgumentException("El paquete de viaje y su precio no pueden ser nulos");
+        }
+        Purchase purchase = new Purchase(this, travelPackage, travelPackage.getPrice());
+        this.travelPackagesPurchased.add(purchase);
+    }
+
+    public void addPurchase(Purchase purchase) {
         this.travelPackagesPurchased.add(purchase);
     }
 
