@@ -2,6 +2,7 @@ package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.adapters.dto.PassengerDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.PurchaseResponseDTO;
+import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Buyer;
 import ar.edu.unq.tusViajes.model.Purchase;
@@ -47,6 +48,12 @@ public class PurchaseService {
         if (travelPackage.getPrice() == null) {
             throw new IllegalArgumentException("El precio del paquete de viaje no puede ser nulo");
         }
+        if (travelPackage.hasEnded()) {
+            throw new IllegalArgumentException("No se puede comprar un paquete de viaje que ya ha finalizado");
+        }
+        if (buyer.hasAcquired(travelPackage)) {
+            throw new DuplicateResourceException("El comprador ya adquirió este paquete de viaje");
+        }
 
         PassengerDTO passenger = toPassengerDTO(buyer);
         logger.info("Processing purchase for buyer {} and travelPackage {}", buyerId, travelPackageId);
@@ -56,7 +63,7 @@ public class PurchaseService {
         flightsApiService.sellFlight(travelPackage.getReturnFlight().getId(), passenger);
         logger.info("Return flight {} sold for buyer {}", travelPackage.getReturnFlight().getId(), buyerId);
 
-        Purchase purchase = new Purchase(buyer, travelPackage, travelPackage.getPrice());
+        Purchase purchase = buyer.buy(travelPackage);
         Purchase saved = purchaseRepository.save(purchase);
         logger.info("Purchase {} created for buyer {} with price {}", saved.getId(), buyerId, saved.getPrice());
         return PurchaseResponseDTO.from(saved);

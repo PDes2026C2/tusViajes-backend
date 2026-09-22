@@ -2,6 +2,7 @@ package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.adapters.dto.PassengerDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.PurchaseResponseDTO;
+import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Buyer;
 import ar.edu.unq.tusViajes.model.TravelPackage;
@@ -58,6 +59,7 @@ class PurchaseServiceTest {
         Flight departureFlight = FlightBuilder.aFlight().withId(10L).withOriginCity(originCity).withDestinationCity(destCity).build();
         Flight returnFlight = FlightBuilder.aFlight().withId(11L).withOriginCity(destCity).withDestinationCity(originCity).build();
         TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
+                .withId(99L)
                 .withPrice(250000.0)
                 .withDepartureFlight(departureFlight)
                 .withReturnFlight(returnFlight)
@@ -71,6 +73,8 @@ class PurchaseServiceTest {
 
         assertThat(result.price()).isEqualTo(250000.0);
         assertThat(result.purchasedAt()).isNotNull();
+        assertThat(buyer.getTravelPackagesPurchased()).hasSize(1);
+        assertThat(buyer.hasAcquired(travelPackage)).isTrue();
         verify(flightsApiService).sellFlight(eq(10L), any(PassengerDTO.class));
         verify(flightsApiService).sellFlight(eq(11L), any(PassengerDTO.class));
 
@@ -116,5 +120,41 @@ class PurchaseServiceTest {
         assertThatThrownBy(() -> purchaseService.purchase(1L, 1L))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("El DNI del comprador debe ser numérico");
+    }
+
+    @Test
+    void purchase_throwsWhenBuyerAlreadyAcquiredPackage() {
+        Buyer buyer = BuyerBuilder.aBuyer().build();
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().withId(10L).build();
+        buyer.buy(travelPackage);
+
+        when(entityValidator.findByIdOrThrow(buyerRepository, 1L, "Comprador")).thenReturn(buyer);
+        when(travelPackageRepository.findById(10L)).thenReturn(Optional.of(travelPackage));
+
+        assertThatThrownBy(() -> purchaseService.purchase(1L, 10L))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining("El comprador ya adquirió este paquete de viaje");
+
+        verifyNoInteractions(flightsApiService);
+        verifyNoInteractions(purchaseRepository);
+    }
+
+    @Test
+    void purchase_throwsWhenTravelPackageHasEnded() {
+        Buyer buyer = BuyerBuilder.aBuyer().build();
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
+                .withId(10L)
+                .withEndDate(java.time.LocalDateTime.now().minusDays(1))
+                .build();
+
+        when(entityValidator.findByIdOrThrow(buyerRepository, 1L, "Comprador")).thenReturn(buyer);
+        when(travelPackageRepository.findById(10L)).thenReturn(Optional.of(travelPackage));
+
+        assertThatThrownBy(() -> purchaseService.purchase(1L, 10L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("No se puede comprar un paquete de viaje que ya ha finalizado");
+
+        verifyNoInteractions(flightsApiService);
+        verifyNoInteractions(purchaseRepository);
     }
 }

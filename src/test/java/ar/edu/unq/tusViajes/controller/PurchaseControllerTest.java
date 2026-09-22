@@ -93,6 +93,9 @@ class PurchaseControllerTest {
 
         assertThat(purchaseRepository.findByBuyerId(buyer.getId())).hasSize(1);
         assertThat(purchaseRepository.findByBuyerId(buyer.getId()).get(0).getPrice()).isEqualTo(300000.0);
+        Buyer persistedBuyer = buyerRepository.findById(buyer.getId()).orElseThrow();
+        assertThat(persistedBuyer.getTravelPackagesPurchased()).hasSize(1);
+        assertThat(persistedBuyer.hasAcquired(tp)).isTrue();
         verify(flightsApiService).sellFlight(eq(100L), any(PassengerDTO.class));
         verify(flightsApiService).sellFlight(eq(101L), any(PassengerDTO.class));
     }
@@ -149,5 +152,56 @@ class PurchaseControllerTest {
                                 createAuthorityList("ROLE_BUYER"), true))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("El DNI del comprador debe ser numérico: ABC12345"));
+    }
+
+    @Test
+    void purchase_returns409WhenPackageAlreadyPurchased() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City origin = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
+        City dest = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        Flight dep = flightRepository.save(FlightBuilder.aFlight().withId(200L).withOriginCity(origin).withDestinationCity(dest).build());
+        Flight ret = flightRepository.save(FlightBuilder.aFlight().withId(201L).withOriginCity(dest).withDestinationCity(origin).build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(dest).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        TravelPackage tp = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel)
+                .withAgency(agency)
+                .withDepartureFlight(dep)
+                .withReturnFlight(ret)
+                .build());
+        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().withNationalId("40123456").build());
+        buyer.buy(tp);
+        buyerRepository.save(buyer);
+
+        mockMvc.perform(post("/api/purchases/" + tp.getId())
+                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
+                                createAuthorityList("ROLE_BUYER"), true))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("El comprador ya adquirió este paquete de viaje"));
+    }
+
+    @Test
+    void purchase_returns400WhenTravelPackageHasEnded() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City origin = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
+        City dest = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        Flight dep = flightRepository.save(FlightBuilder.aFlight().withId(300L).withOriginCity(origin).withDestinationCity(dest).build());
+        Flight ret = flightRepository.save(FlightBuilder.aFlight().withId(301L).withOriginCity(dest).withDestinationCity(origin).build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(dest).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        TravelPackage tp = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withEndDate(java.time.LocalDateTime.now().minusDays(2))
+                .withHotel(hotel)
+                .withAgency(agency)
+                .withDepartureFlight(dep)
+                .withReturnFlight(ret)
+                .build());
+        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().withNationalId("40123456").build());
+
+        mockMvc.perform(post("/api/purchases/" + tp.getId())
+                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
+                                createAuthorityList("ROLE_BUYER"), true))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("No se puede comprar un paquete de viaje que ya ha finalizado"));
     }
 }

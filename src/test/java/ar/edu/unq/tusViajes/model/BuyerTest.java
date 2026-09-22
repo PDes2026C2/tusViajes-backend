@@ -56,4 +56,54 @@ class BuyerTest {
 
         assertThat(buyer.getFavoriteTravelPackages()).isEmpty();
     }
+
+    @Test
+    void buy_createsAndAddsPurchaseToPurchasedCollection() {
+        Buyer buyer = new Buyer("Maria", "Lopez", "maria@example.com",
+                "hash123", "11-9999-8888", "40123456");
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
+                .withId(10L)
+                .withPrice(150000.0)
+                .build();
+
+        Purchase purchase = buyer.buy(travelPackage);
+
+        assertThat(purchase).isNotNull();
+        assertThat(purchase.getBuyer()).isEqualTo(buyer);
+        assertThat(purchase.getTravelPackage()).isEqualTo(travelPackage);
+        assertThat(purchase.getPrice()).isEqualTo(150000.0);
+        assertThat(buyer.getTravelPackagesPurchased()).contains(purchase);
+        assertThat(buyer.hasAcquired(travelPackage)).isTrue();
+    }
+
+    @Test
+    void buy_throwsWhenTravelPackageIsNull() {
+        Buyer buyer = new Buyer("Maria", "Lopez", "maria@example.com",
+                "hash123", "11-9999-8888", "40123456");
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> buyer.buy(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("El paquete de viaje y su precio no pueden ser nulos");
+    }
+
+    @Test
+    void buy_throwsWhenTravelPackagePriceIsNull() {
+        Buyer buyer = new Buyer("Maria", "Lopez", "maria@example.com",
+                "hash123", "11-9999-8888", "40123456");
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().withPrice(null).build();
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> buyer.buy(travelPackage))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("El paquete de viaje y su precio no pueden ser nulos");
+    }
+
+    @Test
+    void hasAcquired_returnsFalseWhenPackageNotPurchasedOrNull() {
+        Buyer buyer = new Buyer("Maria", "Lopez", "maria@example.com",
+                "hash123", "11-9999-8888", "40123456");
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().withId(10L).build();
+
+        assertThat(buyer.hasAcquired(null)).isFalse();
+        assertThat(buyer.hasAcquired(travelPackage)).isFalse();
+    }
 }

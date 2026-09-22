@@ -15,6 +15,7 @@ public class TravelPackageBuilder {
     private City originCity = new City(1L, "Buenos Aires", DEFAULT_COUNTRY);
     private City destinationCity = new City(2L, "Bariloche", DEFAULT_COUNTRY);
 
+    private Long id;
     private String name = "Escapada Bariloche";
     private String description = "Includes round trip flight and 7 days stay";
     private Double price = 150000.0;
@@ -86,7 +87,16 @@ public class TravelPackageBuilder {
         return this;
     }
 
+    public TravelPackageBuilder withId(Long id) {
+        this.id = id;
+        return this;
+    }
+
     public TravelPackage build() {
-        return new TravelPackage(name, description, price, startDate, endDate, hotel, agency, departureFlight, returnFlight);
+        TravelPackage tp = new TravelPackage(name, description, price, startDate, endDate, hotel, agency, departureFlight, returnFlight);
+        if (id != null) {
+            org.springframework.test.util.ReflectionTestUtils.setField(tp, "id", id);
+        }
+        return tp;
     }
 }

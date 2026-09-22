@@ -48,12 +48,13 @@ public class Buyer extends User {
         this.nationalId = nationalId;
     }
 
-    public void buy(TravelPackage travelPackage) {
+    public Purchase buy(TravelPackage travelPackage) {
         if (travelPackage == null || travelPackage.getPrice() == null) {
             throw new IllegalArgumentException("El paquete de viaje y su precio no pueden ser nulos");
         }
         Purchase purchase = new Purchase(this, travelPackage, travelPackage.getPrice());
         this.travelPackagesPurchased.add(purchase);
+        return purchase;
     }
 
     public void addPurchase(Purchase purchase) {
