@@ -63,6 +63,12 @@ All retrieval endpoints and internal service methods follow a unified `get` conv
 | `GET` | `/api/hotels/{id}` | `ADMIN`, `AGENCY` | Get hotel by ID |
 | `POST` | `/api/hotels` | Authenticated | Register a new hotel |
 
+### Flights (`/api/flights`)
+| Method | Path | Access | Description |
+|---|---|---|---|
+| `GET` | `/api/flights` | `ADMIN`, `AGENCY` | Get available flights (supports filtering & pagination) |
+| `GET` | `/api/flights/{id}` | `ADMIN`, `AGENCY` | Get flight by ID |
+
 ### Buyers (`/api/buyers`)
 | Method | Path | Access | Description |
 |---|---|---|---|
