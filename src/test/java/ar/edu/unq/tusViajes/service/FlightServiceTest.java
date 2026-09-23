@@ -5,6 +5,7 @@ import ar.edu.unq.tusViajes.repository.CountryRepository;
 import ar.edu.unq.tusViajes.adapters.dto.CityDTO;
 import ar.edu.unq.tusViajes.adapters.dto.CountryDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightDTO;
+import ar.edu.unq.tusViajes.adapters.dto.FlightFilterDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.FlightResponseDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.City;
@@ -180,5 +181,39 @@ class FlightServiceTest {
         assertThat(result.getAirline()).isEqualTo("Flybondi");
         assertThat(flightRepository.existsById(60L)).isTrue();
         verify(flightsApiService).getFlight(60L);
+    }
+
+    @Test
+    void getAvailableFlights_returnsFlightsFromFlightsApiService() {
+        FlightDTO flight = new FlightDTO(70L, "Aerolíneas", null, null, LocalDateTime.now().plusDays(2), LocalDateTime.now().plusDays(2).plusHours(2));
+        when(flightsApiService.searchFlights()).thenReturn(List.of(flight));
+
+        List<FlightDTO> result = flightService.getAvailableFlights();
+
+        assertThat(result).containsExactly(flight);
+        verify(flightsApiService).searchFlights();
+    }
+
+    @Test
+    void getAvailableFlights_withFilterAndPagination_delegatesToFlightsApiService() {
+        FlightFilterDTO filter = new FlightFilterDTO("Flybondi", null, null, null, null, 1L, "AR", 2L, "ES");
+        FlightDTO flight = new FlightDTO(80L, "Flybondi", null, null, LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(3).plusHours(4));
+        when(flightsApiService.searchFlights(filter, 0, 10)).thenReturn(List.of(flight));
+
+        List<FlightDTO> result = flightService.getAvailableFlights(filter, 0, 10);
+
+        assertThat(result).containsExactly(flight);
+        verify(flightsApiService).searchFlights(filter, 0, 10);
+    }
+
+    @Test
+    void getAvailableFlight_returnsFlightFromFlightsApiService() {
+        FlightDTO flight = new FlightDTO(90L, "Iberia", null, null, LocalDateTime.now().plusDays(10), LocalDateTime.now().plusDays(10).plusHours(12));
+        when(flightsApiService.getFlight(90L)).thenReturn(flight);
+
+        FlightDTO result = flightService.getAvailableFlight(90L);
+
+        assertThat(result).isEqualTo(flight);
+        verify(flightsApiService).getFlight(90L);
     }
 }

@@ -2,6 +2,7 @@ package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.adapters.dto.CityDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightDTO;
+import ar.edu.unq.tusViajes.adapters.dto.FlightFilterDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.FlightResponseDTO;
 import ar.edu.unq.tusViajes.model.City;
 import ar.edu.unq.tusViajes.model.Flight;
@@ -41,6 +42,18 @@ public class FlightService {
     public FlightResponseDTO create(FlightDTO dto) {
         Flight flight = toEntity(dto);
         return FlightResponseDTO.from(flightRepository.save(flight));
+    }
+
+    public List<FlightDTO> getAvailableFlights() {
+        return flightsApiService.searchFlights();
+    }
+
+    public List<FlightDTO> getAvailableFlights(FlightFilterDTO filter, Integer page, Integer size) {
+        return flightsApiService.searchFlights(filter, page, size);
+    }
+
+    public FlightDTO getAvailableFlight(Long id) {
+        return flightsApiService.getFlight(id);
     }
 
     public Flight getEntityById(Long id) {
