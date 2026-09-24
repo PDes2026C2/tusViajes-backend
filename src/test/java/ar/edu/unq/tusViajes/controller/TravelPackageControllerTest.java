@@ -1,8 +1,8 @@
 package ar.edu.unq.tusViajes.controller;
 
-import ar.edu.unq.tusViajes.repository.CityRepository;
-import ar.edu.unq.tusViajes.repository.CountryRepository;
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
+import ar.edu.unq.tusViajes.builder.CityBuilder;
+import ar.edu.unq.tusViajes.builder.CountryBuilder;
 import ar.edu.unq.tusViajes.builder.FlightBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
@@ -13,9 +13,12 @@ import ar.edu.unq.tusViajes.model.Flight;
 import ar.edu.unq.tusViajes.model.Hotel;
 import ar.edu.unq.tusViajes.model.TravelPackage;
 import ar.edu.unq.tusViajes.repository.AgencyRepository;
+import ar.edu.unq.tusViajes.repository.CityRepository;
+import ar.edu.unq.tusViajes.repository.CountryRepository;
 import ar.edu.unq.tusViajes.repository.FlightRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
 import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
+import ar.edu.unq.tusViajes.security.CustomUserDetails;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -31,8 +34,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import static ar.edu.unq.tusViajes.builder.CityBuilder.aCity;
 import static ar.edu.unq.tusViajes.builder.CountryBuilder.aCountry;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.security.core.authority.AuthorityUtils.createAuthorityList;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Testcontainers(disabledWithoutDocker = true)
@@ -136,7 +140,6 @@ class TravelPackageControllerTest {
                     "startDate": "2026-10-01T10:00:00",
                     "endDate": "2026-10-08T10:00:00",
                     "hotelId": 1,
-                    "agencyId": 1,
                     "departureFlightId": 1,
                     "returnFlightId": 2
                 }
@@ -167,14 +170,13 @@ class TravelPackageControllerTest {
                     "startDate": "2026-10-01T10:00:00",
                     "endDate": "2026-10-08T10:00:00",
                     "hotelId": %d,
-                    "agencyId": %d,
                     "departureFlightId": %d,
                     "returnFlightId": %d
                 }
-                """.formatted(hotel.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
+                """.formatted(hotel.getId(), depFlight.getId(), retFlight.getId());
 
         mockMvc.perform(post("/api/travel-packages")
-                        .with(user("user"))
+                        .with(user(new CustomUserDetails(agency.getId(), agency.getEmail(), agency.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
@@ -218,14 +220,13 @@ class TravelPackageControllerTest {
                     "startDate": "2026-11-01T10:00:00",
                     "endDate": "2026-11-10T10:00:00",
                     "hotelId": %d,
-                    "agencyId": %d,
                     "departureFlightId": %d,
                     "returnFlightId": %d
                 }
-                """.formatted(hotel.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
+                """.formatted(hotel.getId(), depFlight.getId(), retFlight.getId());
 
         mockMvc.perform(put("/api/travel-packages/" + saved.getId())
-                        .with(user("user"))
+                        .with(user(new CustomUserDetails(agency.getId(), agency.getEmail(), agency.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -257,7 +258,7 @@ class TravelPackageControllerTest {
                 .build();
         TravelPackage saved = travelPackageRepository.save(travelPackage);
 
-        mockMvc.perform(delete("/api/travel-packages/" + saved.getId()).with(user("user")))
+        mockMvc.perform(delete("/api/travel-packages/" + saved.getId()).with(user(new CustomUserDetails(agency.getId(), agency.getEmail(), agency.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true))))
                 .andExpect(status().isNoContent());
 
         assertThat(travelPackageRepository.existsById(saved.getId())).isFalse();
@@ -283,18 +284,17 @@ class TravelPackageControllerTest {
                     "startDate": "2026-10-01T10:00:00",
                     "endDate": "2026-10-08T10:00:00",
                     "hotelId": %d,
-                    "agencyId": %d,
                     "departureFlightId": %d,
                     "returnFlightId": %d
                 }
-                """.formatted(hotelInMendoza.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
+                """.formatted(hotelInMendoza.getId(), depFlight.getId(), retFlight.getId());
 
         mockMvc.perform(post("/api/travel-packages")
-                        .with(user("user"))
+                        .with(user(new CustomUserDetails(agency.getId(), agency.getEmail(), agency.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Hotel city must match")));
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("La ciudad del hotel debe coincidir")));
     }
 
     @Test
@@ -321,18 +321,129 @@ class TravelPackageControllerTest {
                     "startDate": "2026-11-01T10:00:00",
                     "endDate": "2026-11-10T10:00:00",
                     "hotelId": %d,
-                    "agencyId": %d,
                     "departureFlightId": %d,
                     "returnFlightId": %d
                 }
-                """.formatted(hotelInMendoza.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
+                """.formatted(hotelInMendoza.getId(), depFlight.getId(), retFlight.getId());
 
         mockMvc.perform(put("/api/travel-packages/" + saved.getId())
-                        .with(user("user"))
+                        .with(user(new CustomUserDetails(agency.getId(), agency.getEmail(), agency.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Hotel city must match")));
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("La ciudad del hotel debe coincidir")));
     }
+
+    @Test
+    void create_returns403_whenBuyer() throws Exception {
+        String json = """
+                {
+                    "name": "Bariloche 7d",
+                    "description": "Desc",
+                    "price": 150000.0,
+                    "startDate": "2026-10-01T10:00:00",
+                    "endDate": "2026-10-08T10:00:00",
+                    "hotelId": 1,
+                    "departureFlightId": 1,
+                    "returnFlightId": 2
+                }
+                """;
+
+        mockMvc.perform(post("/api/travel-packages")
+                        .with(user("buyer").roles("BUYER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void create_usesPrincipalAsOwner() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency owner = agencyRepository.save(AgencyBuilder.anAgency().withEmail("owner@example.com").withTaxId("20-11111111-1").build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(90L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(91L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        String json = """
+                {
+                    "name": "Spoof",
+                    "description": "Desc",
+                    "price": 150000.0,
+                    "startDate": "2026-10-01T10:00:00",
+                    "endDate": "2026-10-08T10:00:00",
+                    "hotelId": %d,
+                    "departureFlightId": %d,
+                    "returnFlightId": %d
+                }
+                """.formatted(hotel.getId(), depFlight.getId(), retFlight.getId());
+
+        mockMvc.perform(post("/api/travel-packages")
+                        .with(user(new CustomUserDetails(owner.getId(), owner.getEmail(), owner.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.agency.id").value(owner.getId()));
+    }
+
+    @Test
+    void update_returns404_whenNotOwner() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency owner = agencyRepository.save(AgencyBuilder.anAgency().withEmail("owner2@example.com").withTaxId("20-33333333-3").build());
+        Agency other = agencyRepository.save(AgencyBuilder.anAgency().withEmail("other2@example.com").withTaxId("20-44444444-4").build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(92L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(93L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        TravelPackage saved = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel).withAgency(owner).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+
+        String json = """
+                {
+                    "name": "Hijack",
+                    "description": "Desc",
+                    "price": 150000.0,
+                    "startDate": "2026-10-01T10:00:00",
+                    "endDate": "2026-10-08T10:00:00",
+                    "hotelId": %d,
+                    "departureFlightId": %d,
+                    "returnFlightId": %d
+                }
+                """.formatted(hotel.getId(), depFlight.getId(), retFlight.getId());
+
+        mockMvc.perform(put("/api/travel-packages/" + saved.getId())
+                        .with(user(new CustomUserDetails(other.getId(), other.getEmail(), other.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void delete_returns404_whenNotOwner() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency owner = agencyRepository.save(AgencyBuilder.anAgency().withEmail("owner3@example.com").withTaxId("20-55555555-5").build());
+        Agency other = agencyRepository.save(AgencyBuilder.anAgency().withEmail("other3@example.com").withTaxId("20-66666666-6").build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(94L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(95L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        TravelPackage saved = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel).withAgency(owner).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+
+        mockMvc.perform(delete("/api/travel-packages/" + saved.getId())
+                        .with(user(new CustomUserDetails(other.getId(), other.getEmail(), other.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true))))
+                .andExpect(status().isNotFound());
+
+        assertThat(travelPackageRepository.existsById(saved.getId())).isTrue();
+    }
+
 }
 
