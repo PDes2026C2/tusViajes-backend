@@ -57,6 +57,9 @@ public class TravelPackage {
     @JoinColumn(name = "return_flight_id", nullable = false)
     private Flight returnFlight;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
     public TravelPackage(String name, String description, Double price, LocalDateTime startDate,
                          LocalDateTime endDate, Hotel hotel, Agency agency, Flight departureFlight, Flight returnFlight) {
         this.name = name;
@@ -85,5 +88,13 @@ public class TravelPackage {
 
     public boolean hasEnded(){
         return endDate.isBefore(LocalDateTime.now());
+    }
+
+    public void deactivate() {
+        this.active = false;
+    }
+
+    public void activate() {
+        this.active = true;
     }
 }

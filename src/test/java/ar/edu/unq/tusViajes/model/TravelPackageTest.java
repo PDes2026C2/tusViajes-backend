@@ -68,4 +68,29 @@ class TravelPackageTest {
         assertThat(travelPackage.getDepartureFlight()).isEqualTo(newDeparture);
         assertThat(travelPackage.getReturnFlight()).isEqualTo(newReturn);
     }
+
+    @Test
+    void createTravelPackage_isActiveByDefault() {
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().build();
+
+        assertThat(travelPackage.isActive()).isTrue();
+    }
+
+    @Test
+    void deactivate_setsActiveToFalse() {
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().build();
+
+        travelPackage.deactivate();
+
+        assertThat(travelPackage.isActive()).isFalse();
+    }
+
+    @Test
+    void activate_setsActiveToTrue() {
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().withActive(false).build();
+
+        travelPackage.activate();
+
+        assertThat(travelPackage.isActive()).isTrue();
+    }
 }
