@@ -78,13 +78,13 @@ public class GlobalExceptionHandler {
             errors.put(error.getField(), error.getDefaultMessage());
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorDTO(HttpStatus.BAD_REQUEST.value(), "Invalid data", errors));
+                .body(new ErrorDTO(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), errors));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorDTO> handleNotReadable(HttpMessageNotReadableException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorDTO(HttpStatus.BAD_REQUEST.value(), "Malformed request payload"));
+                .body(new ErrorDTO(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

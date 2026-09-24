@@ -16,7 +16,7 @@ public class UserValidator {
 
     public void validateEmailAvailable(String email) {
         if (userRepository.existsByEmail(email)) {
-            throw new DuplicateResourceException("A user already exists with email " + email);
+            throw new DuplicateResourceException("El usuario ya existe");
         }
     }
 }

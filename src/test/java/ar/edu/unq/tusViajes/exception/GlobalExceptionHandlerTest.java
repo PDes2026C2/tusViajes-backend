@@ -84,14 +84,14 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleInvalidCredentials_returns401WithErrorDTO() {
-        InvalidCredentialsException ex = new InvalidCredentialsException("Invalid credentials");
+        InvalidCredentialsException ex = new InvalidCredentialsException();
 
         ResponseEntity<ErrorDTO> response = handler.handleInvalidCredentials(ex);
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(401, response.getBody().code());
-        assertEquals("Invalid credentials", response.getBody().message());
+        assertEquals("Credenciales invalidas", response.getBody().message());
         assertNotNull(response.getBody().timestamp());
         assertNull(response.getBody().errors());
     }

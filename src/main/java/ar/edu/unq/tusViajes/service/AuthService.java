@@ -36,10 +36,10 @@ public class AuthService {
     @Transactional(readOnly = true)
     public LoginResponseDTO login(LoginRequestDTO dto) {
         User user = userRepository.findByEmail(dto.email())
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
+                .orElseThrow(() -> new InvalidCredentialsException());
 
         if (!passwordEncoder.matches(dto.password(), user.getPasswordHash())) {
-            throw new InvalidCredentialsException("Invalid credentials");
+            throw new InvalidCredentialsException();
         }
 
         if (!user.isActive()) {
@@ -65,7 +65,7 @@ public class AuthService {
         userValidator.validateEmailAvailable(dto.email());
 
         if (agencyRepository.existsByTaxId(dto.taxId())) {
-            throw new DuplicateResourceException("An agency already exists with tax ID " + dto.taxId());
+            throw new DuplicateResourceException("El CUIT ya está registrado.");
         }
 
         String hash = passwordEncoder.encode(dto.password());
@@ -74,7 +74,7 @@ public class AuthService {
 
         return AgencyRegistrationResponseDTO.from(
                 savedAgency,
-                "Registration request received. Pending authorization by an administrator."
+                "Tu postulación ha sido enviada con éxito. Un administrador revisará tu solicitud."
         );
     }
 
@@ -107,7 +107,7 @@ public class AuthService {
 
         String email = jwtTokenService.getEmail(token);
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new InvalidCredentialsException("User not found"));
+                .orElseThrow(InvalidCredentialsException::new);
 
         String newToken = jwtTokenService.generateToken(user);
         String refreshToken = jwtTokenService.generateToken(user, true);

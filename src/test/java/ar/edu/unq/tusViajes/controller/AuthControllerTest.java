@@ -138,7 +138,7 @@ class AuthControllerTest {
                         .content(json))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(401))
-                .andExpect(jsonPath("$.message").value("Invalid credentials"))
+                .andExpect(jsonPath("$.message").value("Credenciales invalidas"))
                 .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }
 
