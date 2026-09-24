@@ -25,7 +25,7 @@ public class City {
     public String name;
 
     @ManyToOne
-    @JoinColumn(name = "countryISO")
+    @JoinColumn(name = "country_iso")
     public Country country;
 
     public City(String name, Country country) {
