@@ -34,21 +34,21 @@ public class BuyerController {
         return ResponseEntity.ok(buyerService.getById(id));
     }
 
-    @PostMapping("/favorites/{travelPackageId}")
+    @PostMapping("/me/favorites/{travelPackageId}")
     public ResponseEntity<Void> addFavorite(@AuthenticationPrincipal CustomUserDetails userDetails,
                                             @PathVariable Long travelPackageId) {
         buyerService.addFavorite(userDetails.getId(), travelPackageId);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/favorites/{travelPackageId}")
+    @DeleteMapping("/me/favorites/{travelPackageId}")
     public ResponseEntity<Void> removeFavorite(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                @PathVariable Long travelPackageId) {
         buyerService.removeFavorite(userDetails.getId(), travelPackageId);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/favorites")
+    @GetMapping("/me/favorites")
     public ResponseEntity<List<TravelPackageResponseDTO>> getFavorites(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(buyerService.getFavorites(userDetails.getId()));
     }

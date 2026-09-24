@@ -52,9 +52,9 @@ All retrieval endpoints and internal service methods follow a unified `get` conv
 |---|---|---|---|
 | `GET` | `/api/travel-packages` | Public | Get all travel packages |
 | `GET` | `/api/travel-packages/{id}` | Public | Get travel package by ID |
-| `POST` | `/api/travel-packages` | Authenticated | Create a new travel package |
-| `PUT` | `/api/travel-packages/{id}` | Authenticated | Update travel package details |
-| `DELETE` | `/api/travel-packages/{id}` | Authenticated | Delete travel package |
+| `POST` | `/api/travel-packages` | `AGENCY` | Create own travel package (agencyId from JWT, no `agencyId` in body) |
+| `PUT` | `/api/travel-packages/{id}` | `AGENCY` | Update own travel package (404 if not owned) |
+| `DELETE` | `/api/travel-packages/{id}` | `AGENCY` | Delete own travel package (404 if not owned) |
 
 ### Hotels (`/api/hotels`)
 | Method | Path | Access | Description |
@@ -75,15 +75,16 @@ All retrieval endpoints and internal service methods follow a unified `get` conv
 | `GET` | `/api/buyers` | Authenticated | Get all buyers |
 | `GET` | `/api/buyers/{id}` | Authenticated | Get buyer by ID |
 | `POST` | `/api/buyers` | Public | Register a buyer |
-| `POST` | `/api/buyers/{buyerId}/favorites/{travelPackageId}` | Authenticated | Add travel package to buyer's favorites |
-| `DELETE` | `/api/buyers/{buyerId}/favorites/{travelPackageId}` | Authenticated | Remove travel package from buyer's favorites |
-| `GET` | `/api/buyers/{buyerId}/favorites` | Authenticated | Get all favorite travel packages for a buyer |
+| `POST` | `/api/buyers/me/favorites/{travelPackageId}` | `BUYER` | Add own favorite travel package |
+| `DELETE` | `/api/buyers/me/favorites/{travelPackageId}` | `BUYER` | Remove own favorite travel package |
+| `GET` | `/api/buyers/me/favorites` | `BUYER` | Get own favorite travel packages |
 
 ### Agencies (`/api/agencies`)
 | Method | Path | Access | Description |
 |---|---|---|---|
 | `GET` | `/api/agencies` | `ADMIN` | Get all agencies |
 | `GET` | `/api/agencies/{id}` | `ADMIN` | Get agency by ID |
+| `GET` | `/api/agencies/me/packages` | `AGENCY` | Get own travel packages (paginated, e.g. `?page&size`) |
 | `PUT` | `/api/agencies/{id}` | `ADMIN` | Update agency business name |
 | `DELETE` | `/api/agencies/{id}` | `ADMIN` | Delete agency |
 
