@@ -10,7 +10,7 @@ import lombok.Setter;
 @Table(name="cities",
         schema = "world",
         uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"name", "countryISO"}),
+        @UniqueConstraint(columnNames = {"name", "country_iso"}),
     })
 @Getter
 @Setter
