@@ -113,8 +113,16 @@ class BuyerControllerTest {
 
     @Test
     void addFavorite_returns401_whenUnauthenticated() throws Exception {
-                mockMvc.perform(post("/api/buyers/favorites/1"))
+                mockMvc.perform(post("/api/buyers/me/favorites/1"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void addFavorite_returns403_whenNotBuyer() throws Exception {
+        mockMvc.perform(post("/api/buyers/me/favorites/1").with(user("agency").roles("AGENCY")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/buyers/me/favorites/1").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -134,7 +142,7 @@ class BuyerControllerTest {
 
         TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).withDepartureFlight(departureFlight).withReturnFlight(returnFlight).build());
 
-        mockMvc.perform(post("/api/buyers/favorites/" + travelPackage.getId())
+        mockMvc.perform(post("/api/buyers/me/favorites/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true))))
                 .andExpect(status().isOk());
@@ -145,8 +153,14 @@ class BuyerControllerTest {
 
     @Test
     void removeFavorite_returns401_whenUnauthenticated() throws Exception {
-                mockMvc.perform(delete("/api/buyers/favorites/1"))
+                mockMvc.perform(delete("/api/buyers/me/favorites/1"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void removeFavorite_returns403_whenNotBuyer() throws Exception {
+        mockMvc.perform(delete("/api/buyers/me/favorites/1").with(user("agency").roles("AGENCY")))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -168,7 +182,7 @@ class BuyerControllerTest {
         buyer.addFavorite(travelPackage);
         buyer = buyerRepository.save(buyer);
 
-        mockMvc.perform(delete("/api/buyers/favorites/" + travelPackage.getId())
+        mockMvc.perform(delete("/api/buyers/me/favorites/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true))))
                 .andExpect(status().isNoContent());
@@ -179,8 +193,14 @@ class BuyerControllerTest {
 
     @Test
     void getFavorites_returns401_whenUnauthenticated() throws Exception {
-                mockMvc.perform(get("/api/buyers/favorites"))
+                mockMvc.perform(get("/api/buyers/me/favorites"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getFavorites_returns403_whenNotBuyer() throws Exception {
+        mockMvc.perform(get("/api/buyers/me/favorites").with(user("agency").roles("AGENCY")))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -202,7 +222,7 @@ class BuyerControllerTest {
         buyer.addFavorite(travelPackage);
         buyer = buyerRepository.save(buyer);
 
-        mockMvc.perform(get("/api/buyers/favorites")
+        mockMvc.perform(get("/api/buyers/me/favorites")
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true))))
                 .andExpect(status().isOk())
