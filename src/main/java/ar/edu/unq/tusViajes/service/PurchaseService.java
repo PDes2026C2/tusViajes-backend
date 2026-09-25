@@ -13,6 +13,8 @@ import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
 import ar.edu.unq.tusViajes.validator.EntityValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,6 +69,16 @@ public class PurchaseService {
         Purchase saved = purchaseRepository.save(purchase);
         logger.info("Purchase {} created for buyer {} with price {}", saved.getId(), buyerId, saved.getPrice());
         return PurchaseResponseDTO.from(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PurchaseResponseDTO> getPurchasesByBuyer(Long buyerId, Pageable pageable) {
+        return purchaseRepository.findByBuyerId(buyerId, pageable).map(PurchaseResponseDTO::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PurchaseResponseDTO> getSalesByAgency(Long agencyId, Pageable pageable) {
+        return purchaseRepository.findByTravelPackageAgencyId(agencyId, pageable).map(PurchaseResponseDTO::from);
     }
 
     private PassengerDTO toPassengerDTO(Buyer buyer) {

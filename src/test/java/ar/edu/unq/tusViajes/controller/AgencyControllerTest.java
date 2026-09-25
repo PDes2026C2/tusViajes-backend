@@ -1,22 +1,26 @@
 package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
+import ar.edu.unq.tusViajes.builder.BuyerBuilder;
 import ar.edu.unq.tusViajes.builder.CityBuilder;
 import ar.edu.unq.tusViajes.builder.CountryBuilder;
 import ar.edu.unq.tusViajes.builder.FlightBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
 import ar.edu.unq.tusViajes.model.Agency;
+import ar.edu.unq.tusViajes.model.Buyer;
 import ar.edu.unq.tusViajes.model.City;
 import ar.edu.unq.tusViajes.model.Country;
 import ar.edu.unq.tusViajes.model.Flight;
 import ar.edu.unq.tusViajes.model.Hotel;
 import ar.edu.unq.tusViajes.model.TravelPackage;
 import ar.edu.unq.tusViajes.repository.AgencyRepository;
+import ar.edu.unq.tusViajes.repository.BuyerRepository;
 import ar.edu.unq.tusViajes.repository.CityRepository;
 import ar.edu.unq.tusViajes.repository.CountryRepository;
 import ar.edu.unq.tusViajes.repository.FlightRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
+import ar.edu.unq.tusViajes.repository.PurchaseRepository;
 import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
 
@@ -70,6 +74,9 @@ class AgencyControllerTest {
 
     @Autowired
     private CountryRepository countryRepository;
+
+    @Autowired
+    private BuyerRepository buyerRepository;
 
     @Test
     void getAll_returns401_whenUnauthenticated() throws Exception {
@@ -223,5 +230,56 @@ class AgencyControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.content[0].name").value("Mine"));
+    }
+
+    @Test
+    void getMySales_returns401_whenUnauthenticated() throws Exception {
+        mockMvc.perform(get("/api/agencies/me/sales"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getMySales_returns403_whenNotAgency() throws Exception {
+        mockMvc.perform(get("/api/agencies/me/sales").with(user("buyer").roles("BUYER")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/agencies/me/sales").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getMySales_returnsOnlyOwnSales() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency mine = agencyRepository.save(AgencyBuilder.anAgency().withEmail("mine-sales@example.com").withTaxId("20-99999991-1").build());
+        Agency other = agencyRepository.save(AgencyBuilder.anAgency().withEmail("other-sales@example.com").withTaxId("20-99999992-2").build());
+        Flight dep = flightRepository.save(FlightBuilder.aFlight().withId(120L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight ret = flightRepository.save(FlightBuilder.aFlight().withId(121L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+        TravelPackage mineTp = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(mine).withDepartureFlight(dep).withReturnFlight(ret).build());
+        TravelPackage otherTp = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(other).withDepartureFlight(dep).withReturnFlight(ret).build());
+        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().withEmail("buyer-sales@example.com").withNationalId("40222222").build());
+        buyer.buy(mineTp);
+        buyerRepository.save(buyer);
+        Buyer buyer2 = buyerRepository.save(BuyerBuilder.aBuyer().withEmail("buyer2-sales@example.com").withNationalId("40222223").build());
+        buyer2.buy(otherTp);
+        buyerRepository.save(buyer2);
+
+        mockMvc.perform(get("/api/agencies/me/sales")
+                        .with(user(new CustomUserDetails(mine.getId(), mine.getEmail(), mine.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].travelPackage.id").value(mineTp.getId()));
+    }
+
+    @Test
+    void getMySales_returnsEmptyWhenNoSales() throws Exception {
+        Agency mine = agencyRepository.save(AgencyBuilder.anAgency().withEmail("empty-sales@example.com").withTaxId("20-99999993-3").build());
+
+        mockMvc.perform(get("/api/agencies/me/sales")
+                        .with(user(new CustomUserDetails(mine.getId(), mine.getEmail(), mine.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 }

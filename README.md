@@ -85,8 +85,15 @@ All retrieval endpoints and internal service methods follow a unified `get` conv
 | `GET` | `/api/agencies` | `ADMIN` | Get all agencies |
 | `GET` | `/api/agencies/{id}` | `ADMIN` | Get agency by ID |
 | `GET` | `/api/agencies/me/packages` | `AGENCY` | Get own travel packages (paginated, e.g. `?page&size`) |
+| `GET` | `/api/agencies/me/sales` | `AGENCY` | Get own sales (paginated, `?page&size`, includes buyer + package) |
 | `PUT` | `/api/agencies/{id}` | `ADMIN` | Update agency business name |
 | `DELETE` | `/api/agencies/{id}` | `ADMIN` | Delete agency |
+
+### Purchases (`/api/purchases` & `/api/buyers`)
+| Method | Path | Access | Description |
+|---|---|---|---|
+| `POST` | `/api/purchases/{travelPackageId}` | `BUYER` | Purchase a travel package |
+| `GET` | `/api/buyers/me/purchases` | `BUYER` | Get own purchases (paginated, `?page&size`) |
 
 ### Administrator Management (`/api/admin`)
 | Method | Path | Access | Description |
