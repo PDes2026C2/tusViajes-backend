@@ -15,8 +15,10 @@ import ar.edu.unq.tusViajes.controller.dto.request.UpdateAgencyRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AgencyResponseDTO;
 import ar.edu.unq.tusViajes.service.AgencyService;
 
+import ar.edu.unq.tusViajes.controller.dto.response.PurchaseResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
+import ar.edu.unq.tusViajes.service.PurchaseService;
 import ar.edu.unq.tusViajes.service.TravelPackageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class AgencyController {
 
     private final AgencyService agencyService;
     private final TravelPackageService travelPackageService;
+    private final PurchaseService purchaseService;
 
     @GetMapping
     public ResponseEntity<List<AgencyResponseDTO>> getAll() {
@@ -59,5 +62,12 @@ public class AgencyController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(travelPackageService.searchMine(userDetails.getId(), pageable));
+    }
+
+    @GetMapping("/me/sales")
+    public ResponseEntity<Page<PurchaseResponseDTO>> getMySales(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(purchaseService.getSalesByAgency(userDetails.getId(), pageable));
     }
 }
