@@ -58,6 +58,6 @@ public class AgencyController {
     public ResponseEntity<Page<TravelPackageResponseDTO>> getMyPackages(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(travelPackageService.searchMine(userDetails.getId(), pageable));
+        return ResponseEntity.ok(travelPackageService.searchMine(userDetails.getId(), pageable).map(TravelPackageResponseDTO::from));
     }
 }

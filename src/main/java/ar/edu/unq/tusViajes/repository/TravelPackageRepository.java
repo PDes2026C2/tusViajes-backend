@@ -9,4 +9,5 @@ import ar.edu.unq.tusViajes.model.TravelPackage;
 
 public interface TravelPackageRepository extends JpaRepository<TravelPackage, Long>, JpaSpecificationExecutor<TravelPackage> {
     Page<TravelPackage> findByActiveTrue(Pageable pageable);
+    Page<TravelPackage> findByAgencyId(Long agencyId, Pageable pageable);
 }

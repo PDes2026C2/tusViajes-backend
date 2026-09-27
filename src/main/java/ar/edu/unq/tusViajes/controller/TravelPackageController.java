@@ -1,6 +1,7 @@
 package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.UpdateTravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
 import ar.edu.unq.tusViajes.service.TravelPackageService;
@@ -37,22 +38,22 @@ public class TravelPackageController {
     public ResponseEntity<TravelPackageResponseDTO> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody TravelPackageRequestDTO dto) {
-        TravelPackageResponseDTO created = travelPackageService.create(userDetails.getId(), dto);
+        TravelPackageResponseDTO created = travelPackageService.create(dto, userDetails.getId());
         return ResponseEntity.created(URI.create("/api/travel-packages/" + created.getId())).body(created);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TravelPackageResponseDTO> update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long id, @Valid @RequestBody TravelPackageRequestDTO dto) {
-        return ResponseEntity.ok(travelPackageService.update(userDetails.getId(), id, dto));
+            @PathVariable Long id, @Valid @RequestBody UpdateTravelPackageRequestDTO dto) {
+        return ResponseEntity.ok(travelPackageService.update(id, userDetails.getId(), dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long id) {
-        travelPackageService.delete(userDetails.getId(), id);
+        travelPackageService.delete(id, userDetails.getId());
         return ResponseEntity.noContent().build();
     }
 }

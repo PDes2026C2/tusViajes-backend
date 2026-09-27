@@ -117,9 +117,9 @@ public class TravelPackage {
 
         if (!hotelCityId.equals(departureDestinationCityId) || !hotelCityId.equals(returnOriginCityId)) {
             throw new InvalidTravelPackageException(
-                    "Hotel city must match destination of departure flight and origin of return flight. Hotel city id: "
-                            + hotelCityId + ", departure destination id: " + departureDestinationCityId
-                            + ", return origin id: " + returnOriginCityId);
+                    "La ciudad del hotel debe coincidir con el destino del vuelo de ida y el origen del vuelo de vuelta. Id de ciudad del hotel: "
+                            + hotelCityId + ", id de destino del vuelo de ida: " + departureDestinationCityId
+                            + ", id de origen del vuelo de vuelta: " + returnOriginCityId);
         }
     }
 }

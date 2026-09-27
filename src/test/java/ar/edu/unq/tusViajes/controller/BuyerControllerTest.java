@@ -144,7 +144,7 @@ class BuyerControllerTest {
 
         mockMvc.perform(post("/api/buyers/me/favorites/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
-                                createAuthorityList("AGENCY"), true))))
+                                createAuthorityList("ROLE_BUYER"), true))))
                 .andExpect(status().isOk());
 
         Buyer updatedBuyer = buyerRepository.findById(buyer.getId()).orElseThrow();

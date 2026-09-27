@@ -92,6 +92,11 @@ public class TravelPackageService {
         travelPackageRepository.save(travelPackage);
     }
 
+    @Transactional(readOnly = true)
+    public Page<TravelPackage> searchMine(Long agencyId, Pageable pageable) {
+        return travelPackageRepository.findByAgencyId(agencyId, pageable);
+    }
+
     public TravelPackage getEntityById(Long id) {
         return travelPackageRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("TravelPackage with id " + id + " not found"));

@@ -175,7 +175,7 @@ class TravelPackageServiceTest {
 
         assertThatThrownBy(() -> travelPackageService.create(dto, agency.getId()))
                 .isInstanceOf(InvalidTravelPackageException.class)
-                .hasMessageContaining("Hotel city must match");
+                .hasMessageContaining("La ciudad del hotel debe coincidir");
     }
 
     @Test
@@ -203,7 +203,7 @@ class TravelPackageServiceTest {
 
         assertThatThrownBy(() -> travelPackageService.update(saved.getId(), agency.getId(), dto))
                 .isInstanceOf(InvalidTravelPackageException.class)
-                .hasMessageContaining("Hotel city must match");
+                .hasMessageContaining("La ciudad del hotel debe coincidir");
     }
 
     @Test

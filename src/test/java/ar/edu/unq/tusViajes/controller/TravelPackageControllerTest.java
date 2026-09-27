@@ -297,7 +297,7 @@ class TravelPackageControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Hotel city must match")));
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("La ciudad del hotel debe coincidir")));
     }
 
     @Test
@@ -335,7 +335,7 @@ class TravelPackageControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Hotel city must match")));
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("La ciudad del hotel debe coincidir")));
     }
 
     @Test
