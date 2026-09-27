@@ -5,9 +5,11 @@ import ar.edu.unq.tusViajes.builder.FlightBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
 import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.UpdateTravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.exception.InvalidTravelPackageException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
+import ar.edu.unq.tusViajes.exception.UnauthorizedAgencyException;
 import ar.edu.unq.tusViajes.model.Agency;
 import ar.edu.unq.tusViajes.model.Flight;
 import ar.edu.unq.tusViajes.model.Hotel;
@@ -140,11 +142,11 @@ class TravelPackageServiceTest {
         TravelPackageRequestDTO dto = new TravelPackageRequestDTO(
                 "Viaje a Cataratas", "All inclusive", 200000.0,
                 LocalDateTime.now().plusDays(5), LocalDateTime.now().plusDays(10),
-                hotel.getId(), agency.getId(),
+                hotel.getId(),
                 depFlight.getId(), retFlight.getId()
         );
 
-        TravelPackageResponseDTO result = travelPackageService.create(dto);
+        TravelPackageResponseDTO result = travelPackageService.create(dto, agency.getId());
 
         assertThat(result.getName()).isEqualTo("Viaje a Cataratas");
         assertThat(result.getPrice()).isEqualTo(200000.0);
@@ -167,11 +169,11 @@ class TravelPackageServiceTest {
         TravelPackageRequestDTO dto = new TravelPackageRequestDTO(
                 "Viaje a Bariloche", "Desc", 200000.0,
                 LocalDateTime.now().plusDays(5), LocalDateTime.now().plusDays(10),
-                hotelInMendoza.getId(), agency.getId(),
+                hotelInMendoza.getId(),
                 depFlight.getId(), retFlight.getId()
         );
 
-        assertThatThrownBy(() -> travelPackageService.create(dto))
+        assertThatThrownBy(() -> travelPackageService.create(dto, agency.getId()))
                 .isInstanceOf(InvalidTravelPackageException.class)
                 .hasMessageContaining("Hotel city must match");
     }
@@ -192,15 +194,108 @@ class TravelPackageServiceTest {
         TravelPackage saved = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotelInBariloche).withAgency(agency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
 
-        TravelPackageRequestDTO dto = new TravelPackageRequestDTO(
+        UpdateTravelPackageRequestDTO dto = new UpdateTravelPackageRequestDTO(
                 "Update", "Desc", 200000.0,
                 LocalDateTime.now().plusDays(5), LocalDateTime.now().plusDays(10),
-                hotelInMendoza.getId(), agency.getId(),
+                hotelInMendoza.getId(),
                 depFlight.getId(), retFlight.getId()
         );
 
-        assertThatThrownBy(() -> travelPackageService.update(saved.getId(), dto))
+        assertThatThrownBy(() -> travelPackageService.update(saved.getId(), agency.getId(), dto))
                 .isInstanceOf(InvalidTravelPackageException.class)
                 .hasMessageContaining("Hotel city must match");
+    }
+
+    @Test
+    void delete_deactivatesTravelPackageInsteadOfHardDeleting() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("softdel@agency.com").withTaxId("30-55555555-5").build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(80L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(81L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        TravelPackage saved = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+
+        travelPackageService.delete(saved.getId(), agency.getId());
+
+        TravelPackage inDb = travelPackageRepository.findById(saved.getId()).orElseThrow();
+        assertThat(inDb.isActive()).isFalse();
+        assertThat(travelPackageRepository.existsById(saved.getId())).isTrue();
+    }
+
+    @Test
+    void search_returnsOnlyActiveTravelPackages() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("searchact@agency.com").withTaxId("30-66666666-6").build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(90L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(91L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        TravelPackage activePackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Active Package")
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+
+        TravelPackage inactivePackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Inactive Package")
+                .withActive(false)
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+
+        Page<TravelPackageResponseDTO> result = travelPackageService.search(PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).extracting(TravelPackageResponseDTO::getName)
+                .contains(activePackage.getName())
+                .doesNotContain(inactivePackage.getName());
+    }
+
+    @Test
+    void delete_throwsWhenTravelPackageDoesNotBelongToAgency() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency ownerAgency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("owner@agency.com").withTaxId("30-11111111-1").build());
+        Agency otherAgency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("other@agency.com").withTaxId("30-22222222-2").build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(60L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(61L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        TravelPackage saved = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel).withAgency(ownerAgency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+
+        assertThatThrownBy(() -> travelPackageService.delete(saved.getId(), otherAgency.getId()))
+                .isInstanceOf(UnauthorizedAgencyException.class);
+    }
+
+    @Test
+    void update_throwsWhenTravelPackageDoesNotBelongToAgency() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency ownerAgency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("owner2@agency.com").withTaxId("30-33333333-3").build());
+        Agency otherAgency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("other2@agency.com").withTaxId("30-44444444-4").build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(70L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(71L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        TravelPackage saved = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel).withAgency(ownerAgency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+
+        UpdateTravelPackageRequestDTO dto = new UpdateTravelPackageRequestDTO(
+                "Update Name", "Desc", 200000.0,
+                LocalDateTime.now().plusDays(5), LocalDateTime.now().plusDays(10),
+                hotel.getId(),
+                depFlight.getId(), retFlight.getId()
+        );
+
+        assertThatThrownBy(() -> travelPackageService.update(saved.getId(), otherAgency.getId(), dto))
+                .isInstanceOf(UnauthorizedAgencyException.class);
     }
 }

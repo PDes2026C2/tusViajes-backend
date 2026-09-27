@@ -36,9 +36,6 @@ public class TravelPackageRequestDTO {
     @NotNull(message = "Hotel ID is required")
     private Long hotelId;
 
-    @NotNull(message = "Agency ID is required")
-    private Long agencyId;
-
     @NotNull(message = "Departure Flight ID is required")
     private Long departureFlightId;
 

@@ -25,7 +25,7 @@ public class TravelPackageResponseDTO {
     private AgencyResponseDTO agency;
     private FlightResponseDTO departureFlight;
     private FlightResponseDTO arrivalFlight;
-
+    private Boolean active;
 
     public static TravelPackageResponseDTO from(TravelPackage travelPackage) {
         if (travelPackage == null) {
@@ -41,7 +41,8 @@ public class TravelPackageResponseDTO {
                 HotelResponseDTO.from(travelPackage.getHotel()),
                 AgencyResponseDTO.from(travelPackage.getAgency()),
                 FlightResponseDTO.from(travelPackage.getDepartureFlight()),
-                FlightResponseDTO.from(travelPackage.getReturnFlight())
+                FlightResponseDTO.from(travelPackage.getReturnFlight()),
+                travelPackage.isActive()
         );
     }
 }

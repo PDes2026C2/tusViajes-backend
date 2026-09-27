@@ -1,8 +1,8 @@
 package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.UpdateTravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
-import ar.edu.unq.tusViajes.exception.InvalidTravelPackageException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Agency;
 import ar.edu.unq.tusViajes.model.Flight;
@@ -28,7 +28,7 @@ public class TravelPackageService {
 
     @Transactional(readOnly = true)
     public Page<TravelPackageResponseDTO> search(Pageable pageable) {
-        return travelPackageRepository.findAll(pageable).map(TravelPackageResponseDTO::from);
+        return travelPackageRepository.findByActiveTrue(pageable).map(TravelPackageResponseDTO::from);
     }
 
     @Transactional(readOnly = true)
@@ -36,15 +36,13 @@ public class TravelPackageService {
         return TravelPackageResponseDTO.from(getEntityById(id));
     }
 
-    public TravelPackageResponseDTO create(TravelPackageRequestDTO dto) {
+    public TravelPackageResponseDTO create(TravelPackageRequestDTO dto, Long agencyId) {
         Flight departureFlight = flightService.getOrCreateFlight(dto.getDepartureFlightId());
         Flight returnFlight = flightService.getOrCreateFlight(dto.getReturnFlightId());
 
         return transactionTemplate.execute(status -> {
             Hotel hotel = hotelService.getEntityById(dto.getHotelId());
-            Agency agency = agencyService.getEntityById(dto.getAgencyId());
-
-            validateHotelAndFlights(hotel, departureFlight, returnFlight);
+            Agency agency = agencyService.getEntityById(agencyId);
 
             TravelPackage travelPackage = new TravelPackage(
                     dto.getName(),
@@ -61,16 +59,14 @@ public class TravelPackageService {
         });
     }
 
-    public TravelPackageResponseDTO update(Long id, TravelPackageRequestDTO dto) {
+    public TravelPackageResponseDTO update(Long id, Long agencyId, UpdateTravelPackageRequestDTO dto) {
         Flight departureFlight = flightService.getOrCreateFlight(dto.getDepartureFlightId());
         Flight returnFlight = flightService.getOrCreateFlight(dto.getReturnFlightId());
 
         return transactionTemplate.execute(status -> {
             TravelPackage travelPackage = getEntityById(id);
             Hotel hotel = hotelService.getEntityById(dto.getHotelId());
-            Agency agency = agencyService.getEntityById(dto.getAgencyId());
-
-            validateHotelAndFlights(hotel, departureFlight, returnFlight);
+            Agency agency = agencyService.getEntityById(agencyId);
 
             travelPackage.updateData(
                     dto.getName(),
@@ -88,25 +84,12 @@ public class TravelPackageService {
         });
     }
 
-    private void validateHotelAndFlights(Hotel hotel, Flight departureFlight, Flight returnFlight) {
-        Long hotelCityId = hotel.getCity().getId();
-        Long departureDestinationCityId = departureFlight.getDestinationCity().getId();
-        Long returnOriginCityId = returnFlight.getOriginCity().getId();
-
-        if (!hotelCityId.equals(departureDestinationCityId) || !hotelCityId.equals(returnOriginCityId)) {
-            throw new InvalidTravelPackageException(
-                    "Hotel city must match destination of departure flight and origin of return flight. Hotel city id: "
-                            + hotelCityId + ", departure destination id: " + departureDestinationCityId
-                            + ", return origin id: " + returnOriginCityId);
-        }
-    }
-
     @Transactional
-    public void delete(Long id) {
-        if (!travelPackageRepository.existsById(id)) {
-            throw new ResourceNotFoundException("TravelPackage with id " + id + " not found");
-        }
-        travelPackageRepository.deleteById(id);
+    public void delete(Long id, Long agencyId) {
+        TravelPackage travelPackage = getEntityById(id);
+        Agency agency = agencyService.getEntityById(agencyId);
+        travelPackage.deactivate(agency);
+        travelPackageRepository.save(travelPackage);
     }
 
     public TravelPackage getEntityById(Long id) {
