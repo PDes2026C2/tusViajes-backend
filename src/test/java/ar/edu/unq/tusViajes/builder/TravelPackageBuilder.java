@@ -104,7 +104,7 @@ public class TravelPackageBuilder {
             org.springframework.test.util.ReflectionTestUtils.setField(tp, "id", id);
         }
         if (!active) {
-            tp.deactivate();
+            tp.deactivate(agency);
         }
         return tp;
     }

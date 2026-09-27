@@ -30,6 +30,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static ar.edu.unq.tusViajes.builder.CityBuilder.aCity;
 import static ar.edu.unq.tusViajes.builder.CountryBuilder.aCountry;
+import static ar.edu.unq.tusViajes.util.TestSecurityUtils.withCustomUserDetails;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -174,7 +175,7 @@ class TravelPackageControllerTest {
                 """.formatted(hotel.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
 
         mockMvc.perform(post("/api/travel-packages")
-                        .with(user("user"))
+                        .with(withCustomUserDetails(agency))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
@@ -218,14 +219,13 @@ class TravelPackageControllerTest {
                     "startDate": "2026-11-01T10:00:00",
                     "endDate": "2026-11-10T10:00:00",
                     "hotelId": %d,
-                    "agencyId": %d,
                     "departureFlightId": %d,
                     "returnFlightId": %d
                 }
-                """.formatted(hotel.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
+                """.formatted(hotel.getId(), depFlight.getId(), retFlight.getId());
 
         mockMvc.perform(put("/api/travel-packages/" + saved.getId())
-                        .with(user("user"))
+                        .with(withCustomUserDetails(agency))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -257,10 +257,13 @@ class TravelPackageControllerTest {
                 .build();
         TravelPackage saved = travelPackageRepository.save(travelPackage);
 
-        mockMvc.perform(delete("/api/travel-packages/" + saved.getId()).with(user("user")))
+        mockMvc.perform(delete("/api/travel-packages/" + saved.getId())
+                        .with(withCustomUserDetails(agency)))
                 .andExpect(status().isNoContent());
 
-        assertThat(travelPackageRepository.existsById(saved.getId())).isFalse();
+        TravelPackage inDb = travelPackageRepository.findById(saved.getId()).orElseThrow();
+        assertThat(inDb.isActive()).isFalse();
+        assertThat(travelPackageRepository.existsById(saved.getId())).isTrue();
     }
 
     @Test
@@ -290,7 +293,7 @@ class TravelPackageControllerTest {
                 """.formatted(hotelInMendoza.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
 
         mockMvc.perform(post("/api/travel-packages")
-                        .with(user("user"))
+                        .with(withCustomUserDetails(agency))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest())
@@ -328,11 +331,79 @@ class TravelPackageControllerTest {
                 """.formatted(hotelInMendoza.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
 
         mockMvc.perform(put("/api/travel-packages/" + saved.getId())
-                        .with(user("user"))
+                        .with(withCustomUserDetails(agency))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Hotel city must match")));
+    }
+
+    @Test
+    void create_returns403_whenRoleIsNotAgency() throws Exception {
+        String json = """
+                {
+                    "name": "Bariloche 7d",
+                    "description": "Desc",
+                    "price": 150000.0,
+                    "startDate": "2026-10-01T10:00:00",
+                    "endDate": "2026-10-08T10:00:00",
+                    "hotelId": 1,
+                    "agencyId": 1,
+                    "departureFlightId": 1,
+                    "returnFlightId": 2
+                }
+                """;
+
+        mockMvc.perform(post("/api/travel-packages")
+                        .with(user("buyer").roles("BUYER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void update_returns403_whenRoleIsNotAgency() throws Exception {
+        mockMvc.perform(put("/api/travel-packages/1")
+                        .with(user("buyer").roles("BUYER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void delete_returns403_whenRoleIsNotAgency() throws Exception {
+        mockMvc.perform(delete("/api/travel-packages/1")
+                        .with(user("buyer").roles("BUYER")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void delete_softDeletesPackageSoItIsNotReturnedInSearch() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(100L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(101L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
+                .withName("Bariloche Soft Delete Test")
+                .withHotel(hotel)
+                .withAgency(agency)
+                .withDepartureFlight(depFlight)
+                .withReturnFlight(retFlight)
+                .build();
+        TravelPackage saved = travelPackageRepository.save(travelPackage);
+
+        mockMvc.perform(delete("/api/travel-packages/" + saved.getId())
+                        .with(withCustomUserDetails(agency)))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/travel-packages"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 }
 

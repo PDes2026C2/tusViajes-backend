@@ -20,6 +20,15 @@ public class FlightBuilder {
         return new FlightBuilder();
     }
 
+    public static FlightBuilder aReturnFlight() {
+        return new FlightBuilder()
+                .withId(2L)
+                .withOriginCity(new City(2L, "Bariloche", DEFAULT_COUNTRY))
+                .withDestinationCity(new City(1L, "Buenos Aires", DEFAULT_COUNTRY))
+                .withDepartureDate(LocalDateTime.now().plusDays(17).minusHours(2))
+                .withArrivalDate(LocalDateTime.now().plusDays(17));
+    }
+
     public FlightBuilder withId(Long id) {
         this.id = id;
         return this;

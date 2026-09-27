@@ -1,5 +1,7 @@
 package ar.edu.unq.tusViajes.model;
 
+import ar.edu.unq.tusViajes.exception.InvalidTravelPackageException;
+import ar.edu.unq.tusViajes.exception.UnauthorizedAgencyException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -62,6 +64,7 @@ public class TravelPackage {
 
     public TravelPackage(String name, String description, Double price, LocalDateTime startDate,
                          LocalDateTime endDate, Hotel hotel, Agency agency, Flight departureFlight, Flight returnFlight) {
+        this.validateHotelAndFlights(hotel, departureFlight, returnFlight);
         this.name = name;
         this.description = description;
         this.price = price;
@@ -75,13 +78,14 @@ public class TravelPackage {
 
     public void updateData(String name, String description, Double price, LocalDateTime startDate,
                            LocalDateTime endDate, Hotel hotel, Agency agency, Flight departureFlight, Flight returnFlight) {
+        this.validAgencyIsOwner(agency);
+        this.validateHotelAndFlights(hotel, departureFlight, returnFlight);
         this.name = name;
         this.description = description;
         this.price = price;
         this.startDate = startDate;
         this.endDate = endDate;
         this.hotel = hotel;
-        this.agency = agency;
         this.departureFlight = departureFlight;
         this.returnFlight = returnFlight;
     }
@@ -90,11 +94,32 @@ public class TravelPackage {
         return endDate.isBefore(LocalDateTime.now());
     }
 
-    public void deactivate() {
+    public void deactivate(Agency agency) {
+        this.validAgencyIsOwner(agency);
         this.active = false;
     }
 
-    public void activate() {
+    public void activate(Agency agency) {
+        this.validAgencyIsOwner(agency);
         this.active = true;
+    }
+
+    private void validAgencyIsOwner(Agency ag) {
+        if (! ag.equals(this.agency)) {
+            throw new UnauthorizedAgencyException("La agencia no tiene permiso para realizar esta operacion");
+        }
+    }
+
+    private void validateHotelAndFlights(Hotel hotel, Flight departureFlight, Flight returnFlight) {
+        Long hotelCityId = hotel.getCity().getId();
+        Long departureDestinationCityId = departureFlight.getDestinationCity().getId();
+        Long returnOriginCityId = returnFlight.getOriginCity().getId();
+
+        if (!hotelCityId.equals(departureDestinationCityId) || !hotelCityId.equals(returnOriginCityId)) {
+            throw new InvalidTravelPackageException(
+                    "Hotel city must match destination of departure flight and origin of return flight. Hotel city id: "
+                            + hotelCityId + ", departure destination id: " + departureDestinationCityId
+                            + ", return origin id: " + returnOriginCityId);
+        }
     }
 }

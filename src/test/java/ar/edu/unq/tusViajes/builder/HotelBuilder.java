@@ -3,16 +3,23 @@ package ar.edu.unq.tusViajes.builder;
 import ar.edu.unq.tusViajes.model.City;
 import ar.edu.unq.tusViajes.model.Country;
 import ar.edu.unq.tusViajes.model.Hotel;
+import org.springframework.test.util.ReflectionTestUtils;
 
 public class HotelBuilder {
 
+    private Long id = null;
     private String name = "Hotel Gran Central";
-    private City city = new City("Bariloche", new Country("AR", "Argentina"));
+    private City city = new City(2L, "Bariloche", new Country("AR", "Argentina"));
     private String photoUrl = "https://example.com/hotel.jpg";
     private String services = "Breakfast included, WiFi";
 
     public static HotelBuilder aHotel() {
         return new HotelBuilder();
+    }
+
+    public HotelBuilder withId(Long id) {
+        this.id = id;
+        return this;
     }
 
     public HotelBuilder withName(String name) {
@@ -36,6 +43,10 @@ public class HotelBuilder {
     }
 
     public Hotel build() {
-        return new Hotel(name, city, photoUrl, services);
+        Hotel hotel = new Hotel(name, city, photoUrl, services);
+        if (id != null) {
+            ReflectionTestUtils.setField(hotel, "id", id);
+        }
+        return hotel;
     }
 }
