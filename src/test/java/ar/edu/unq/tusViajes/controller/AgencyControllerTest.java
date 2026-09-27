@@ -1,8 +1,28 @@
 package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
+import ar.edu.unq.tusViajes.builder.CityBuilder;
+import ar.edu.unq.tusViajes.builder.CountryBuilder;
+import ar.edu.unq.tusViajes.builder.FlightBuilder;
+import ar.edu.unq.tusViajes.builder.HotelBuilder;
+import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
 import ar.edu.unq.tusViajes.model.Agency;
+import ar.edu.unq.tusViajes.model.City;
+import ar.edu.unq.tusViajes.model.Country;
+import ar.edu.unq.tusViajes.model.Flight;
+import ar.edu.unq.tusViajes.model.Hotel;
+import ar.edu.unq.tusViajes.model.TravelPackage;
 import ar.edu.unq.tusViajes.repository.AgencyRepository;
+import ar.edu.unq.tusViajes.repository.CityRepository;
+import ar.edu.unq.tusViajes.repository.CountryRepository;
+import ar.edu.unq.tusViajes.repository.FlightRepository;
+import ar.edu.unq.tusViajes.repository.HotelRepository;
+import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
+import ar.edu.unq.tusViajes.security.CustomUserDetails;
+
+import static ar.edu.unq.tusViajes.builder.CityBuilder.aCity;
+import static ar.edu.unq.tusViajes.builder.CountryBuilder.aCountry;
+import static org.springframework.security.core.authority.AuthorityUtils.createAuthorityList;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -35,6 +55,21 @@ class AgencyControllerTest {
 
     @Autowired
     private AgencyRepository agencyRepository;
+
+    @Autowired
+    private TravelPackageRepository travelPackageRepository;
+
+    @Autowired
+    private HotelRepository hotelRepository;
+
+    @Autowired
+    private FlightRepository flightRepository;
+
+    @Autowired
+    private CityRepository cityRepository;
+
+    @Autowired
+    private CountryRepository countryRepository;
 
     @Test
     void getAll_returns401_whenUnauthenticated() throws Exception {
@@ -146,5 +181,47 @@ class AgencyControllerTest {
                 .andExpect(status().isNoContent());
 
         assertThat(agencyRepository.existsById(saved.getId())).isFalse();
+    }
+
+    @Test
+    void getMyPackages_returns401_whenUnauthenticated() throws Exception {
+        mockMvc.perform(get("/api/agencies/me/packages"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getMyPackages_returns403_whenBuyer() throws Exception {
+        mockMvc.perform(get("/api/agencies/me/packages").with(user("buyer").roles("BUYER")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getMyPackages_returns403_whenAdmin() throws Exception {
+        mockMvc.perform(get("/api/agencies/me/packages").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getMyPackages_returnsOnlyOwnPackages() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency mine = agencyRepository.save(AgencyBuilder.anAgency().withEmail("mine@example.com").withTaxId("20-77777777-7").build());
+        Agency other = agencyRepository.save(AgencyBuilder.anAgency().withEmail("theirs@example.com").withTaxId("20-88888888-8").build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(96L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(97L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Mine").withHotel(hotel).withAgency(mine).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+        travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Theirs").withHotel(hotel).withAgency(other).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+
+        mockMvc.perform(get("/api/agencies/me/packages")
+                        .with(user(new CustomUserDetails(mine.getId(), mine.getEmail(), mine.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Mine"));
     }
 }

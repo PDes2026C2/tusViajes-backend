@@ -10,7 +10,7 @@ import lombok.Setter;
 @Table(name="cities",
         schema = "world",
         uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"name", "countryISO"}),
+        @UniqueConstraint(columnNames = {"name", "country_iso"}),
     })
 @Getter
 @Setter
@@ -25,7 +25,7 @@ public class City {
     public String name;
 
     @ManyToOne
-    @JoinColumn(name = "countryISO")
+    @JoinColumn(name = "country_iso")
     public Country country;
 
     public City(String name, Country country) {
