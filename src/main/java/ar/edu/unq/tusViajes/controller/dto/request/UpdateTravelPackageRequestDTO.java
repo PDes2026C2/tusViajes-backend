@@ -22,24 +22,24 @@ public class UpdateTravelPackageRequestDTO {
 
     private String description;
 
-    @NotNull(message = "Price is required")
-    @Positive(message = "Price must be greater than 0")
+    @NotNull(message = "El precio es obligatorio")
+    @Positive(message = "El precio debe ser mayor a 0")
     private Double price;
 
-    @NotNull(message = "Start date is required")
-    @FutureOrPresent(message = "Start date must be today or in the future")
+    @NotNull(message = "La fecha de inicio es obligatoria")
+    @FutureOrPresent(message = "La fecha de inicio debe ser posterior a la actual")
     private LocalDateTime startDate;
 
-    @NotNull(message = "End date is required")
+    @NotNull(message = "La fecha de finalizacion es obligatoria")
     private LocalDateTime endDate;
 
-    @NotNull(message = "Hotel ID is required")
+    @NotNull(message = "El hotel es obligatorio")
     private Long hotelId;
 
-    @NotNull(message = "Departure Flight ID is required")
+    @NotNull(message = "El vuelo de ida es obligatorio")
     private Long departureFlightId;
 
-    @NotNull(message = "Return Flight ID is required")
+    @NotNull(message = "El vuelo de vuelta es obligatorio")
     private Long returnFlightId;
 }
 
