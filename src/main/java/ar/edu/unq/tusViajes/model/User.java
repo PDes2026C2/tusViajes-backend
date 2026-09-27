@@ -41,4 +41,11 @@ public abstract class User {
     public boolean isActive() {
         return true;
     }
+
+    public boolean equals(User user) {
+        if (user == null) {
+            return false;
+        }
+        return this.email != null && this.email.equals(user.getEmail());
+    }
 }
