@@ -140,7 +140,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.registerAgency(dto))
                 .isInstanceOf(DuplicateResourceException.class)
-                .hasMessageContaining("30-77777777-7");
+                .hasMessageContaining("El CUIT ya está registrado");
     }
 
     @Test

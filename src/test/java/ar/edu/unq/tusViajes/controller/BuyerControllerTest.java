@@ -79,7 +79,7 @@ class BuyerControllerTest {
                         .build()
         );
 
-        mockMvc.perform(get("/api/buyers").with(user("lucas").roles("BUYER")))
+        mockMvc.perform(get("/api/buyers").with(user("lucas").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").isNotEmpty())
                 .andExpect(jsonPath("$[0].firstName").value("Lucas"));
@@ -136,7 +136,7 @@ class BuyerControllerTest {
 
         mockMvc.perform(post("/api/buyers/favorites/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
-                                createAuthorityList("ROLE_BUYER"), true))))
+                                createAuthorityList("AGENCY"), true))))
                 .andExpect(status().isOk());
 
         Buyer updatedBuyer = buyerRepository.findById(buyer.getId()).orElseThrow();

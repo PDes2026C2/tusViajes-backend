@@ -116,8 +116,8 @@ class ReviewControllerTest {
                         .content("{\"score\":11}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
-                .andExpect(jsonPath("$.message").value("Invalid data"))
-                .andExpect(jsonPath("$.errors.score").isNotEmpty())
+                .andExpect(jsonPath("$.message").value("Error de validación"))
+                .andExpect(jsonPath("$.errors.score").value("El puntaje no puede ser mayor a 10"))
                 .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }
 
