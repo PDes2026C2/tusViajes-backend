@@ -7,9 +7,9 @@ on:
     branches: [ "main" ]
 
 env:
-  # Tu registry propio
-  REGISTRY: hub.docker.com
-  IMAGE_NAME: tusViajes-backend
+  # El endpoint oficial de Docker Hub
+  REGISTRY: docker.io
+  IMAGE_NAME: rodribolanos/pdes-2026c2-backend
 
 jobs:
   build:
@@ -37,7 +37,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
         with:
-          images: \({{ env.REGISTRY }}/\){{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
         id: build-and-push
