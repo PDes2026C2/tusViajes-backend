@@ -26,17 +26,17 @@ public class AdminController {
 
     @GetMapping
     public ResponseEntity<List<AdminResponseDTO>> getAll() {
-        return ResponseEntity.ok(adminService.getAll());
+        return ResponseEntity.ok(adminService.getAll().stream().map(AdminResponseDTO::from).toList());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<AdminResponseDTO> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(adminService.getById(id));
+        return ResponseEntity.ok(AdminResponseDTO.from(adminService.getById(id)));
     }
 
     @PostMapping
     public ResponseEntity<AdminResponseDTO> create(@Valid @RequestBody AdminRegistrationRequestDTO dto) {
-        AdminResponseDTO created = adminService.create(dto);
+        AdminResponseDTO created = AdminResponseDTO.from(adminService.create(dto));
         return ResponseEntity.created(URI.create("/api/admin/administrators/" + created.id())).body(created);
     }
 }

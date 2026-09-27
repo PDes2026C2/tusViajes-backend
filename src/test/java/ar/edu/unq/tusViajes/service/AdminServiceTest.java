@@ -2,7 +2,6 @@ package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.builder.AdminBuilder;
 import ar.edu.unq.tusViajes.controller.dto.request.AdminRegistrationRequestDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.AdminResponseDTO;
 import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Admin;
@@ -40,20 +39,20 @@ class AdminServiceTest {
     void getAll_returnsAllAdmins() {
         Admin admin = adminRepository.save(AdminBuilder.anAdmin().build());
 
-        List<AdminResponseDTO> result = adminService.getAll();
+        List<Admin> result = adminService.getAll();
 
         assertThat(result).isNotEmpty();
-        assertThat(result.getFirst().firstName()).isEqualTo(admin.getFirstName());
+        assertThat(result.getFirst().getFirstName()).isEqualTo(admin.getFirstName());
     }
 
     @Test
     void getById_returnsAdminWhenExists() {
         Admin saved = adminRepository.save(AdminBuilder.anAdmin().build());
 
-        AdminResponseDTO result = adminService.getById(saved.getId());
+        Admin result = adminService.getById(saved.getId());
 
-        assertThat(result.firstName()).isEqualTo(saved.getFirstName());
-        assertThat(result.email()).isEqualTo(saved.getEmail());
+        assertThat(result.getFirstName()).isEqualTo(saved.getFirstName());
+        assertThat(result.getEmail()).isEqualTo(saved.getEmail());
     }
 
     @Test
@@ -66,10 +65,10 @@ class AdminServiceTest {
     void create_savesAndReturnsAdmin() {
         AdminRegistrationRequestDTO dto = new AdminRegistrationRequestDTO("Super", "Admin", "newadmin@test.com", "secretPassword123");
 
-        AdminResponseDTO result = adminService.create(dto);
+        Admin result = adminService.create(dto);
 
-        assertThat(result.id()).isNotNull();
-        assertThat(result.email()).isEqualTo("newadmin@test.com");
+        assertThat(result.getId()).isNotNull();
+        assertThat(result.getEmail()).isEqualTo("newadmin@test.com");
     }
 
     @Test

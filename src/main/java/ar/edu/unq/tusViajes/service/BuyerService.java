@@ -7,8 +7,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ar.edu.unq.tusViajes.controller.dto.response.BuyerResponseDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.model.Buyer;
 import ar.edu.unq.tusViajes.model.TravelPackage;
 import ar.edu.unq.tusViajes.repository.BuyerRepository;
@@ -34,15 +32,13 @@ public class BuyerService {
     }
 
     @Transactional(readOnly = true)
-    public List<BuyerResponseDTO> getAll() {
-        return buyerRepository.findAll().stream()
-                .map(BuyerResponseDTO::from)
-                .collect(Collectors.toList());
+    public List<Buyer> getAll() {
+        return buyerRepository.findAll();
     }
 
     @Transactional(readOnly = true)
-    public BuyerResponseDTO getById(Long id) {
-        return BuyerResponseDTO.from(getEntityById(id));
+    public Buyer getById(Long id) {
+        return getEntityById(id);
     }
 
     @Transactional
@@ -60,10 +56,10 @@ public class BuyerService {
     }
 
     @Transactional(readOnly = true)
-    public List<TravelPackageResponseDTO> getFavorites(Long buyerId) {
+    public List<TravelPackage> getFavorites(Long buyerId) {
         Buyer buyer = getEntityById(buyerId);
         return buyer.getFavoriteTravelPackages().stream()
-                .map(travelPackage -> travelPackageService.getById(travelPackage.getId()))
+                .map(travelPackage -> travelPackageService.getEntityById(travelPackage.getId()))
                 .collect(Collectors.toList());
     }
 

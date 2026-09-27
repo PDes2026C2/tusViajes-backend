@@ -6,7 +6,6 @@ import ar.edu.unq.tusViajes.adapters.dto.CityDTO;
 import ar.edu.unq.tusViajes.adapters.dto.CountryDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightFilterDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.FlightResponseDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.City;
 import ar.edu.unq.tusViajes.model.Country;
@@ -65,10 +64,10 @@ class FlightServiceTest {
         Flight flight1 = flightRepository.save(aFlight().withId(1L).withAirline("Aerolíneas").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight flight2 = flightRepository.save(aFlight().withId(2L).withAirline("Flybondi").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
 
-        List<FlightResponseDTO> result = flightService.getAll();
+        List<Flight> result = flightService.getAll();
 
         assertThat(result).hasSize(2);
-        assertThat(result).extracting(FlightResponseDTO::airline).containsExactlyInAnyOrder("Aerolíneas", "Flybondi");
+        assertThat(result).extracting(Flight::getAirline).containsExactlyInAnyOrder("Aerolíneas", "Flybondi");
     }
 
     @Test
@@ -79,10 +78,10 @@ class FlightServiceTest {
 
         Flight flight = flightRepository.save(aFlight().withId(10L).withAirline("JetSMART").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
 
-        FlightResponseDTO result = flightService.getById(10L);
+        Flight result = flightService.getById(10L);
 
-        assertThat(result.id()).isEqualTo(10L);
-        assertThat(result.airline()).isEqualTo("JetSMART");
+        assertThat(result.getId()).isEqualTo(10L);
+        assertThat(result.getAirline()).isEqualTo("JetSMART");
     }
 
     @Test
@@ -121,10 +120,10 @@ class FlightServiceTest {
 
         FlightDTO dto = new FlightDTO(30L, "LATAM", originCity, destCity, departure, arrival);
 
-        FlightResponseDTO result = flightService.create(dto);
+        Flight result = flightService.create(dto);
 
-        assertThat(result.id()).isEqualTo(30L);
-        assertThat(result.airline()).isEqualTo("LATAM");
+        assertThat(result.getId()).isEqualTo(30L);
+        assertThat(result.getAirline()).isEqualTo("LATAM");
         assertThat(flightRepository.existsById(30L)).isTrue();
     }
 

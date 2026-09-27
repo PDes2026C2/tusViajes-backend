@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ar.edu.unq.tusViajes.controller.dto.request.ReviewRequestDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.ReviewResponseDTO;
 import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.model.Buyer;
 import ar.edu.unq.tusViajes.model.Review;
@@ -30,7 +29,7 @@ public class ReviewService {
     }
 
     @Transactional
-    public ReviewResponseDTO create(CustomUserDetails userDetails, Long travelPackageId, ReviewRequestDTO dto) {
+    public Review create(CustomUserDetails userDetails, Long travelPackageId, ReviewRequestDTO dto) {
         Long buyerId = userDetails.getId();
         if (reviewRepository.existsByBuyerIdAndTravelPackageId(buyerId, travelPackageId)) {
             throw new DuplicateResourceException("Buyer already reviewed this travel package");
@@ -40,13 +39,12 @@ public class ReviewService {
         TravelPackage travelPackage = travelPackageService.getEntityById(travelPackageId);
         buyer.ensureCanReview(travelPackage);
         Review review = new Review(dto.score(), dto.comment(), buyer, travelPackage);
-        return ReviewResponseDTO.from(reviewRepository.save(review));
+        return reviewRepository.save(review);
     }
 
     @Transactional(readOnly = true)
-    public Page<ReviewResponseDTO> getByTravelPackageId(Long travelPackageId, Pageable pageable) {
+    public Page<Review> getByTravelPackageId(Long travelPackageId, Pageable pageable) {
         travelPackageService.getEntityById(travelPackageId);
-        return reviewRepository.findByTravelPackageIdOrderByCreatedAtDesc(travelPackageId, pageable)
-                .map(ReviewResponseDTO::from);
+        return reviewRepository.findByTravelPackageIdOrderByCreatedAtDesc(travelPackageId, pageable);
     }
 }

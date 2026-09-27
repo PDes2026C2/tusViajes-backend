@@ -24,7 +24,7 @@ public class PurchaseController {
     public ResponseEntity<PurchaseResponseDTO> purchase(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long travelPackageId) {
-        PurchaseResponseDTO created = purchaseService.purchase(userDetails.getId(), travelPackageId);
+        PurchaseResponseDTO created = PurchaseResponseDTO.from(purchaseService.purchase(userDetails.getId(), travelPackageId));
         return ResponseEntity.created(URI.create("/api/purchases/" + created.id())).body(created);
     }
 }
