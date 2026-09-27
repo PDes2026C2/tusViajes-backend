@@ -78,7 +78,7 @@ public class GlobalExceptionHandler {
             errors.put(error.getField(), error.getDefaultMessage());
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorDTO(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), errors));
+                .body(new ErrorDTO(HttpStatus.BAD_REQUEST.value(), "Error de validación", errors));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

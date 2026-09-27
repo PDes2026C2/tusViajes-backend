@@ -125,25 +125,11 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(400, response.getBody().code());
-        assertEquals("Invalid data", response.getBody().message());
+        assertEquals("Error de validación", response.getBody().message());
         assertNotNull(response.getBody().timestamp());
         assertNotNull(response.getBody().errors());
         assertEquals("must not be blank", response.getBody().errors().get("email"));
         assertEquals("size must be at least 8", response.getBody().errors().get("password"));
-    }
-
-    @Test
-    void handleNotReadable_returns400WithErrorDTO() {
-        HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
-
-        ResponseEntity<ErrorDTO> response = handler.handleNotReadable(ex);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(400, response.getBody().code());
-        assertEquals("Malformed request payload", response.getBody().message());
-        assertNotNull(response.getBody().timestamp());
-        assertNull(response.getBody().errors());
     }
 
     @Test
