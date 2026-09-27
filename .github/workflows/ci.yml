@@ -12,12 +12,14 @@ jobs:
   # Build & Test
   # ------------------------------------------------------------
   build:
-    name: Build & Test (JaCoCo)
+    name: Build, Test & SonarCloud
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Necesario para que SonarCloud calcule blame e historial
 
       - name: Set up JDK 21 and Maven
         uses: actions/setup-java@v4
@@ -26,9 +28,16 @@ jobs:
           java-version: '21'
           cache: maven
 
-      # Ejecuta compilación, tests y verificación
+      # Ejecuta compilación, tests y verificación de cobertura con JaCoCo
       - name: Compile, Test and Verify
         run: mvn -B clean verify
+
+      # Lanza SonarCloud reutilizando target/ y jacoco.xml del mismo workspace
+      - name: Analyze with SonarCloud
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn -B sonar:sonar
 
       # Sube los reportes de surefire
       - name: Upload test reports
