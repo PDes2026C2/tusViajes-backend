@@ -62,9 +62,6 @@ class BuyerControllerTest {
     @Autowired
     private CountryRepository countryRepository;
 
-    @Autowired
-    private PurchaseRepository purchaseRepository;
-
     @Test
     void getAll_returns401_whenUnauthenticated() throws Exception {
         mockMvc.perform(get("/api/buyers"))

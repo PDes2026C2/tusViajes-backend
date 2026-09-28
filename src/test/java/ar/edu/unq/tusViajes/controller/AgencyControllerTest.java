@@ -2,8 +2,6 @@ package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
 import ar.edu.unq.tusViajes.builder.BuyerBuilder;
-import ar.edu.unq.tusViajes.builder.CityBuilder;
-import ar.edu.unq.tusViajes.builder.CountryBuilder;
 import ar.edu.unq.tusViajes.builder.FlightBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
@@ -20,7 +18,6 @@ import ar.edu.unq.tusViajes.repository.CityRepository;
 import ar.edu.unq.tusViajes.repository.CountryRepository;
 import ar.edu.unq.tusViajes.repository.FlightRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
-import ar.edu.unq.tusViajes.repository.PurchaseRepository;
 import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
 

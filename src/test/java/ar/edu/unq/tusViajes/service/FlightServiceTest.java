@@ -61,8 +61,8 @@ class FlightServiceTest {
         City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
         City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
 
-        Flight flight1 = flightRepository.save(aFlight().withId(1L).withAirline("Aerolíneas").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
-        Flight flight2 = flightRepository.save(aFlight().withId(2L).withAirline("Flybondi").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        flightRepository.save(aFlight().withId(1L).withAirline("Aerolíneas").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        flightRepository.save(aFlight().withId(2L).withAirline("Flybondi").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
 
         List<Flight> result = flightService.getAll();
 
@@ -76,7 +76,7 @@ class FlightServiceTest {
         City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
         City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
 
-        Flight flight = flightRepository.save(aFlight().withId(10L).withAirline("JetSMART").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        flightRepository.save(aFlight().withId(10L).withAirline("JetSMART").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
 
         Flight result = flightService.getById(10L);
 
@@ -152,7 +152,7 @@ class FlightServiceTest {
         City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
         City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
 
-        Flight saved = flightRepository.save(aFlight().withId(50L).withAirline("Aerolíneas").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        flightRepository.save(aFlight().withId(50L).withAirline("Aerolíneas").withOriginCity(buenosAires).withDestinationCity(bariloche).build());
 
         Flight result = flightService.getOrCreateFlight(50L);
 
