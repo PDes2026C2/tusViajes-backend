@@ -2,6 +2,7 @@ package ar.edu.unq.tusViajes.controller;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,7 +37,7 @@ public class HotelController {
 
     @PostMapping
     public ResponseEntity<HotelResponseDTO> create(@Valid @RequestBody HotelRequestDTO dto) {
-        HotelResponseDTO created = HotelResponseDTO.from(hotelService.create(dto));
+        HotelResponseDTO created = Objects.requireNonNull(HotelResponseDTO.from(hotelService.create(dto)), "El mapeo de hotel no debe ser nulo");
         return ResponseEntity.created(URI.create("/api/hotels/" + created.id())).body(created);
     }
 }

@@ -2,6 +2,7 @@ package ar.edu.unq.tusViajes.controller;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,7 +37,7 @@ public class AdminController {
 
     @PostMapping
     public ResponseEntity<AdminResponseDTO> create(@Valid @RequestBody AdminRegistrationRequestDTO dto) {
-        AdminResponseDTO created = AdminResponseDTO.from(adminService.create(dto));
+        AdminResponseDTO created = Objects.requireNonNull(AdminResponseDTO.from(adminService.create(dto)), "El mapeo de admin no debe ser nulo");
         return ResponseEntity.created(URI.create("/api/admin/administrators/" + created.id())).body(created);
     }
 }

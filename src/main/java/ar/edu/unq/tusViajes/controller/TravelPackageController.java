@@ -11,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Objects;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +38,7 @@ public class TravelPackageController {
     public ResponseEntity<TravelPackageResponseDTO> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody TravelPackageRequestDTO dto) {
-        TravelPackageResponseDTO created = TravelPackageResponseDTO.from(travelPackageService.create(userDetails.getId(), dto));
+        TravelPackageResponseDTO created = Objects.requireNonNull(TravelPackageResponseDTO.from(travelPackageService.create(userDetails.getId(), dto)), "El mapeo de paquete de viaje no debe ser nulo");
         return ResponseEntity.created(URI.create("/api/travel-packages/" + created.getId())).body(created);
     }
 
