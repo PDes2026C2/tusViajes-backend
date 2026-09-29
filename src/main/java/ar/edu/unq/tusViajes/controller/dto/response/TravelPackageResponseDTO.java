@@ -20,7 +20,7 @@ public record TravelPackageResponseDTO(
         FlightResponseDTO arrivalFlight,
         boolean active
 ) {
-    public TravelPackageResponseDTO from(TravelPackage travelPackage) {
+    public static TravelPackageResponseDTO from(TravelPackage travelPackage) {
         if (travelPackage == null) {
             return null;
         }

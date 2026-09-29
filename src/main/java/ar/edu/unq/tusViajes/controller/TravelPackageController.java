@@ -39,7 +39,7 @@ public class TravelPackageController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody TravelPackageRequestDTO dto) {
         TravelPackageResponseDTO created = TravelPackageResponseDTO.from(travelPackageService.create(dto, userDetails.getId()));
-        return ResponseEntity.created(URI.create("/api/travel-packages/" + created.getId())).body(created);
+        return ResponseEntity.created(URI.create("/api/travel-packages/" + created.id())).body(created);
     }
 
     @PutMapping("/{id}")
