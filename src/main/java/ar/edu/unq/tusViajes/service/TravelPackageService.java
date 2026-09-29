@@ -41,19 +41,19 @@ public class TravelPackageService {
     }
 
     public TravelPackage create(TravelPackageRequestDTO dto, Long agencyId) {
-        Flight departureFlight = flightService.getOrCreateFlight(dto.getDepartureFlightId());
-        Flight returnFlight = flightService.getOrCreateFlight(dto.getReturnFlightId());
+        Flight departureFlight = flightService.getOrCreateFlight(dto.departureFlightId());
+        Flight returnFlight = flightService.getOrCreateFlight(dto.returnFlightId());
 
         return transactionTemplate.execute(status -> {
-            Hotel hotel = hotelService.getEntityById(dto.getHotelId());
+            Hotel hotel = hotelService.getEntityById(dto.hotelId());
             Agency agency = agencyService.getEntityById(agencyId);
 
             TravelPackage travelPackage = new TravelPackage(
-                    dto.getName(),
-                    dto.getDescription(),
-                    dto.getPrice(),
-                    dto.getStartDate(),
-                    dto.getEndDate(),
+                    dto.name(),
+                    dto.description(),
+                    dto.price(),
+                    dto.startDate(),
+                    dto.endDate(),
                     hotel,
                     agency,
                     departureFlight,

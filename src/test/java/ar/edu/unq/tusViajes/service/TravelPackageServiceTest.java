@@ -128,12 +128,17 @@ class TravelPackageServiceTest {
         Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
-        TravelPackageRequestDTO dto = new TravelPackageRequestDTO(
-                "Viaje a Cataratas", "All inclusive", 200000.0,
-                LocalDateTime.now().plusDays(5), LocalDateTime.now().plusDays(10),
-                hotel.getId(),
-                depFlight.getId(), retFlight.getId()
-        );
+        TravelPackageRequestDTO dto = TravelPackageRequestDTO
+                .builder()
+                .name("Viaje a Cataratas")
+                .description("All inclusive")
+                .price(200000.0)
+                .startDate(LocalDateTime.now().plusDays(5))
+                .endDate(LocalDateTime.now().plusDays(10))
+                .hotelId(hotel.getId())
+                .departureFlightId(depFlight.getId())
+                .returnFlightId(retFlight.getId())
+                .build();
 
         TravelPackage result = travelPackageService.create(dto, agency.getId());
 
@@ -155,12 +160,17 @@ class TravelPackageServiceTest {
         Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(10L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(11L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
-        TravelPackageRequestDTO dto = new TravelPackageRequestDTO(
-                "Viaje a Bariloche", "Desc", 200000.0,
-                LocalDateTime.now().plusDays(5), LocalDateTime.now().plusDays(10),
-                hotelInMendoza.getId(),
-                depFlight.getId(), retFlight.getId()
-        );
+        TravelPackageRequestDTO dto = TravelPackageRequestDTO
+                .builder()
+                .name("Viaje a Bariloche")
+                .description("Desc")
+                .price(200000.0)
+                .startDate(LocalDateTime.now().plusDays(5))
+                .endDate(LocalDateTime.now().plusDays(10))
+                .hotelId(hotelInMendoza.getId())
+                .departureFlightId(depFlight.getId())
+                .returnFlightId(retFlight.getId())
+                .build();
 
         assertThatThrownBy(() -> travelPackageService.create(dto, agency.getId()))
                 .isInstanceOf(InvalidTravelPackageException.class)
