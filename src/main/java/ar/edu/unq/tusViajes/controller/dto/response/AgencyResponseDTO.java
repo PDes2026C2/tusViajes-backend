@@ -10,10 +10,6 @@ public record AgencyResponseDTO(
     String email,
     AgencyStatus status
 ) {
-    public AgencyResponseDTO(Long id, String businessName, String taxId) {
-        this(id, businessName, taxId, null, AgencyStatus.AUTHORIZED);
-    }
-
     public static AgencyResponseDTO from(Agency agency) {
         if (agency == null) {
             return null;

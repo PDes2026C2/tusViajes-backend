@@ -138,7 +138,7 @@ class AuthControllerTest {
                         .content(json))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(401))
-                .andExpect(jsonPath("$.message").value("Invalid credentials"))
+                .andExpect(jsonPath("$.message").value("Credenciales invalidas"))
                 .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }
 
@@ -161,7 +161,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.businessName").value("New Agency SA"))
-                .andExpect(jsonPath("$.message").value("Registration request received. Pending authorization by an administrator."));
+                .andExpect(jsonPath("$.message").value("Tu postulación ha sido enviada con éxito. Un administrador revisará tu solicitud."));
     }
 
     @Test

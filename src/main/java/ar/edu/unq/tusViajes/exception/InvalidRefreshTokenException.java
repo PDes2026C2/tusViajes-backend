@@ -5,7 +5,4 @@ public class InvalidRefreshTokenException extends RuntimeException {
         super("Invalid refresh token.");
     }
 
-    public InvalidRefreshTokenException(String message) {
-        super(message);
-    }
 }

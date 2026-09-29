@@ -1,6 +1,7 @@
 package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.UpdateTravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
 import ar.edu.unq.tusViajes.service.TravelPackageService;
@@ -11,7 +12,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Objects;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,22 +38,22 @@ public class TravelPackageController {
     public ResponseEntity<TravelPackageResponseDTO> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody TravelPackageRequestDTO dto) {
-        TravelPackageResponseDTO created = Objects.requireNonNull(TravelPackageResponseDTO.from(travelPackageService.create(userDetails.getId(), dto)), "El mapeo de paquete de viaje no debe ser nulo");
-        return ResponseEntity.created(URI.create("/api/travel-packages/" + created.getId())).body(created);
+        TravelPackageResponseDTO created = TravelPackageResponseDTO.from(travelPackageService.create(dto, userDetails.getId()));
+        return ResponseEntity.created(URI.create("/api/travel-packages/" + created.id())).body(created);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TravelPackageResponseDTO> update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long id, @Valid @RequestBody TravelPackageRequestDTO dto) {
-        return ResponseEntity.ok(TravelPackageResponseDTO.from(travelPackageService.update(userDetails.getId(), id, dto)));
+            @Valid @RequestBody UpdateTravelPackageRequestDTO dto) {
+        return ResponseEntity.ok(TravelPackageResponseDTO.from(travelPackageService.update(userDetails.getId(), dto)));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long id) {
-        travelPackageService.delete(userDetails.getId(), id);
+        travelPackageService.delete(id, userDetails.getId());
         return ResponseEntity.noContent().build();
     }
 }

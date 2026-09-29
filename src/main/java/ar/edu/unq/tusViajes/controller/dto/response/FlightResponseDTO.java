@@ -14,9 +14,6 @@ public record FlightResponseDTO(
         LocalDateTime arrivalDate
 ) {
     public static FlightResponseDTO from(Flight flight) {
-        if (flight == null) {
-            return null;
-        }
         return new FlightResponseDTO(
                 flight.getId(),
                 flight.getAirline(),

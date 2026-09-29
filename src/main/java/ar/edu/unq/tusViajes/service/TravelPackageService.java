@@ -1,7 +1,7 @@
 package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
-import ar.edu.unq.tusViajes.exception.InvalidTravelPackageException;
+import ar.edu.unq.tusViajes.controller.dto.request.UpdateTravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Agency;
 import ar.edu.unq.tusViajes.model.Flight;
@@ -27,7 +27,7 @@ public class TravelPackageService {
 
     @Transactional(readOnly = true)
     public Page<TravelPackage> search(Pageable pageable) {
-        return travelPackageRepository.findAll(pageable);
+        return travelPackageRepository.findByActiveTrue(pageable);
     }
 
     @Transactional(readOnly = true)
@@ -40,22 +40,20 @@ public class TravelPackageService {
         return getEntityById(id);
     }
 
-    public TravelPackage create(Long agencyId, TravelPackageRequestDTO dto) {
-        Flight departureFlight = flightService.getOrCreateFlight(dto.getDepartureFlightId());
-        Flight returnFlight = flightService.getOrCreateFlight(dto.getReturnFlightId());
+    public TravelPackage create(TravelPackageRequestDTO dto, Long agencyId) {
+        Flight departureFlight = flightService.getOrCreateFlight(dto.departureFlightId());
+        Flight returnFlight = flightService.getOrCreateFlight(dto.returnFlightId());
 
         return transactionTemplate.execute(status -> {
-            Hotel hotel = hotelService.getEntityById(dto.getHotelId());
+            Hotel hotel = hotelService.getEntityById(dto.hotelId());
             Agency agency = agencyService.getEntityById(agencyId);
 
-            validateHotelAndFlights(hotel, departureFlight, returnFlight);
-
             TravelPackage travelPackage = new TravelPackage(
-                    dto.getName(),
-                    dto.getDescription(),
-                    dto.getPrice(),
-                    dto.getStartDate(),
-                    dto.getEndDate(),
+                    dto.name(),
+                    dto.description(),
+                    dto.price(),
+                    dto.startDate(),
+                    dto.endDate(),
                     hotel,
                     agency,
                     departureFlight,
@@ -65,23 +63,24 @@ public class TravelPackageService {
         });
     }
 
-    public TravelPackage update(Long agencyId, Long id, TravelPackageRequestDTO dto) {
-        Flight departureFlight = flightService.getOrCreateFlight(dto.getDepartureFlightId());
-        Flight returnFlight = flightService.getOrCreateFlight(dto.getReturnFlightId());
+    public TravelPackage update(Long agencyId, UpdateTravelPackageRequestDTO dto) {
+        Flight departureFlight = flightService.getOrCreateFlight(dto
+                .departureFlightId());
+        Flight returnFlight = flightService.getOrCreateFlight(dto.returnFlightId());
 
         return transactionTemplate.execute(status -> {
-            TravelPackage travelPackage = getOwnedEntityById(agencyId, id);
-            Hotel hotel = hotelService.getEntityById(dto.getHotelId());
-            Agency agency = travelPackage.getAgency();
-
-            validateHotelAndFlights(hotel, departureFlight, returnFlight);
+            TravelPackage travelPackage = getEntityById(dto.id());
+            Hotel hotel = hotelService.getEntityById(dto.hotelId());
+            Agency agency = agencyService.getEntityById(agencyId);
 
             travelPackage.updateData(
-                    dto.getName(),
-                    dto.getDescription(),
-                    dto.getPrice(),
-                    dto.getStartDate(),
-                    dto.getEndDate(),
+                    dto.name(),
+                    dto.description(),
+                    dto.price(),
+                    dto.startDate(),
+                    dto.endDate()
+
+                    ,
                     hotel,
                     agency,
                     departureFlight,
@@ -90,30 +89,14 @@ public class TravelPackageService {
 
             return travelPackageRepository.save(travelPackage);
         });
-    }
-
-    private void validateHotelAndFlights(Hotel hotel, Flight departureFlight, Flight returnFlight) {
-        Long hotelCityId = hotel.getCity().getId();
-        Long departureDestinationCityId = departureFlight.getDestinationCity().getId();
-        Long returnOriginCityId = returnFlight.getOriginCity().getId();
-
-        if (!hotelCityId.equals(departureDestinationCityId) || !hotelCityId.equals(returnOriginCityId)) {
-            throw new InvalidTravelPackageException(
-                    "La ciudad del hotel debe coincidir con el destino del vuelo de ida y el origen del vuelo de vuelta. Id de ciudad del hotel: "
-                            + hotelCityId + ", id de destino del vuelo de ida: " + departureDestinationCityId
-                            + ", id de origen del vuelo de vuelta: " + returnOriginCityId);
-        }
     }
 
     @Transactional
-    public void delete(Long agencyId, Long id) {
-        TravelPackage travelPackage = getOwnedEntityById(agencyId, id);
-        travelPackageRepository.deleteById(travelPackage.getId());
-    }
-
-    private TravelPackage getOwnedEntityById(Long agencyId, Long id) {
-        return travelPackageRepository.findByIdAndAgencyId(id, agencyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Paquete de viaje con id " + id + " no encontrado"));
+    public void delete(Long id, Long agencyId) {
+        TravelPackage travelPackage = getEntityById(id);
+        Agency agency = agencyService.getEntityById(agencyId);
+        travelPackage.deactivate(agency);
+        travelPackageRepository.save(travelPackage);
     }
 
     public TravelPackage getEntityById(Long id) {

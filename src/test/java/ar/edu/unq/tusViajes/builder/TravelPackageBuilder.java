@@ -37,6 +37,7 @@ public class TravelPackageBuilder {
             .withDepartureDate(endDate.minusHours(2))
             .withArrivalDate(endDate)
             .build();
+    private boolean active = true;
 
     public static TravelPackageBuilder aTravelPackage() {
         return new TravelPackageBuilder();
@@ -92,10 +93,18 @@ public class TravelPackageBuilder {
         return this;
     }
 
+    public TravelPackageBuilder withActive(boolean active) {
+        this.active = active;
+        return this;
+    }
+
     public TravelPackage build() {
         TravelPackage tp = new TravelPackage(name, description, price, startDate, endDate, hotel, agency, departureFlight, returnFlight);
         if (id != null) {
             org.springframework.test.util.ReflectionTestUtils.setField(tp, "id", id);
+        }
+        if (!active) {
+            tp.deactivate(agency);
         }
         return tp;
     }

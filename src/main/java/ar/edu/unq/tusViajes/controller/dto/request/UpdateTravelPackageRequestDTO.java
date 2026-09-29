@@ -1,0 +1,42 @@
+package ar.edu.unq.tusViajes.controller.dto.request;
+
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.Builder;
+
+import java.time.LocalDateTime;
+
+@Builder
+public record UpdateTravelPackageRequestDTO(
+        @NotNull(message = "El ID es obligatorio")
+        Long id,
+
+        @NotBlank(message = "El nombre es requerido")
+        String name,
+
+        String description,
+
+        @NotNull(message = "El precio es obligatorio")
+        @Positive(message = "El precio debe ser mayor a 0")
+        Double price,
+
+        @NotNull(message = "La fecha de inicio es obligatoria")
+        @FutureOrPresent(message = "La fecha de inicio debe ser posterior a la actual")
+        LocalDateTime startDate,
+
+        @NotNull(message = "La fecha de finalizacion es obligatoria")
+        LocalDateTime endDate,
+
+        @NotNull(message = "El hotel es obligatorio")
+        Long hotelId,
+
+        @NotNull(message = "El vuelo de ida es obligatorio")
+        Long departureFlightId,
+        @NotNull(message = "El vuelo de vuelta es obligatorio")
+        Long returnFlightId
+) {
+
+}
+

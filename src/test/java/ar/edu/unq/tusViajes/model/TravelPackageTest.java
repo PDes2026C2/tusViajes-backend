@@ -4,11 +4,13 @@ import ar.edu.unq.tusViajes.builder.AgencyBuilder;
 import ar.edu.unq.tusViajes.builder.FlightBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
+import ar.edu.unq.tusViajes.exception.UnauthorizedAgencyException;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TravelPackageTest {
 
@@ -17,7 +19,7 @@ class TravelPackageTest {
         Hotel hotel = HotelBuilder.aHotel().withName("Hotel Alvear").build();
         Agency agency = AgencyBuilder.anAgency().withBusinessName("Viajes SA").build();
         Flight departureFlight = FlightBuilder.aFlight().withId(1L).withAirline("Aerolíneas").build();
-        Flight returnFlight = FlightBuilder.aFlight().withId(2L).withAirline("Flybondi").build();
+        Flight returnFlight = FlightBuilder.aReturnFlight().withId(2L).withAirline("Flybondi").build();
 
         LocalDateTime start = LocalDateTime.now().plusDays(5);
         LocalDateTime end = LocalDateTime.now().plusDays(12);
@@ -50,9 +52,9 @@ class TravelPackageTest {
         TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().build();
 
         Hotel newHotel = HotelBuilder.aHotel().withName("Nuevo Hotel").build();
-        Agency newAgency = AgencyBuilder.anAgency().withBusinessName("Nueva Agencia").build();
+        Agency newAgency = travelPackage.getAgency();
         Flight newDeparture = FlightBuilder.aFlight().withId(201L).withAirline("LATAM").build();
-        Flight newReturn = FlightBuilder.aFlight().withId(202L).withAirline("JetSMART").build();
+        Flight newReturn = FlightBuilder.aReturnFlight().withId(202L).withAirline("JetSMART").build();
         LocalDateTime newStart = LocalDateTime.now().plusDays(20);
         LocalDateTime newEnd = LocalDateTime.now().plusDays(27);
 
@@ -67,5 +69,54 @@ class TravelPackageTest {
         assertThat(travelPackage.getAgency()).isEqualTo(newAgency);
         assertThat(travelPackage.getDepartureFlight()).isEqualTo(newDeparture);
         assertThat(travelPackage.getReturnFlight()).isEqualTo(newReturn);
+    }
+
+    @Test
+    void createTravelPackage_isActiveByDefault() {
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().build();
+
+        assertThat(travelPackage.isActive()).isTrue();
+    }
+
+    @Test
+    void deactivate_setsActiveToFalse_whenAgencyIsOwner() {
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().build();
+
+        travelPackage.deactivate(travelPackage.getAgency());
+
+        assertThat(travelPackage.isActive()).isFalse();
+    }
+
+    @Test
+    void deactivate_throwsException_whenAgencyIsNotOwner() {
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().build();
+        Agency otherAgency = AgencyBuilder
+                .anAgency()
+                .withBusinessName("Other Agency")
+                .withEmail("otheragency@email.com")
+                .build();
+
+        assertThatThrownBy(() -> travelPackage.deactivate(otherAgency)).isInstanceOf(UnauthorizedAgencyException.class);
+    }
+
+    @Test
+    void activate_setsActiveToTrue_whenAgencyIsOwner() {
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().withActive(false).build();
+
+        travelPackage.activate(travelPackage.getAgency());
+
+        assertThat(travelPackage.isActive()).isTrue();
+    }
+
+    @Test
+    void activate_throwsException_whenAgencyIsNotOwner() {
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().build();
+        Agency otherAgency = AgencyBuilder
+                .anAgency()
+                .withBusinessName("Other Agency")
+                .withEmail("otheragency@email.com")
+                .build();
+
+        assertThatThrownBy(() -> travelPackage.activate(otherAgency)).isInstanceOf(UnauthorizedAgencyException.class);
     }
 }

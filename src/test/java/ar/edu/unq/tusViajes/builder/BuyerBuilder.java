@@ -1,9 +1,11 @@
 package ar.edu.unq.tusViajes.builder;
 
 import ar.edu.unq.tusViajes.model.Buyer;
+import org.springframework.test.util.ReflectionTestUtils;
 
 public class BuyerBuilder {
 
+    private Long id = null;
     private String firstName = "FirstName";
     private String lastName = "LastName";
     private String email = "buyer@example.com";
@@ -13,6 +15,11 @@ public class BuyerBuilder {
 
     public static BuyerBuilder aBuyer() {
         return new BuyerBuilder();
+    }
+
+    public BuyerBuilder withId(Long id) {
+        this.id = id;
+        return this;
     }
 
     public BuyerBuilder withFirstName(String firstName) {
@@ -46,6 +53,10 @@ public class BuyerBuilder {
     }
 
     public Buyer build() {
-        return new Buyer(firstName, lastName, email, passwordHash, phoneNumber, nationalId);
+        Buyer buyer = new Buyer(firstName, lastName, email, passwordHash, phoneNumber, nationalId);
+        if (id != null) {
+            ReflectionTestUtils.setField(buyer, "id", id);
+        }
+        return buyer;
     }
 }

@@ -12,9 +12,7 @@ public record AgencyRegistrationResponseDTO(
     String message
 ) {
     public static AgencyRegistrationResponseDTO from(Agency agency, String message) {
-        if (agency == null) {
-            return null;
-        }
+
         return new AgencyRegistrationResponseDTO(
                 agency.getId(),
                 agency.getEmail(),

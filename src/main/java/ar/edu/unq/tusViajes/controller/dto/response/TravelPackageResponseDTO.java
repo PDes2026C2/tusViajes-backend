@@ -1,36 +1,26 @@
 package ar.edu.unq.tusViajes.controller.dto.response;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 import ar.edu.unq.tusViajes.model.TravelPackage;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-public class TravelPackageResponseDTO {
-
-    private Long id;
-    private String name;
-    private String description;
-    private Double price;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
-    private HotelResponseDTO hotel;
-    private AgencyResponseDTO agency;
-    private FlightResponseDTO departureFlight;
-    private FlightResponseDTO arrivalFlight;
-
-
+public record TravelPackageResponseDTO(
+        Long id,
+        String name,
+        String description,
+        Double price,
+        LocalDateTime startDate,
+        LocalDateTime endDate,
+        HotelResponseDTO hotel,
+        AgencyResponseDTO agency,
+        FlightResponseDTO departureFlight,
+        FlightResponseDTO arrivalFlight,
+        boolean active
+) {
     public static TravelPackageResponseDTO from(TravelPackage travelPackage) {
-        if (travelPackage == null) {
-            return null;
-        }
         return new TravelPackageResponseDTO(
                 travelPackage.getId(),
                 travelPackage.getName(),
@@ -41,7 +31,8 @@ public class TravelPackageResponseDTO {
                 HotelResponseDTO.from(travelPackage.getHotel()),
                 AgencyResponseDTO.from(travelPackage.getAgency()),
                 FlightResponseDTO.from(travelPackage.getDepartureFlight()),
-                FlightResponseDTO.from(travelPackage.getReturnFlight())
+                FlightResponseDTO.from(travelPackage.getReturnFlight()),
+                travelPackage.isActive()
         );
     }
 }

@@ -41,4 +41,17 @@ public abstract class User {
     public boolean isActive() {
         return true;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+
+        if (!(obj instanceof User user)) {
+            return false;
+        }
+
+        return this.email != null && this.email.equals(user.getEmail());
+    }
 }

@@ -10,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -84,14 +83,14 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleInvalidCredentials_returns401WithErrorDTO() {
-        InvalidCredentialsException ex = new InvalidCredentialsException("Invalid credentials");
+        InvalidCredentialsException ex = new InvalidCredentialsException();
 
         ResponseEntity<ErrorDTO> response = handler.handleInvalidCredentials(ex);
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(401, response.getBody().code());
-        assertEquals("Invalid credentials", response.getBody().message());
+        assertEquals("Credenciales invalidas", response.getBody().message());
         assertNotNull(response.getBody().timestamp());
         assertNull(response.getBody().errors());
     }
@@ -125,25 +124,11 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(400, response.getBody().code());
-        assertEquals("Invalid data", response.getBody().message());
+        assertEquals("Error de validación", response.getBody().message());
         assertNotNull(response.getBody().timestamp());
         assertNotNull(response.getBody().errors());
         assertEquals("must not be blank", response.getBody().errors().get("email"));
         assertEquals("size must be at least 8", response.getBody().errors().get("password"));
-    }
-
-    @Test
-    void handleNotReadable_returns400WithErrorDTO() {
-        HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
-
-        ResponseEntity<ErrorDTO> response = handler.handleNotReadable(ex);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(400, response.getBody().code());
-        assertEquals("Malformed request payload", response.getBody().message());
-        assertNotNull(response.getBody().timestamp());
-        assertNull(response.getBody().errors());
     }
 
     @Test

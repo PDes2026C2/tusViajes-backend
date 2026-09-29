@@ -77,7 +77,7 @@ class BuyerControllerTest {
                         .build()
         );
 
-        mockMvc.perform(get("/api/buyers").with(user("lucas").roles("BUYER")))
+        mockMvc.perform(get("/api/buyers").with(user("lucas").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").isNotEmpty())
                 .andExpect(jsonPath("$[0].firstName").value("Lucas"));

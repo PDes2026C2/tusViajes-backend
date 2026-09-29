@@ -1,9 +1,11 @@
 package ar.edu.unq.tusViajes.builder;
 
 import ar.edu.unq.tusViajes.model.Admin;
+import org.springframework.test.util.ReflectionTestUtils;
 
 public class AdminBuilder {
 
+    private Long id = null;
     private String firstName = "John";
     private String lastName = "Doe";
     private String email = "admin@example.com";
@@ -11,6 +13,11 @@ public class AdminBuilder {
 
     public static AdminBuilder anAdmin() {
         return new AdminBuilder();
+    }
+
+    public AdminBuilder withId(Long id) {
+        this.id = id;
+        return this;
     }
 
     public AdminBuilder withFirstName(String firstName) {
@@ -34,6 +41,10 @@ public class AdminBuilder {
     }
 
     public Admin build() {
-        return new Admin(firstName, lastName, email, passwordHash);
+        Admin admin = new Admin(firstName, lastName, email, passwordHash);
+        if (id != null) {
+            ReflectionTestUtils.setField(admin, "id", id);
+        }
+        return admin;
     }
 }

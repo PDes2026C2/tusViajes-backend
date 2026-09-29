@@ -11,34 +11,32 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-public class TravelPackageRequestDTO {
+public record TravelPackageRequestDTO(
+   @NotBlank(message = "Name is required")
+   String name,
 
-    @NotBlank(message = "Name is required")
-    private String name;
+   String description,
 
-    private String description;
+    @NotNull(message = "El precio es obligatorio")
+    @Positive(message = "El precio debe ser mayor a 0")
+    Double price,
 
-    @NotNull(message = "Price is required")
-    @Positive(message = "Price must be greater than 0")
-    private Double price;
+    @NotNull(message = "La fecha de inicio es obligatoria")
+    @FutureOrPresent(message = "La fecha de inicio debe ser posterior a la actual")
+    LocalDateTime startDate,
 
-    @NotNull(message = "Start date is required")
-    @FutureOrPresent(message = "Start date must be today or in the future")
-    private LocalDateTime startDate;
+    @NotNull(message = "La fecha de finalizacion es obligatoria")
+    LocalDateTime endDate,
 
-    @NotNull(message = "End date is required")
-    private LocalDateTime endDate;
+    @NotNull(message = "El hotel es obligatorio")
+    Long hotelId,
 
-    @NotNull(message = "Hotel ID is required")
-    private Long hotelId;
+    @NotNull(message = "El vuelo de ida es obligatorio")
+    Long departureFlightId,
 
-    @NotNull(message = "Departure Flight ID is required")
-    private Long departureFlightId;
+    @NotNull(message = "El vuelo de vuelta es obligatorio")
+    Long returnFlightId
+) {
 
-    @NotNull(message = "Return Flight ID is required")
-    private Long returnFlightId;
 }
