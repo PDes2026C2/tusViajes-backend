@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Objects;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,27 +27,27 @@ public class TravelPackageController {
 
     @GetMapping
     public ResponseEntity<Page<TravelPackageResponseDTO>> search(@PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(travelPackageService.search(pageable));
+        return ResponseEntity.ok(travelPackageService.search(pageable).map(TravelPackageResponseDTO::from));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<TravelPackageResponseDTO> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(travelPackageService.getById(id));
+        return ResponseEntity.ok(TravelPackageResponseDTO.from(travelPackageService.getById(id)));
     }
 
     @PostMapping
     public ResponseEntity<TravelPackageResponseDTO> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody TravelPackageRequestDTO dto) {
-        TravelPackageResponseDTO created = travelPackageService.create(dto, userDetails.getId());
+        TravelPackageResponseDTO created = TravelPackageResponseDTO.from(travelPackageService.create(dto, userDetails.getId()));
         return ResponseEntity.created(URI.create("/api/travel-packages/" + created.getId())).body(created);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TravelPackageResponseDTO> update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long id, @Valid @RequestBody UpdateTravelPackageRequestDTO dto) {
-        return ResponseEntity.ok(travelPackageService.update(id, userDetails.getId(), dto));
+            @PathVariable Long id, @Valid @RequestBody TravelPackageRequestDTO dto) {
+        return ResponseEntity.ok(TravelPackageResponseDTO.from(travelPackageService.update(id, userDetails.getId(), dto)));
     }
 
     @DeleteMapping("/{id}")

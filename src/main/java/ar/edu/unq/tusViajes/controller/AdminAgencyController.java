@@ -22,16 +22,16 @@ public class AdminAgencyController {
 
     @GetMapping("/pending")
     public ResponseEntity<List<AgencyResponseDTO>> getPending() {
-        return ResponseEntity.ok(agencyService.getPending());
+        return ResponseEntity.ok(agencyService.getPending().stream().map(AgencyResponseDTO::from).toList());
     }
 
     @PostMapping("/{id}/authorize")
     public ResponseEntity<AgencyResponseDTO> authorize(@PathVariable Long id) {
-        return ResponseEntity.ok(agencyService.authorize(id));
+        return ResponseEntity.ok(AgencyResponseDTO.from(agencyService.authorize(id)));
     }
 
     @PostMapping("/{id}/reject")
     public ResponseEntity<AgencyResponseDTO> reject(@PathVariable Long id) {
-        return ResponseEntity.ok(agencyService.reject(id));
+        return ResponseEntity.ok(AgencyResponseDTO.from(agencyService.reject(id)));
     }
 }

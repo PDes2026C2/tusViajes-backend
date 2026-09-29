@@ -4,7 +4,6 @@ import ar.edu.unq.tusViajes.builder.CityBuilder;
 import ar.edu.unq.tusViajes.builder.CountryBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.controller.dto.request.HotelRequestDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.HotelResponseDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.City;
 import ar.edu.unq.tusViajes.model.Country;
@@ -53,10 +52,10 @@ class HotelServiceTest {
         City city = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
         Hotel saved = hotelRepository.save(HotelBuilder.aHotel().withCity(city).build());
 
-        List<HotelResponseDTO> result = hotelService.getAll();
+        List<Hotel> result = hotelService.getAll();
 
         assertThat(result).isNotEmpty();
-        assertThat(result.get(0).name()).isEqualTo(saved.getName());
+        assertThat(result.get(0).getName()).isEqualTo(saved.getName());
     }
 
     @Test
@@ -67,10 +66,10 @@ class HotelServiceTest {
                 HotelBuilder.aHotel().withName("Hotel Central").withCity(city).build()
         );
 
-        HotelResponseDTO result = hotelService.getById(saved.getId());
+        Hotel result = hotelService.getById(saved.getId());
 
-        assertThat(result.name()).isEqualTo("Hotel Central");
-        assertThat(result.city().name()).isEqualTo("Bariloche");
+        assertThat(result.getName()).isEqualTo("Hotel Central");
+        assertThat(result.getCity().getName()).isEqualTo("Bariloche");
     }
 
     @Test
@@ -85,12 +84,12 @@ class HotelServiceTest {
         City city = cityRepository.save(CityBuilder.aCity().withName("Mendoza").withCountry(country).build());
         HotelRequestDTO dto = new HotelRequestDTO("Hotel Nuevo", city.getId(), null, null);
 
-        HotelResponseDTO result = hotelService.create(dto);
+        Hotel result = hotelService.create(dto);
 
-        assertThat(result.id()).isNotNull();
-        assertThat(result.name()).isEqualTo("Hotel Nuevo");
-        assertThat(result.city().name()).isEqualTo("Mendoza");
+        assertThat(result.getId()).isNotNull();
+        assertThat(result.getName()).isEqualTo("Hotel Nuevo");
+        assertThat(result.getCity().getName()).isEqualTo("Mendoza");
 
-        assertThat(hotelRepository.existsById(result.id())).isTrue();
+        assertThat(hotelRepository.existsById(result.getId())).isTrue();
     }
 }

@@ -18,10 +18,6 @@ import ar.edu.unq.tusViajes.repository.AgencyRepository;
 import ar.edu.unq.tusViajes.repository.FlightRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
 import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
-import ar.edu.unq.tusViajes.repository.CityRepository;
-import ar.edu.unq.tusViajes.repository.CountryRepository;
-import ar.edu.unq.tusViajes.model.City;
-import ar.edu.unq.tusViajes.model.Country;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -90,7 +86,7 @@ class TravelPackageServiceTest {
                 .build();
         travelPackageRepository.save(travelPackage);
 
-        Page<TravelPackageResponseDTO> result = travelPackageService.search(PageRequest.of(0, 10));
+        Page<TravelPackage> result = travelPackageService.search(PageRequest.of(0, 10));
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().get(0).getName()).isEqualTo(travelPackage.getName());
@@ -115,7 +111,7 @@ class TravelPackageServiceTest {
                 .build();
         TravelPackage saved = travelPackageRepository.save(travelPackage);
 
-        TravelPackageResponseDTO result = travelPackageService.getById(saved.getId());
+        TravelPackage result = travelPackageService.getById(saved.getId());
 
         assertThat(result.getName()).isEqualTo(travelPackage.getName());
         assertThat(result.getPrice()).isEqualTo(travelPackage.getPrice());
@@ -146,7 +142,7 @@ class TravelPackageServiceTest {
                 depFlight.getId(), retFlight.getId()
         );
 
-        TravelPackageResponseDTO result = travelPackageService.create(dto, agency.getId());
+        TravelPackage result = travelPackageService.create(dto, agency.getId());
 
         assertThat(result.getName()).isEqualTo("Viaje a Cataratas");
         assertThat(result.getPrice()).isEqualTo(200000.0);

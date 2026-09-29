@@ -27,13 +27,18 @@ public class TravelPackageService {
     private final TransactionTemplate transactionTemplate;
 
     @Transactional(readOnly = true)
-    public Page<TravelPackageResponseDTO> search(Pageable pageable) {
-        return travelPackageRepository.findByActiveTrue(pageable).map(TravelPackageResponseDTO::from);
+    public Page<TravelPackage> search(Pageable pageable) {
+        return travelPackageRepository.findByActiveTrue(pageable);
     }
 
     @Transactional(readOnly = true)
-    public TravelPackageResponseDTO getById(Long id) {
-        return TravelPackageResponseDTO.from(getEntityById(id));
+    public Page<TravelPackage> searchMine(Long agencyId, Pageable pageable) {
+        return travelPackageRepository.findByAgencyId(agencyId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public TravelPackage getById(Long id) {
+        return getEntityById(id);
     }
 
     public TravelPackageResponseDTO create(TravelPackageRequestDTO dto, Long agencyId) {
@@ -55,7 +60,7 @@ public class TravelPackageService {
                     departureFlight,
                     returnFlight
             );
-            return TravelPackageResponseDTO.from(travelPackageRepository.save(travelPackage));
+            return travelPackageRepository.save(travelPackage);
         });
     }
 
@@ -83,7 +88,7 @@ public class TravelPackageService {
                     returnFlight
             );
 
-            return TravelPackageResponseDTO.from(travelPackageRepository.save(travelPackage));
+            return travelPackageRepository.save(travelPackage);
         });
     }
 
@@ -95,13 +100,13 @@ public class TravelPackageService {
         travelPackageRepository.save(travelPackage);
     }
 
-    @Transactional(readOnly = true)
-    public Page<TravelPackage> searchMine(Long agencyId, Pageable pageable) {
-        return travelPackageRepository.findByAgencyId(agencyId, pageable);
+    private TravelPackage getOwnedEntityById(Long agencyId, Long id) {
+        return travelPackageRepository.findByIdAndAgencyId(id, agencyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Paquete de viaje con id " + id + " no encontrado"));
     }
 
     public TravelPackage getEntityById(Long id) {
         return travelPackageRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("TravelPackage with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Paquete de viaje con id " + id + " no encontrado"));
     }
 }

@@ -3,7 +3,6 @@ package ar.edu.unq.tusViajes.service;
 import ar.edu.unq.tusViajes.adapters.dto.CityDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightFilterDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.FlightResponseDTO;
 import ar.edu.unq.tusViajes.model.City;
 import ar.edu.unq.tusViajes.model.Flight;
 import ar.edu.unq.tusViajes.repository.FlightRepository;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,21 +25,19 @@ public class FlightService {
     private final EntityManager entityManager;
 
     @Transactional(readOnly = true)
-    public List<FlightResponseDTO> getAll() {
-        return flightRepository.findAll().stream()
-                .map(FlightResponseDTO::from)
-                .collect(Collectors.toList());
+    public List<Flight> getAll() {
+        return flightRepository.findAll();
     }
 
     @Transactional(readOnly = true)
-    public FlightResponseDTO getById(Long id) {
-        return FlightResponseDTO.from(getEntityById(id));
+    public Flight getById(Long id) {
+        return getEntityById(id);
     }
 
     @Transactional
-    public FlightResponseDTO create(FlightDTO dto) {
+    public Flight create(FlightDTO dto) {
         Flight flight = toEntity(dto);
-        return FlightResponseDTO.from(flightRepository.save(flight));
+        return flightRepository.save(flight);
     }
 
     public List<FlightDTO> getAvailableFlights() {

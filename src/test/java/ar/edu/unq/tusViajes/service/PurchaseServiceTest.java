@@ -1,7 +1,6 @@
 package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.adapters.dto.PassengerDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.PurchaseResponseDTO;
 import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Buyer;
@@ -69,10 +68,10 @@ class PurchaseServiceTest {
         when(travelPackageRepository.findById(99L)).thenReturn(Optional.of(travelPackage));
         when(purchaseRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        PurchaseResponseDTO result = purchaseService.purchase(1L, 99L);
+        ar.edu.unq.tusViajes.model.Purchase result = purchaseService.purchase(1L, 99L);
 
-        assertThat(result.price()).isEqualTo(250000.0);
-        assertThat(result.purchasedAt()).isNotNull();
+        assertThat(result.getPrice()).isEqualTo(250000.0);
+        assertThat(result.getPurchasedAt()).isNotNull();
         assertThat(buyer.getTravelPackagesPurchased()).hasSize(1);
         assertThat(buyer.hasAcquired(travelPackage)).isTrue();
         verify(flightsApiService).sellFlight(eq(10L), any(PassengerDTO.class));
