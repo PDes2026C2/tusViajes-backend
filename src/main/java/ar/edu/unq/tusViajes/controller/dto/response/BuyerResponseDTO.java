@@ -11,9 +11,6 @@ public record BuyerResponseDTO(
     String nationalId
 ) {
     public static BuyerResponseDTO from(Buyer buyer) {
-        if (buyer == null) {
-            return null;
-        }
         return new BuyerResponseDTO(
                 buyer.getId(),
                 buyer.getFirstName(),

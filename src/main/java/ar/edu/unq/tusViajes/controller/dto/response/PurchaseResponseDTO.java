@@ -12,7 +12,6 @@ public record PurchaseResponseDTO(
         TravelPackageResponseDTO travelPackage
 ) {
     public static PurchaseResponseDTO from(Purchase purchase) {
-        if (purchase == null) return null;
         return new PurchaseResponseDTO(
                 purchase.getId(),
                 purchase.getPrice(),

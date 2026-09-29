@@ -6,9 +6,6 @@ import ar.edu.unq.tusViajes.model.Hotel;
 public record HotelResponseDTO(Long id, String name, CityDTO city, String photoUrl, String services) {
 
     public static HotelResponseDTO from(Hotel hotel) {
-        if (hotel == null) {
-            return null;
-        }
         return new HotelResponseDTO(
                 hotel.getId(),
                 hotel.getName(),

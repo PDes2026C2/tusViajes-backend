@@ -21,9 +21,6 @@ public record TravelPackageResponseDTO(
         boolean active
 ) {
     public static TravelPackageResponseDTO from(TravelPackage travelPackage) {
-        if (travelPackage == null) {
-            return null;
-        }
         return new TravelPackageResponseDTO(
                 travelPackage.getId(),
                 travelPackage.getName(),
