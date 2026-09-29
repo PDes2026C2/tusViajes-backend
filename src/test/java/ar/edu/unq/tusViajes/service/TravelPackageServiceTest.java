@@ -194,12 +194,17 @@ class TravelPackageServiceTest {
         TravelPackage saved = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotelInBariloche).withAgency(agency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
 
-        UpdateTravelPackageRequestDTO dto = new UpdateTravelPackageRequestDTO(
-                "Update", "Desc", 200000.0,
-                LocalDateTime.now().plusDays(5), LocalDateTime.now().plusDays(10),
-                hotelInMendoza.getId(),
-                depFlight.getId(), retFlight.getId()
-        );
+        UpdateTravelPackageRequestDTO dto = UpdateTravelPackageRequestDTO
+                .builder()
+                .name("Updated Package")
+                .description("Updated Description")
+                .price(200000.0)
+                .startDate(LocalDateTime.now().plusDays(5))
+                .endDate(LocalDateTime.now().plusDays(10))
+                .hotelId(hotelInMendoza.getId())
+                .departureFlightId(depFlight.getId())
+                .returnFlightId(retFlight.getId())
+                .build();
 
         assertThatThrownBy(() -> travelPackageService.update(saved.getId(), agency.getId(), dto))
                 .isInstanceOf(InvalidTravelPackageException.class)
@@ -288,12 +293,17 @@ class TravelPackageServiceTest {
         TravelPackage saved = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotel).withAgency(ownerAgency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
 
-        UpdateTravelPackageRequestDTO dto = new UpdateTravelPackageRequestDTO(
-                "Update Name", "Desc", 200000.0,
-                LocalDateTime.now().plusDays(5), LocalDateTime.now().plusDays(10),
-                hotel.getId(),
-                depFlight.getId(), retFlight.getId()
-        );
+        UpdateTravelPackageRequestDTO dto = UpdateTravelPackageRequestDTO
+                .builder()
+                .name("Update Name")
+                .description("Desc")
+                .price(200000.0)
+                .startDate(LocalDateTime.now().plusDays(5))
+                .endDate(LocalDateTime.now().plusDays(10))
+                .hotelId(hotel.getId())
+                .departureFlightId(depFlight.getId())
+                .returnFlightId(retFlight.getId())
+                .build();
 
         assertThatThrownBy(() -> travelPackageService.update(saved.getId(), otherAgency.getId(), dto))
                 .isInstanceOf(UnauthorizedAgencyException.class);

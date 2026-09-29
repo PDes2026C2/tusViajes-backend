@@ -60,20 +60,23 @@ public class TravelPackageService {
     }
 
     public TravelPackageResponseDTO update(Long id, Long agencyId, UpdateTravelPackageRequestDTO dto) {
-        Flight departureFlight = flightService.getOrCreateFlight(dto.getDepartureFlightId());
-        Flight returnFlight = flightService.getOrCreateFlight(dto.getReturnFlightId());
+        Flight departureFlight = flightService.getOrCreateFlight(dto
+                .departureFlightId());
+        Flight returnFlight = flightService.getOrCreateFlight(dto.returnFlightId());
 
         return transactionTemplate.execute(status -> {
             TravelPackage travelPackage = getEntityById(id);
-            Hotel hotel = hotelService.getEntityById(dto.getHotelId());
+            Hotel hotel = hotelService.getEntityById(dto.hotelId());
             Agency agency = agencyService.getEntityById(agencyId);
 
             travelPackage.updateData(
-                    dto.getName(),
-                    dto.getDescription(),
-                    dto.getPrice(),
-                    dto.getStartDate(),
-                    dto.getEndDate(),
+                    dto.name(),
+                    dto.description(),
+                    dto.price(),
+                    dto.startDate(),
+                    dto.endDate()
+
+                    ,
                     hotel,
                     agency,
                     departureFlight,
