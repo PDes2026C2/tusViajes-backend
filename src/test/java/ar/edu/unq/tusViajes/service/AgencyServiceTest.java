@@ -2,7 +2,6 @@ package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
 import ar.edu.unq.tusViajes.controller.dto.request.UpdateAgencyRequestDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.AgencyResponseDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Agency;
 import ar.edu.unq.tusViajes.model.AgencyStatus;
@@ -41,10 +40,10 @@ public class AgencyServiceTest {
     void getAll_returnsAllAgenciesFromDatabase() {
         Agency saved = agencyRepository.save(AgencyBuilder.anAgency().build());
 
-        List<AgencyResponseDTO> result = agencyService.getAll();
+        List<Agency> result = agencyService.getAll();
 
         assertThat(result).isNotEmpty();
-        assertEquals(result.getFirst().businessName(), saved.getBusinessName());
+        assertEquals(result.getFirst().getBusinessName(), saved.getBusinessName());
     }
 
     @Test
@@ -53,10 +52,10 @@ public class AgencyServiceTest {
                 AgencyBuilder.anAgency().withBusinessName("Huryn").withTaxId("20-44576859-8").build()
         );
 
-        AgencyResponseDTO result = agencyService.getById(saved.getId());
+        Agency result = agencyService.getById(saved.getId());
 
-        assertThat(result.businessName()).isEqualTo("Huryn");
-        assertThat(result.taxId()).isEqualTo("20-44576859-8");
+        assertThat(result.getBusinessName()).isEqualTo("Huryn");
+        assertThat(result.getTaxId()).isEqualTo("20-44576859-8");
     }
 
     @Test
@@ -73,9 +72,9 @@ public class AgencyServiceTest {
 
         UpdateAgencyRequestDTO dto = new UpdateAgencyRequestDTO("New Name SA");
 
-        AgencyResponseDTO result = agencyService.update(saved.getId(), dto);
+        Agency result = agencyService.update(saved.getId(), dto);
 
-        assertThat(result.businessName()).isEqualTo("New Name SA");
+        assertThat(result.getBusinessName()).isEqualTo("New Name SA");
         Agency inDb = agencyRepository.findById(saved.getId()).orElseThrow();
         assertThat(inDb.getBusinessName()).isEqualTo("New Name SA");
     }
@@ -96,9 +95,9 @@ public class AgencyServiceTest {
                 .withStatus(AgencyStatus.AUTHORIZED)
                 .build());
 
-        List<AgencyResponseDTO> pending = agencyService.getPending();
+        List<Agency> pending = agencyService.getPending();
 
-        assertThat(pending).allMatch(a -> a.status() == AgencyStatus.PENDING);
+        assertThat(pending).allMatch(a -> a.getStatus() == AgencyStatus.PENDING);
     }
 
     @Test
@@ -107,9 +106,9 @@ public class AgencyServiceTest {
                 .withStatus(AgencyStatus.PENDING)
                 .build());
 
-        AgencyResponseDTO authorized = agencyService.authorize(saved.getId());
+        Agency authorized = agencyService.authorize(saved.getId());
 
-        assertThat(authorized.status()).isEqualTo(AgencyStatus.AUTHORIZED);
+        assertThat(authorized.getStatus()).isEqualTo(AgencyStatus.AUTHORIZED);
         Agency inDb = agencyRepository.findById(saved.getId()).orElseThrow();
         assertThat(inDb.isAuthorized()).isTrue();
         assertThat(inDb.isActive()).isTrue();
@@ -121,9 +120,9 @@ public class AgencyServiceTest {
                 .withStatus(AgencyStatus.PENDING)
                 .build());
 
-        AgencyResponseDTO rejected = agencyService.reject(saved.getId());
+        Agency rejected = agencyService.reject(saved.getId());
 
-        assertThat(rejected.status()).isEqualTo(AgencyStatus.REJECTED);
+        assertThat(rejected.getStatus()).isEqualTo(AgencyStatus.REJECTED);
         Agency inDb = agencyRepository.findById(saved.getId()).orElseThrow();
         assertThat(inDb.isAuthorized()).isFalse();
         assertThat(inDb.isActive()).isFalse();

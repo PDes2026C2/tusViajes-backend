@@ -2,6 +2,7 @@ package ar.edu.unq.tusViajes.controller;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,17 +27,17 @@ public class HotelController {
 
     @GetMapping
     public ResponseEntity<List<HotelResponseDTO>> getAll() {
-        return ResponseEntity.ok(hotelService.getAll());
+        return ResponseEntity.ok(hotelService.getAll().stream().map(HotelResponseDTO::from).toList());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<HotelResponseDTO> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(hotelService.getById(id));
+        return ResponseEntity.ok(HotelResponseDTO.from(hotelService.getById(id)));
     }
 
     @PostMapping
     public ResponseEntity<HotelResponseDTO> create(@Valid @RequestBody HotelRequestDTO dto) {
-        HotelResponseDTO created = hotelService.create(dto);
+        HotelResponseDTO created = Objects.requireNonNull(HotelResponseDTO.from(hotelService.create(dto)), "El mapeo de hotel no debe ser nulo");
         return ResponseEntity.created(URI.create("/api/hotels/" + created.id())).body(created);
     }
 }

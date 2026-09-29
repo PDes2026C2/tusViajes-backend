@@ -33,7 +33,7 @@ public class ReviewController {
     public ResponseEntity<Page<ReviewResponseDTO>> getByTravelPackageId(
             @PathVariable Long travelPackageId,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(reviewService.getByTravelPackageId(travelPackageId, pageable));
+        return ResponseEntity.ok(reviewService.getByTravelPackageId(travelPackageId, pageable).map(ReviewResponseDTO::from));
     }
 
     @PostMapping("/{travelPackageId}")
@@ -41,7 +41,7 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long travelPackageId,
             @Valid @RequestBody ReviewRequestDTO dto) {
-        ReviewResponseDTO created = reviewService.create(userDetails, travelPackageId, dto);
+        ReviewResponseDTO created = ReviewResponseDTO.from(reviewService.create(userDetails, travelPackageId, dto));
         return ResponseEntity.created(URI.create("/api/reviews/" + travelPackageId + created.id()))
                 .body(created);
     }

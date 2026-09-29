@@ -1,7 +1,6 @@
 package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.exception.InvalidTravelPackageException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Agency;
@@ -27,21 +26,21 @@ public class TravelPackageService {
     private final TransactionTemplate transactionTemplate;
 
     @Transactional(readOnly = true)
-    public Page<TravelPackageResponseDTO> search(Pageable pageable) {
-        return travelPackageRepository.findAll(pageable).map(TravelPackageResponseDTO::from);
+    public Page<TravelPackage> search(Pageable pageable) {
+        return travelPackageRepository.findAll(pageable);
     }
 
     @Transactional(readOnly = true)
-    public Page<TravelPackageResponseDTO> searchMine(Long agencyId, Pageable pageable) {
-        return travelPackageRepository.findByAgencyId(agencyId, pageable).map(TravelPackageResponseDTO::from);
+    public Page<TravelPackage> searchMine(Long agencyId, Pageable pageable) {
+        return travelPackageRepository.findByAgencyId(agencyId, pageable);
     }
 
     @Transactional(readOnly = true)
-    public TravelPackageResponseDTO getById(Long id) {
-        return TravelPackageResponseDTO.from(getEntityById(id));
+    public TravelPackage getById(Long id) {
+        return getEntityById(id);
     }
 
-    public TravelPackageResponseDTO create(Long agencyId, TravelPackageRequestDTO dto) {
+    public TravelPackage create(Long agencyId, TravelPackageRequestDTO dto) {
         Flight departureFlight = flightService.getOrCreateFlight(dto.getDepartureFlightId());
         Flight returnFlight = flightService.getOrCreateFlight(dto.getReturnFlightId());
 
@@ -62,11 +61,11 @@ public class TravelPackageService {
                     departureFlight,
                     returnFlight
             );
-            return TravelPackageResponseDTO.from(travelPackageRepository.save(travelPackage));
+            return travelPackageRepository.save(travelPackage);
         });
     }
 
-    public TravelPackageResponseDTO update(Long agencyId, Long id, TravelPackageRequestDTO dto) {
+    public TravelPackage update(Long agencyId, Long id, TravelPackageRequestDTO dto) {
         Flight departureFlight = flightService.getOrCreateFlight(dto.getDepartureFlightId());
         Flight returnFlight = flightService.getOrCreateFlight(dto.getReturnFlightId());
 
@@ -89,7 +88,7 @@ public class TravelPackageService {
                     returnFlight
             );
 
-            return TravelPackageResponseDTO.from(travelPackageRepository.save(travelPackage));
+            return travelPackageRepository.save(travelPackage);
         });
     }
 

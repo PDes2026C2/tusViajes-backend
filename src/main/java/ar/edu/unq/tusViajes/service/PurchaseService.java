@@ -1,7 +1,6 @@
 package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.adapters.dto.PassengerDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.PurchaseResponseDTO;
 import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Buyer;
@@ -13,6 +12,8 @@ import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
 import ar.edu.unq.tusViajes.validator.EntityValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +41,7 @@ public class PurchaseService {
     }
 
     @Transactional
-    public PurchaseResponseDTO purchase(Long buyerId, Long travelPackageId) {
+    public Purchase purchase(Long buyerId, Long travelPackageId) {
         Buyer buyer = entityValidator.findByIdOrThrow(buyerRepository, buyerId, "Comprador");
         TravelPackage travelPackage = travelPackageRepository.findById(travelPackageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Paquete de viaje con id " + travelPackageId + " no encontrado"));
@@ -66,7 +67,17 @@ public class PurchaseService {
         Purchase purchase = buyer.buy(travelPackage);
         Purchase saved = purchaseRepository.save(purchase);
         logger.info("Purchase {} created for buyer {} with price {}", saved.getId(), buyerId, saved.getPrice());
-        return PurchaseResponseDTO.from(saved);
+        return saved;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Purchase> getPurchasesByBuyer(Long buyerId, Pageable pageable) {
+        return purchaseRepository.findByBuyerId(buyerId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Purchase> getSalesByAgency(Long agencyId, Pageable pageable) {
+        return purchaseRepository.findByTravelPackageAgencyId(agencyId, pageable);
     }
 
     private PassengerDTO toPassengerDTO(Buyer buyer) {

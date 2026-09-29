@@ -15,8 +15,10 @@ import ar.edu.unq.tusViajes.controller.dto.request.UpdateAgencyRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.AgencyResponseDTO;
 import ar.edu.unq.tusViajes.service.AgencyService;
 
+import ar.edu.unq.tusViajes.controller.dto.response.PurchaseResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
+import ar.edu.unq.tusViajes.service.PurchaseService;
 import ar.edu.unq.tusViajes.service.TravelPackageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,20 +34,21 @@ public class AgencyController {
 
     private final AgencyService agencyService;
     private final TravelPackageService travelPackageService;
+    private final PurchaseService purchaseService;
 
     @GetMapping
     public ResponseEntity<List<AgencyResponseDTO>> getAll() {
-        return ResponseEntity.ok(agencyService.getAll());
+        return ResponseEntity.ok(agencyService.getAll().stream().map(AgencyResponseDTO::from).toList());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<AgencyResponseDTO> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(agencyService.getById(id));
+        return ResponseEntity.ok(AgencyResponseDTO.from(agencyService.getById(id)));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<AgencyResponseDTO> update(@PathVariable Long id, @Valid @RequestBody UpdateAgencyRequestDTO dto) {
-        return ResponseEntity.ok(agencyService.update(id, dto));
+        return ResponseEntity.ok(AgencyResponseDTO.from(agencyService.update(id, dto)));
     }
 
     @DeleteMapping("/{id}")
@@ -58,6 +61,13 @@ public class AgencyController {
     public ResponseEntity<Page<TravelPackageResponseDTO>> getMyPackages(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(travelPackageService.searchMine(userDetails.getId(), pageable));
+        return ResponseEntity.ok(travelPackageService.searchMine(userDetails.getId(), pageable).map(TravelPackageResponseDTO::from));
+    }
+
+    @GetMapping("/me/sales")
+    public ResponseEntity<Page<PurchaseResponseDTO>> getMySales(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(purchaseService.getSalesByAgency(userDetails.getId(), pageable).map(PurchaseResponseDTO::from));
     }
 }

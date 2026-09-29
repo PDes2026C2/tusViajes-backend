@@ -5,7 +5,6 @@ import ar.edu.unq.tusViajes.builder.FlightBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
 import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.exception.InvalidTravelPackageException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Agency;
@@ -88,7 +87,7 @@ class TravelPackageServiceTest {
                 .build();
         travelPackageRepository.save(travelPackage);
 
-        Page<TravelPackageResponseDTO> result = travelPackageService.search(PageRequest.of(0, 10));
+        Page<TravelPackage> result = travelPackageService.search(PageRequest.of(0, 10));
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().get(0).getName()).isEqualTo(travelPackage.getName());
@@ -113,7 +112,7 @@ class TravelPackageServiceTest {
                 .build();
         TravelPackage saved = travelPackageRepository.save(travelPackage);
 
-        TravelPackageResponseDTO result = travelPackageService.getById(saved.getId());
+        TravelPackage result = travelPackageService.getById(saved.getId());
 
         assertThat(result.getName()).isEqualTo(travelPackage.getName());
         assertThat(result.getPrice()).isEqualTo(travelPackage.getPrice());
@@ -144,7 +143,7 @@ class TravelPackageServiceTest {
                 depFlight.getId(), retFlight.getId()
         );
 
-        TravelPackageResponseDTO result = travelPackageService.create(agency.getId(), dto);
+        TravelPackage result = travelPackageService.create(agency.getId(), dto);
 
         assertThat(result.getName()).isEqualTo("Viaje a Cataratas");
         assertThat(result.getPrice()).isEqualTo(200000.0);
@@ -222,9 +221,9 @@ class TravelPackageServiceTest {
                 depFlight.getId(), retFlight.getId()
         );
 
-        TravelPackageResponseDTO result = travelPackageService.create(owner.getId(), dto);
+        TravelPackage result = travelPackageService.create(owner.getId(), dto);
 
-        assertThat(result.getAgency().id()).isEqualTo(owner.getId());
+        assertThat(result.getAgency().getId()).isEqualTo(owner.getId());
     }
 
     @Test
@@ -292,7 +291,7 @@ class TravelPackageServiceTest {
         travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Theirs").withHotel(hotel).withAgency(other).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
 
-        Page<TravelPackageResponseDTO> result = travelPackageService.searchMine(mine.getId(), PageRequest.of(0, 10));
+        Page<TravelPackage> result = travelPackageService.searchMine(mine.getId(), PageRequest.of(0, 10));
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().get(0).getName()).isEqualTo("Mine");

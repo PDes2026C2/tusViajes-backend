@@ -7,8 +7,6 @@ import ar.edu.unq.tusViajes.builder.AgencyBuilder;
 import ar.edu.unq.tusViajes.builder.BuyerBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
-import ar.edu.unq.tusViajes.controller.dto.response.BuyerResponseDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.*;
 import ar.edu.unq.tusViajes.repository.*;
@@ -67,22 +65,22 @@ class BuyerServiceTest {
     void getAll_returnsAllBuyers() {
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
 
-        List<BuyerResponseDTO> result = buyerService.getAll();
+        List<Buyer> result = buyerService.getAll();
 
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().firstName()).isEqualTo(buyer.getFirstName());
-        assertThat(result.getFirst().email()).isEqualTo(buyer.getEmail());
+        assertThat(result.getFirst().getFirstName()).isEqualTo(buyer.getFirstName());
+        assertThat(result.getFirst().getEmail()).isEqualTo(buyer.getEmail());
     }
 
     @Test
     void getById_returnsBuyerWhenExists() {
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
 
-        BuyerResponseDTO result = buyerService.getById(buyer.getId());
+        Buyer result = buyerService.getById(buyer.getId());
 
-        assertThat(result.firstName()).isEqualTo(buyer.getFirstName());
-        assertThat(result.email()).isEqualTo(buyer.getEmail());
-        assertThat(result.nationalId()).isEqualTo(buyer.getNationalId());
+        assertThat(result.getFirstName()).isEqualTo(buyer.getFirstName());
+        assertThat(result.getEmail()).isEqualTo(buyer.getEmail());
+        assertThat(result.getNationalId()).isEqualTo(buyer.getNationalId());
     }
 
     @Test
@@ -151,7 +149,7 @@ class BuyerServiceTest {
         buyer.addFavorite(travelPackage);
         buyerRepository.save(buyer);
 
-        List<TravelPackageResponseDTO> favorites = buyerService.getFavorites(buyer.getId());
+        List<TravelPackage> favorites = buyerService.getFavorites(buyer.getId());
 
         assertThat(favorites).hasSize(1);
         assertThat(favorites.get(0).getName()).isEqualTo("Promo Bariloche");
