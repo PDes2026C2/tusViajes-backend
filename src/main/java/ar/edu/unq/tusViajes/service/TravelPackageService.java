@@ -2,7 +2,6 @@ package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.UpdateTravelPackageRequestDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Agency;
 import ar.edu.unq.tusViajes.model.Flight;
@@ -41,7 +40,7 @@ public class TravelPackageService {
         return getEntityById(id);
     }
 
-    public TravelPackageResponseDTO create(TravelPackageRequestDTO dto, Long agencyId) {
+    public TravelPackage create(TravelPackageRequestDTO dto, Long agencyId) {
         Flight departureFlight = flightService.getOrCreateFlight(dto.getDepartureFlightId());
         Flight returnFlight = flightService.getOrCreateFlight(dto.getReturnFlightId());
 
@@ -64,13 +63,13 @@ public class TravelPackageService {
         });
     }
 
-    public TravelPackageResponseDTO update(Long id, Long agencyId, UpdateTravelPackageRequestDTO dto) {
+    public TravelPackage update(Long agencyId, UpdateTravelPackageRequestDTO dto) {
         Flight departureFlight = flightService.getOrCreateFlight(dto
                 .departureFlightId());
         Flight returnFlight = flightService.getOrCreateFlight(dto.returnFlightId());
 
         return transactionTemplate.execute(status -> {
-            TravelPackage travelPackage = getEntityById(id);
+            TravelPackage travelPackage = getEntityById(dto.id());
             Hotel hotel = hotelService.getEntityById(dto.hotelId());
             Agency agency = agencyService.getEntityById(agencyId);
 
@@ -98,11 +97,6 @@ public class TravelPackageService {
         Agency agency = agencyService.getEntityById(agencyId);
         travelPackage.deactivate(agency);
         travelPackageRepository.save(travelPackage);
-    }
-
-    private TravelPackage getOwnedEntityById(Long agencyId, Long id) {
-        return travelPackageRepository.findByIdAndAgencyId(id, agencyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Paquete de viaje con id " + id + " no encontrado"));
     }
 
     public TravelPackage getEntityById(Long id) {

@@ -1,5 +1,7 @@
 package ar.edu.unq.tusViajes.controller;
 
+import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.UpdateTravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.repository.CityRepository;
 import ar.edu.unq.tusViajes.repository.CountryRepository;
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
@@ -16,6 +18,8 @@ import ar.edu.unq.tusViajes.repository.AgencyRepository;
 import ar.edu.unq.tusViajes.repository.FlightRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
 import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -27,6 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.time.LocalDateTime;
 
 import static ar.edu.unq.tusViajes.builder.CityBuilder.aCity;
 import static ar.edu.unq.tusViajes.builder.CountryBuilder.aCountry;
@@ -66,6 +72,9 @@ class TravelPackageControllerTest {
 
     @Autowired
     private CountryRepository countryRepository;
+
+    private final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
 
     @Test
     void getAll_returns200AndListOfTravelPackages() throws Exception {
@@ -129,19 +138,19 @@ class TravelPackageControllerTest {
 
     @Test
     void create_returns401_whenUnauthenticated() throws Exception {
-        String json = """
-                {
-                    "name": "Bariloche 7d",
-                    "description": "Desc",
-                    "price": 150000.0,
-                    "startDate": "2026-10-01T10:00:00",
-                    "endDate": "2026-10-08T10:00:00",
-                    "hotelId": 1,
-                    "agencyId": 1,
-                    "departureFlightId": 1,
-                    "returnFlightId": 2
-                }
-                """;
+        TravelPackageRequestDTO dto = TravelPackageRequestDTO
+                .builder()
+                .name("Bariloche 7d")
+                .description("Desc")
+                .price(150000.0)
+                .startDate(LocalDateTime.of(2026, 10, 1, 10, 0))
+                .endDate(LocalDateTime.of(2026, 10, 8, 10, 0))
+                .hotelId(1L)
+                .departureFlightId(1L)
+                .returnFlightId(2L)
+                .build();
+
+        String json = mapper.writeValueAsString(dto);
 
         mockMvc.perform(post("/api/travel-packages")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -211,18 +220,19 @@ class TravelPackageControllerTest {
                 .build();
         TravelPackage saved = travelPackageRepository.save(travelPackage);
 
-        String json = """
-                {
-                    "name": "Bariloche 10d",
-                    "description": "Extended desc",
-                    "price": 200000.0,
-                    "startDate": "2026-11-01T10:00:00",
-                    "endDate": "2026-11-10T10:00:00",
-                    "hotelId": %d,
-                    "departureFlightId": %d,
-                    "returnFlightId": %d
-                }
-                """.formatted(hotel.getId(), depFlight.getId(), retFlight.getId());
+        UpdateTravelPackageRequestDTO updateDto = UpdateTravelPackageRequestDTO.builder()
+                .id(saved.getId())
+                .name("Bariloche 10d")
+                .description("Extended desc")
+                .price(200000.0)
+                .startDate(saved.getStartDate())
+                .endDate(saved.getEndDate().plusDays(3))
+                .hotelId(hotel.getId())
+                .departureFlightId(depFlight.getId())
+                .returnFlightId(retFlight.getId())
+                .build();
+
+        String json = mapper.writeValueAsString(updateDto);
 
         mockMvc.perform(put("/api/travel-packages/" + saved.getId())
                         .with(withCustomUserDetails(agency))
@@ -318,6 +328,7 @@ class TravelPackageControllerTest {
 
         String json = """
                 {
+                    "id": %d,
                     "name": "Update invalido",
                     "description": "Hotel mismatch",
                     "price": 200000.0,
@@ -328,7 +339,7 @@ class TravelPackageControllerTest {
                     "departureFlightId": %d,
                     "returnFlightId": %d
                 }
-                """.formatted(hotelInMendoza.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
+                """.formatted(saved.getId(), hotelInMendoza.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
 
         mockMvc.perform(put("/api/travel-packages/" + saved.getId())
                         .with(withCustomUserDetails(agency))

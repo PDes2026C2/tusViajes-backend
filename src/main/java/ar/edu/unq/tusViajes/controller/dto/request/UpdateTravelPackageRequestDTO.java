@@ -10,6 +10,9 @@ import java.time.LocalDateTime;
 
 @Builder
 public record UpdateTravelPackageRequestDTO(
+        @NotNull(message = "El ID es obligatorio")
+        Long id,
+
         @NotBlank(message = "El nombre es requerido")
         String name,
 

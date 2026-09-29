@@ -6,18 +6,11 @@ import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
 import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.UpdateTravelPackageRequestDTO;
-import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.exception.InvalidTravelPackageException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.exception.UnauthorizedAgencyException;
-import ar.edu.unq.tusViajes.model.Agency;
-import ar.edu.unq.tusViajes.model.Flight;
-import ar.edu.unq.tusViajes.model.Hotel;
-import ar.edu.unq.tusViajes.model.TravelPackage;
-import ar.edu.unq.tusViajes.repository.AgencyRepository;
-import ar.edu.unq.tusViajes.repository.FlightRepository;
-import ar.edu.unq.tusViajes.repository.HotelRepository;
-import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
+import ar.edu.unq.tusViajes.model.*;
+import ar.edu.unq.tusViajes.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -192,6 +185,7 @@ class TravelPackageServiceTest {
 
         UpdateTravelPackageRequestDTO dto = UpdateTravelPackageRequestDTO
                 .builder()
+                .id(saved.getId())
                 .name("Updated Package")
                 .description("Updated Description")
                 .price(200000.0)
@@ -202,7 +196,7 @@ class TravelPackageServiceTest {
                 .returnFlightId(retFlight.getId())
                 .build();
 
-        assertThatThrownBy(() -> travelPackageService.update(saved.getId(), agency.getId(), dto))
+        assertThatThrownBy(() -> travelPackageService.update(agency.getId(), dto))
                 .isInstanceOf(InvalidTravelPackageException.class)
                 .hasMessageContaining("La ciudad del hotel debe coincidir");
     }
@@ -248,9 +242,9 @@ class TravelPackageServiceTest {
                 .withActive(false)
                 .withHotel(hotel).withAgency(agency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
 
-        Page<TravelPackageResponseDTO> result = travelPackageService.search(PageRequest.of(0, 10));
+        Page<TravelPackage> result = travelPackageService.search(PageRequest.of(0, 10));
 
-        assertThat(result.getContent()).extracting(TravelPackageResponseDTO::getName)
+        assertThat(result.getContent()).extracting(TravelPackage::getName)
                 .contains(activePackage.getName())
                 .doesNotContain(inactivePackage.getName());
     }
@@ -291,6 +285,7 @@ class TravelPackageServiceTest {
 
         UpdateTravelPackageRequestDTO dto = UpdateTravelPackageRequestDTO
                 .builder()
+                .id(saved.getId())
                 .name("Update Name")
                 .description("Desc")
                 .price(200000.0)
@@ -301,7 +296,7 @@ class TravelPackageServiceTest {
                 .returnFlightId(retFlight.getId())
                 .build();
 
-        assertThatThrownBy(() -> travelPackageService.update(saved.getId(), otherAgency.getId(), dto))
+        assertThatThrownBy(() -> travelPackageService.update(otherAgency.getId(), dto))
                 .isInstanceOf(UnauthorizedAgencyException.class);
     }
 }

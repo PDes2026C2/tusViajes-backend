@@ -12,7 +12,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Objects;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,8 +45,8 @@ public class TravelPackageController {
     @PutMapping("/{id}")
     public ResponseEntity<TravelPackageResponseDTO> update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long id, @Valid @RequestBody TravelPackageRequestDTO dto) {
-        return ResponseEntity.ok(TravelPackageResponseDTO.from(travelPackageService.update(id, userDetails.getId(), dto)));
+            @Valid @RequestBody UpdateTravelPackageRequestDTO dto) {
+        return ResponseEntity.ok(TravelPackageResponseDTO.from(travelPackageService.update(userDetails.getId(), dto)));
     }
 
     @DeleteMapping("/{id}")
