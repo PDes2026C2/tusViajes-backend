@@ -3,12 +3,14 @@ package ar.edu.unq.tusViajes.controller;
 import ar.edu.unq.tusViajes.builder.CityBuilder;
 import ar.edu.unq.tusViajes.builder.CountryBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
+import ar.edu.unq.tusViajes.controller.dto.request.HotelRequestDTO;
 import ar.edu.unq.tusViajes.model.City;
 import ar.edu.unq.tusViajes.model.Country;
 import ar.edu.unq.tusViajes.model.Hotel;
 import ar.edu.unq.tusViajes.repository.CityRepository;
 import ar.edu.unq.tusViajes.repository.CountryRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -49,6 +51,8 @@ class HotelControllerTest {
 
     @Autowired
     private CountryRepository countryRepository;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void getAll_returns401_whenUnauthenticated() throws Exception {
@@ -148,24 +152,61 @@ class HotelControllerTest {
     }
 
     @Test
-    void create_returns201AndLocationHeader() throws Exception {
-        Country country = countryRepository.save(CountryBuilder.aCountry().withIsoCode("AR").withName("Argentina").build());
-        City city = cityRepository.save(CityBuilder.aCity().withName("Mendoza").withCountry(country).build());
-        String json = """
-                {
-                    "name": "Hotel Nuevo",
-                    "cityId": %d
-                }
-                """.formatted(city.getId());
+    void create_returns403_whenRoleIsBuyer() throws Exception {
+        HotelRequestDTO hotel = HotelRequestDTO
+                .builder()
+                .name("Hotel Nuevo")
+                .cityId(1L)
+                .build();
+        String json = objectMapper.writeValueAsString(hotel);
 
         mockMvc.perform(post("/api/hotels")
-                        .with(user("user"))
+                        .with(user("buyer").roles("BUYER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void create_returns201AndLocationHeader_whenRoleIsAdmin() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().withIsoCode("AR").withName("Argentina").build());
+        City city = cityRepository.save(CityBuilder.aCity().withName("Mendoza").withCountry(country).build());
+
+        HotelRequestDTO hotel = HotelRequestDTO
+                .builder()
+                .name("Hotel Nuevo Admin")
+                .cityId(city.getId())
+                .build();
+
+        String json = objectMapper.writeValueAsString(hotel);
+
+        mockMvc.perform(post("/api/hotels")
+                        .with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.name").value("Hotel Nuevo"))
+                .andExpect(jsonPath("$.name").value("Hotel Nuevo Admin"))
                 .andExpect(jsonPath("$.city.name").value("Mendoza"));
+    }
+
+    @Test
+    void create_returns403_whenRoleIsAgency() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().withIsoCode("AR").withName("Argentina").build());
+        City city = cityRepository.save(CityBuilder.aCity().withName("Mendoza").withCountry(country).build());
+        HotelRequestDTO hotel = HotelRequestDTO
+                .builder()
+                .name("Hotel Nuevo Agency")
+                .cityId(city.getId())
+                .build();
+
+        String json = objectMapper.writeValueAsString(hotel);
+
+        mockMvc.perform(post("/api/hotels")
+                        .with(user("agency").roles("AGENCY"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());
     }
 }
