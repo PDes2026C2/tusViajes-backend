@@ -51,6 +51,15 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.getByTravelPackageId(travelPackageId, pageable).map(ReviewResponseDTO::from));
     }
 
+    @Operation(summary = "Crear reseña de paquete", description = "Registra una opinión y calificación para un paquete adquirido y finalizado (requiere rol BUYER).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Reseña creada con éxito", content = @Content(schema = @Schema(implementation = ReviewResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Error de validación en puntaje o comentario", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Acceso no autorizado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado (el comprador no adquirió el paquete o aún no finalizó)", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Paquete de viaje o comprador no encontrado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "409", description = "El comprador ya opinó sobre este paquete", content = @Content(schema = @Schema(implementation = ErrorDTO.class)))
+    })
     @PostMapping("/{travelPackageId}")
     public ResponseEntity<ReviewResponseDTO> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -60,5 +69,4 @@ public class ReviewController {
         return ResponseEntity.created(URI.create("/api/reviews/" + travelPackageId + created.id()))
                 .body(created);
     }
-
 }

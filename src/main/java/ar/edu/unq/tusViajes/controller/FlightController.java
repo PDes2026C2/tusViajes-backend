@@ -32,6 +32,12 @@ public class FlightController {
 
     private final FlightService flightService;
 
+    @Operation(summary = "Consultar vuelos disponibles", description = "Obtiene vuelos disponibles aplicando filtros de búsqueda y paginación (requiere rol ADMIN o AGENCY).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lista de vuelos disponibles", content = @Content(array = @ArraySchema(schema = @Schema(implementation = FlightDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Acceso no autorizado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN o AGENCY)", content = @Content(schema = @Schema(implementation = ErrorDTO.class)))
+    })
     @GetMapping
     public ResponseEntity<List<FlightDTO>> getAvailableFlights(
             @Parameter(description = "Nombre de la aerolínea") @RequestParam(required = false) String airline,
