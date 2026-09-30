@@ -124,6 +124,21 @@ All retrieval endpoints and internal service methods follow a unified `get` conv
 
 ---
 
+## 📚 API Documentation (Swagger / OpenAPI)
+
+Interactive documentation and API exploration is powered by Swagger UI and OpenAPI 3:
+
+- **Swagger UI**: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+- **OpenAPI JSON Spec**: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+> [!TIP]
+> **Autenticación en Swagger**:
+> 1. Inicie sesión mediante `POST /api/auth/login` o registre un usuario.
+> 2. Copie el valor de `token`.
+> 3. En la parte superior derecha de Swagger UI, haga clic en **Authorize**, pegue el token en el campo `Value` y presione **Authorize**. Todas las peticiones protegidas incluirán automáticamente la cabecera `Authorization: Bearer <token>`.
+
+---
+
 ## 🏃 Running the Application
 
 ### Prerequisites
