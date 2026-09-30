@@ -50,18 +50,18 @@ All retrieval endpoints and internal service methods follow a unified `get` conv
 ### Travel Packages (`/api/travel-packages`)
 | Method | Path | Access | Description |
 |---|---|---|---|
-| `GET` | `/api/travel-packages` | Public | Get all travel packages |
+| `GET` | `/api/travel-packages` | Public | Get all travel packages (paginated, e.g. `?page&size`) |
 | `GET` | `/api/travel-packages/{id}` | Public | Get travel package by ID |
 | `POST` | `/api/travel-packages` | `AGENCY` | Create own travel package (agencyId from JWT, no `agencyId` in body) |
-| `PUT` | `/api/travel-packages/{id}` | `AGENCY` | Update own travel package (404 if not owned) |
-| `DELETE` | `/api/travel-packages/{id}` | `AGENCY` | Delete own travel package (404 if not owned) |
+| `PUT` | `/api/travel-packages/{id}` | `AGENCY` | Update own travel package (403 if not owned, 404 if not found) |
+| `DELETE` | `/api/travel-packages/{id}` | `AGENCY` | Delete own travel package (403 if not owned, 404 if not found) |
 
 ### Hotels (`/api/hotels`)
 | Method | Path | Access | Description |
 |---|---|---|---|
 | `GET` | `/api/hotels` | `ADMIN`, `AGENCY` | Get all hotels |
 | `GET` | `/api/hotels/{id}` | `ADMIN`, `AGENCY` | Get hotel by ID |
-| `POST` | `/api/hotels` | Authenticated | Register a new hotel |
+| `POST` | `/api/hotels` | `ADMIN` | Register a new hotel |
 
 ### Flights (`/api/flights`)
 | Method | Path | Access | Description |
@@ -69,15 +69,25 @@ All retrieval endpoints and internal service methods follow a unified `get` conv
 | `GET` | `/api/flights` | `ADMIN`, `AGENCY` | Get available flights (supports filtering & pagination) |
 | `GET` | `/api/flights/{id}` | `ADMIN`, `AGENCY` | Get flight by ID |
 
+### Cities (`/api/cities`)
+| Method | Path | Access | Description |
+|---|---|---|---|
+| `GET` | `/api/cities` | Public | Get all cities (supports optional `?isoCode` filter) |
+
+### Countries (`/api/countries`)
+| Method | Path | Access | Description |
+|---|---|---|---|
+| `GET` | `/api/countries` | Public | Get all countries |
+
 ### Buyers (`/api/buyers`)
 | Method | Path | Access | Description |
 |---|---|---|---|
-| `GET` | `/api/buyers` | Authenticated | Get all buyers |
-| `GET` | `/api/buyers/{id}` | Authenticated | Get buyer by ID |
-| `POST` | `/api/buyers` | Public | Register a buyer |
+| `GET` | `/api/buyers` | `ADMIN` | Get all buyers |
+| `GET` | `/api/buyers/{id}` | `ADMIN` | Get buyer by ID |
 | `POST` | `/api/buyers/me/favorites/{travelPackageId}` | `BUYER` | Add own favorite travel package |
 | `DELETE` | `/api/buyers/me/favorites/{travelPackageId}` | `BUYER` | Remove own favorite travel package |
 | `GET` | `/api/buyers/me/favorites` | `BUYER` | Get own favorite travel packages |
+| `GET` | `/api/buyers/me/purchases` | `BUYER` | Get own purchases (paginated, `?page&size`) |
 
 ### Agencies (`/api/agencies`)
 | Method | Path | Access | Description |
@@ -86,7 +96,8 @@ All retrieval endpoints and internal service methods follow a unified `get` conv
 | `GET` | `/api/agencies/{id}` | `ADMIN` | Get agency by ID |
 | `GET` | `/api/agencies/me/packages` | `AGENCY` | Get own travel packages (paginated, e.g. `?page&size`) |
 | `GET` | `/api/agencies/me/sales` | `AGENCY` | Get own sales (paginated, `?page&size`, includes buyer + package) |
-| `PUT` | `/api/agencies/{id}` | `ADMIN` | Update agency business name |
+| `PUT` | `/api/agencies/{id}` | `AGENCY` | Update own agency business name (403 if not owned) |
+| `PUT` | `/api/agencies/me` | `AGENCY` | Update own agency business name |
 | `DELETE` | `/api/agencies/{id}` | `ADMIN` | Delete agency |
 
 ### Purchases (`/api/purchases` & `/api/buyers`)
@@ -94,6 +105,12 @@ All retrieval endpoints and internal service methods follow a unified `get` conv
 |---|---|---|---|
 | `POST` | `/api/purchases/{travelPackageId}` | `BUYER` | Purchase a travel package |
 | `GET` | `/api/buyers/me/purchases` | `BUYER` | Get own purchases (paginated, `?page&size`) |
+
+### Reviews (`/api/reviews`)
+| Method | Path | Access | Description |
+|---|---|---|---|
+| `GET` | `/api/reviews/{travelPackageId}` | `ADMIN` | Get reviews for a travel package (paginated, `?page&size&sort`) |
+| `POST` | `/api/reviews/{travelPackageId}` | `BUYER` | Create a review for a finished, purchased travel package |
 
 ### Administrator Management (`/api/admin`)
 | Method | Path | Access | Description |

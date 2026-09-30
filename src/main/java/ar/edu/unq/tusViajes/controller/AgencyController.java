@@ -46,9 +46,11 @@ public class AgencyController {
         return ResponseEntity.ok(AgencyResponseDTO.from(agencyService.getById(id)));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<AgencyResponseDTO> update(@PathVariable Long id, @Valid @RequestBody UpdateAgencyRequestDTO dto) {
-        return ResponseEntity.ok(AgencyResponseDTO.from(agencyService.update(id, dto)));
+    @PutMapping("/me")
+    public ResponseEntity<AgencyResponseDTO> updateMine(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody UpdateAgencyRequestDTO dto) {
+        return ResponseEntity.ok(AgencyResponseDTO.from(agencyService.update(userDetails.getId(), dto)));
     }
 
     @DeleteMapping("/{id}")

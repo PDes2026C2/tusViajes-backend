@@ -84,28 +84,48 @@ class BuyerControllerTest {
     }
 
     @Test
+    void getAll_returns403_whenRoleIsNotAdmin() throws Exception {
+        mockMvc.perform(get("/api/buyers").with(user("lucas").roles("BUYER")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/buyers").with(user("agency").roles("AGENCY")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void getById_returns401_whenUnauthenticated() throws Exception {
         mockMvc.perform(get("/api/buyers/1"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void getById_returns200WhenExists() throws Exception {
+    void getById_returns403_whenRoleIsBuyer() throws Exception {
+        mockMvc.perform(get("/api/buyers/1").with(user("lucas").roles("BUYER")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getById_returns403_whenRoleIsAgency() throws Exception {
+        mockMvc.perform(get("/api/buyers/1").with(user("agency").roles("AGENCY")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getById_returns200WhenExists_whenRoleIsAdmin() throws Exception {
         Buyer saved = buyerRepository.save(
                 BuyerBuilder.aBuyer()
                         .withNationalId("38123456")
                         .build()
         );
 
-        mockMvc.perform(get("/api/buyers/" + saved.getId()).with(user("lucas").roles("BUYER")))
+        mockMvc.perform(get("/api/buyers/" + saved.getId()).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(saved.getId()))
                 .andExpect(jsonPath("$.nationalId").value("38123456"));
     }
 
     @Test
-    void getById_returns404WhenDoesNotExist() throws Exception {
-        mockMvc.perform(get("/api/buyers/99999").with(user("lucas").roles("BUYER")))
+    void getById_returns404WhenDoesNotExist_whenRoleIsAdmin() throws Exception {
+        mockMvc.perform(get("/api/buyers/99999").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
     }
 
