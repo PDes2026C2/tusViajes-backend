@@ -6,18 +6,18 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record AgencyRegistrationRequestDTO(
-    @NotBlank(message = "Business name is required")
+    @NotBlank(message = "La razón social es obligatoria")
     String businessName,
 
-    @NotBlank(message = "Tax ID is required")
-    @Pattern(regexp = "\\d{2}-\\d{8}-\\d{1}", message = "Tax ID must follow the format XX-XXXXXXXX-X")
+    @NotBlank(message = "El CUIT es obligatorio")
+    @Pattern(regexp = "\\d{2}-\\d{8}-\\d{1}", message = "El CUIT debe seguir el formato XX-XXXXXXXX-X")
     String taxId,
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email must be a valid email address")
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "El email debe ser una dirección válida")
     String email,
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must have at least 8 characters")
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
     String password
 ) {}

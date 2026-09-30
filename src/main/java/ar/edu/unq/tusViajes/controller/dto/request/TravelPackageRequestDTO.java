@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 
 @Builder
 public record TravelPackageRequestDTO(
-   @NotBlank(message = "Name is required")
+   @NotBlank(message = "El nombre es obligatorio")
    String name,
 
    String description,

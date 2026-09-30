@@ -6,13 +6,13 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record BuyerRegistrationRequestDTO(
-    @NotBlank(message = "First name is required") String firstName,
-    @NotBlank(message = "Last name is required") String lastName,
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email must be a valid email address") String email,
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must have at least 8 characters") String password,
+    @NotBlank(message = "El nombre es obligatorio") String firstName,
+    @NotBlank(message = "El apellido es obligatorio") String lastName,
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "El email debe ser una dirección válida") String email,
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres") String password,
     String phoneNumber,
-    @NotBlank(message = "National ID is required")
-    @Pattern(regexp = "\\d{8}", message = "National ID must contain 8 numeric digits") String nationalId
+    @NotBlank(message = "El DNI es obligatorio")
+    @Pattern(regexp = "\\d{8}", message = "El DNI debe contener 8 dígitos numéricos") String nationalId
 ) {}

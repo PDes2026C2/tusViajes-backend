@@ -164,7 +164,7 @@ class FlightsApiClientTest {
 
         assertThatThrownBy(() -> flightsApiClient.getFlight(999L))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Flight with id 999 not found");
+                .hasMessage("Vuelo con id 999 no encontrado");
 
         server.verify();
     }

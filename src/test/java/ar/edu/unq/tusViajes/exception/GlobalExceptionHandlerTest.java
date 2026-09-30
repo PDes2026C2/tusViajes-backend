@@ -104,7 +104,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(401, response.getBody().code());
-        assertEquals("Invalid refresh token.", response.getBody().message());
+        assertEquals("Token de refresco inválido.", response.getBody().message());
         assertNotNull(response.getBody().timestamp());
         assertNull(response.getBody().errors());
     }
@@ -140,7 +140,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(500, response.getBody().code());
-        assertEquals("Internal server error", response.getBody().message());
+        assertEquals("Error interno del servidor", response.getBody().message());
         assertNotNull(response.getBody().timestamp());
         assertNull(response.getBody().errors());
     }

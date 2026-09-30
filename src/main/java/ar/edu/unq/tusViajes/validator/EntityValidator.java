@@ -16,7 +16,7 @@ public class EntityValidator {
         return repository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                entityName + " with id " + id + " not found"
+                                entityName + " con id " + id + " no encontrado"
                         )
                 );
     }

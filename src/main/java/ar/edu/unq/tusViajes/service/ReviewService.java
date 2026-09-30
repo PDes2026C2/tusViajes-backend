@@ -32,7 +32,7 @@ public class ReviewService {
     public Review create(CustomUserDetails userDetails, Long travelPackageId, ReviewRequestDTO dto) {
         Long buyerId = userDetails.getId();
         if (reviewRepository.existsByBuyerIdAndTravelPackageId(buyerId, travelPackageId)) {
-            throw new DuplicateResourceException("Buyer already reviewed this travel package");
+            throw new DuplicateResourceException("El comprador ya opinó sobre este paquete de viaje");
         }
 
         Buyer buyer = buyerService.getEntityById(buyerId);

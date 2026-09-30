@@ -28,7 +28,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         ErrorDTO errorDTO = new ErrorDTO(
                 HttpServletResponse.SC_UNAUTHORIZED,
-                "Unauthorized access: you must authenticate to access this resource"
+                "Acceso no autorizado: debes autenticarte para acceder a este recurso"
         );
         response.getWriter().write(objectMapper.writeValueAsString(errorDTO));
     }

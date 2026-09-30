@@ -43,7 +43,7 @@ public class AuthService {
         }
 
         if (!user.isActive()) {
-            throw new UnauthorizedAgencyException("The agency is pending authorization by an administrator.");
+            throw new UnauthorizedAgencyException("La agencia está pendiente de autorización por parte de un administrador.");
         }
 
         String token = jwtTokenService.generateToken(user);

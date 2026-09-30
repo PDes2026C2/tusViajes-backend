@@ -92,7 +92,7 @@ class AuthControllerTest {
                         .content(json))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value(403))
-                .andExpect(jsonPath("$.message").value("The agency is pending authorization by an administrator."))
+                .andExpect(jsonPath("$.message").value("La agencia está pendiente de autorización por parte de un administrador."))
                 .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }
 
@@ -210,7 +210,7 @@ class AuthControllerTest {
                         .content(json))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(401))
-                .andExpect(jsonPath("$.message").value("Invalid refresh token."))
+                .andExpect(jsonPath("$.message").value("Token de refresco inválido."))
                 .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }
 
@@ -238,7 +238,7 @@ class AuthControllerTest {
                         .content(json))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(401))
-                .andExpect(jsonPath("$.message").value("Invalid refresh token."))
+                .andExpect(jsonPath("$.message").value("Token de refresco inválido."))
                 .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }
 
