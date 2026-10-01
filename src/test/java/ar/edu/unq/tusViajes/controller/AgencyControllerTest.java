@@ -153,9 +153,8 @@ class AgencyControllerTest {
     }
 
     @Test
-    void update_modifiesBusinessNameAndReturns200() throws Exception {
+    void update_returns403_whenRoleIsAdmin() throws Exception {
         Agency saved = agencyRepository.save(AgencyBuilder.anAgency().withBusinessName("Original SA").build());
-
         String json = """
                 {
                     "businessName": "Updated SA"
@@ -166,9 +165,43 @@ class AgencyControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void update_returns403_whenRoleIsBuyer() throws Exception {
+        Agency saved = agencyRepository.save(AgencyBuilder.anAgency().withBusinessName("Original SA").build());
+        String json = """
+                {
+                    "businessName": "Updated SA"
+                }
+                """;
+
+        mockMvc.perform(put("/api/agencies/" + saved.getId())
+                        .with(user("buyer").roles("BUYER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateMine_modifiesBusinessNameAndReturns200_whenRoleIsAgency() throws Exception {
+        Agency saved = agencyRepository.save(AgencyBuilder.anAgency().withBusinessName("Original SA").build());
+        String json = """
+                {
+                    "businessName": "Updated Via Me SA"
+                }
+                """;
+
+        mockMvc.perform(put("/api/agencies/me")
+                        .with(user(new CustomUserDetails(saved.getId(), saved.getEmail(), saved.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(saved.getId()))
-                .andExpect(jsonPath("$.businessName").value("Updated SA"));
+                .andExpect(jsonPath("$.businessName").value("Updated Via Me SA"));
+
+        assertThat(agencyRepository.findById(saved.getId()).orElseThrow().getBusinessName()).isEqualTo("Updated Via Me SA");
     }
 
     @Test

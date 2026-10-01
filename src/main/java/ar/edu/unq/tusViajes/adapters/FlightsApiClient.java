@@ -78,7 +78,7 @@ public class FlightsApiClient {
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .onStatus(status -> status.value() == 404, (request, response) -> {
-                    throw new ResourceNotFoundException("Flight with id " + flightId + " not found");
+                    throw new ResourceNotFoundException("Vuelo con id " + flightId + " no encontrado");
                 })
                 .body(FlightDTO.class);
     }

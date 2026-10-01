@@ -89,10 +89,10 @@ public class Buyer extends User {
 
     public void ensureCanReview(TravelPackage travelPackage) {
         if (!hasAcquired(travelPackage)) {
-            throw new ReviewNotAllowedException("Buyer didn't purchase this travel package yet");
+            throw new ReviewNotAllowedException("El comprador aún no ha adquirido este paquete de viaje");
         }
         if (!travelPackage.hasEnded()) {
-            throw new ReviewNotAllowedException("Can't review a travel package before end date.");
+            throw new ReviewNotAllowedException("No se puede opinar sobre un paquete de viaje antes de su fecha de finalización.");
         }
     }
 

@@ -28,7 +28,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         ErrorDTO errorDTO = new ErrorDTO(
                 HttpServletResponse.SC_FORBIDDEN,
-                "Access denied: you do not have sufficient permissions to perform this action"
+                "Acceso denegado: no tienes permisos suficientes para realizar esta acción"
         );
         response.getWriter().write(objectMapper.writeValueAsString(errorDTO));
     }

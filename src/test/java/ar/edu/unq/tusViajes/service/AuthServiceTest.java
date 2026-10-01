@@ -93,7 +93,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.login(new LoginRequestDTO("pending@test.com", "secretPassword")))
                 .isInstanceOf(UnauthorizedAgencyException.class)
-                .hasMessageContaining("pending authorization");
+                .hasMessageContaining("pendiente de autorización");
     }
 
     @Test

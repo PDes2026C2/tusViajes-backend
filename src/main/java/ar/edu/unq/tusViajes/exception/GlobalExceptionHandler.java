@@ -91,6 +91,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorDTO> handleGenericException(Exception ex) {
         logger.error("Unexpected error occurred", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal server error"));
+                .body(new ErrorDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error interno del servidor"));
     }
 }
