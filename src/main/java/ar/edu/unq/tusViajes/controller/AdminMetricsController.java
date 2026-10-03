@@ -1,5 +1,6 @@
 package ar.edu.unq.tusViajes.controller;
 
+import ar.edu.unq.tusViajes.controller.dto.response.AgenciesTopResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.BuyersTopResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.DestinationsTopResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.ErrorDTO;
@@ -63,5 +64,17 @@ public class AdminMetricsController {
     public ResponseEntity<List<RatedDestinationsTopResponseDTO>> getTopRatedDestinations() {
         return ResponseEntity.ok(adminMetricsService.getTopRatedDestinations().stream()
                 .map(RatedDestinationsTopResponseDTO::from).toList());
+    }
+
+    @Operation(summary = "Obtener top 5 agencias vendedoras", description = "Devuelve hasta cinco agencias con su cantidad total de ventas, sumando las compras de todos sus paquetes. Ordena por ventas descendentes y por ID de agencia ascendente en caso de empate. Excluye agencias sin ventas y devuelve una lista vacía si no hay compras (requiere rol ADMIN).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Top agencias con sus datos básicos y cantidad de ventas", content = @Content(array = @ArraySchema(schema = @Schema(implementation = AgenciesTopResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Acceso no autorizado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content(schema = @Schema(implementation = ErrorDTO.class)))
+    })
+    @GetMapping(value = "/top-agencies", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<AgenciesTopResponseDTO>> getTopAgencies() {
+        return ResponseEntity.ok(adminMetricsService.getTopAgencies().stream()
+                .map(AgenciesTopResponseDTO::from).toList());
     }
 }

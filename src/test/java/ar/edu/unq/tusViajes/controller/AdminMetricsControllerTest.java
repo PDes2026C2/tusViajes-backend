@@ -530,6 +530,172 @@ class AdminMetricsControllerTest {
     }
 
     @Test
+    void getTopAgencies_returnsAgencyDetailsAndSellsCountAcrossPackages_whenIsAdmin() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City origin = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
+        City destination = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        Flight departure = flightRepository.save(FlightBuilder.aFlight()
+                .withId(100L).withOriginCity(origin).withDestinationCity(destination).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight()
+                .withId(101L).withOriginCity(destination).withDestinationCity(origin).build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(destination).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().withBusinessName("Agencia Demo").build());
+        TravelPackage firstPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel).withAgency(agency)
+                .withDepartureFlight(departure).withReturnFlight(returnFlight).build());
+        TravelPackage secondPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Otro paquete").withHotel(hotel).withAgency(agency)
+                .withDepartureFlight(departure).withReturnFlight(returnFlight).build());
+        Buyer firstBuyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
+        Buyer secondBuyer = buyerRepository.save(BuyerBuilder.aBuyer()
+                .withEmail("buyer2@example.com").withNationalId("40000002").build());
+        purchaseRepository.save(PurchaseBuilder.aPurchase()
+                .withBuyer(firstBuyer).withTravelPackage(firstPackage).build());
+        purchaseRepository.save(PurchaseBuilder.aPurchase()
+                .withBuyer(secondBuyer).withTravelPackage(firstPackage).build());
+        purchaseRepository.save(PurchaseBuilder.aPurchase()
+                .withBuyer(firstBuyer).withTravelPackage(secondPackage).build());
+
+        mockMvc.perform(get("/api/admin/metrics/top-agencies").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].agency.id").value(agency.getId()))
+                .andExpect(jsonPath("$[0].agency.businessName").value("Agencia Demo"))
+                .andExpect(jsonPath("$[0].agency.email").value(agency.getEmail()))
+                .andExpect(jsonPath("$[0].agency.length()").value(3))
+                .andExpect(jsonPath("$[0].agency.passwordHash").doesNotExist())
+                .andExpect(jsonPath("$[0].agency.taxId").doesNotExist())
+                .andExpect(jsonPath("$[0].agency.status").doesNotExist())
+                .andExpect(jsonPath("$[0].sellsCount").value(3))
+                .andExpect(jsonPath("$[0].salesCount").doesNotExist());
+    }
+
+    @Test
+    void getTopAgencies_returnsOnlyFiveAgenciesOrderedBySellsCount() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City origin = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
+        City destination = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        Flight departure = flightRepository.save(FlightBuilder.aFlight()
+                .withId(100L).withOriginCity(origin).withDestinationCity(destination).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight()
+                .withId(101L).withOriginCity(destination).withDestinationCity(origin).build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(destination).build());
+        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
+        for (int i = 0; i < 7; i++) {
+            Agency agency = agencyRepository.save(AgencyBuilder.anAgency()
+                    .withBusinessName("Agency" + i).withEmail("agency" + i + "@example.com")
+                    .withTaxId("20-" + (12345670 + i) + "-3").build());
+            for (int j = 0; j < i; j++) {
+                TravelPackage travelPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                        .withName("Package " + i + "-" + j).withHotel(hotel).withAgency(agency)
+                        .withDepartureFlight(departure).withReturnFlight(returnFlight).build());
+                purchaseRepository.save(PurchaseBuilder.aPurchase()
+                        .withBuyer(buyer).withTravelPackage(travelPackage).build());
+            }
+        }
+
+        mockMvc.perform(get("/api/admin/metrics/top-agencies").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(5))
+                .andExpect(jsonPath("$[0].agency.businessName").value("Agency6"))
+                .andExpect(jsonPath("$[0].sellsCount").value(6))
+                .andExpect(jsonPath("$[1].agency.businessName").value("Agency5"))
+                .andExpect(jsonPath("$[1].sellsCount").value(5))
+                .andExpect(jsonPath("$[2].agency.businessName").value("Agency4"))
+                .andExpect(jsonPath("$[2].sellsCount").value(4))
+                .andExpect(jsonPath("$[3].agency.businessName").value("Agency3"))
+                .andExpect(jsonPath("$[3].sellsCount").value(3))
+                .andExpect(jsonPath("$[4].agency.businessName").value("Agency2"))
+                .andExpect(jsonPath("$[4].sellsCount").value(2));
+    }
+
+    @Test
+    void getTopAgencies_ordersTiesByAgencyIdAndExcludesAgenciesWithoutSales() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City origin = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
+        City destination = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        Flight departure = flightRepository.save(FlightBuilder.aFlight()
+                .withId(100L).withOriginCity(origin).withDestinationCity(destination).build());
+        Flight returnFlight = flightRepository.save(FlightBuilder.aFlight()
+                .withId(101L).withOriginCity(destination).withDestinationCity(origin).build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(destination).build());
+        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
+        List<Agency> agencies = new ArrayList<>();
+        List<TravelPackage> packages = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            Agency agency = agencyRepository.save(AgencyBuilder.anAgency()
+                    .withBusinessName("Agency" + i).withEmail("agency" + i + "@example.com")
+                    .withTaxId("20-" + (12345670 + i) + "-3").build());
+            agencies.add(agency);
+            packages.add(travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                    .withHotel(hotel).withAgency(agency)
+                    .withDepartureFlight(departure).withReturnFlight(returnFlight).build()));
+        }
+        purchaseRepository.save(PurchaseBuilder.aPurchase()
+                .withBuyer(buyer).withTravelPackage(packages.get(1)).build());
+        purchaseRepository.save(PurchaseBuilder.aPurchase()
+                .withBuyer(buyer).withTravelPackage(packages.get(0)).build());
+
+        mockMvc.perform(get("/api/admin/metrics/top-agencies").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].agency.id").value(agencies.get(0).getId()))
+                .andExpect(jsonPath("$[0].sellsCount").value(1))
+                .andExpect(jsonPath("$[1].agency.id").value(agencies.get(1).getId()))
+                .andExpect(jsonPath("$[1].sellsCount").value(1));
+    }
+
+    @Test
+    void getTopAgencies_returnsEmptyList_whenThereAreNoPurchases() throws Exception {
+        agencyRepository.save(AgencyBuilder.anAgency().build());
+
+        mockMvc.perform(get("/api/admin/metrics/top-agencies").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void getTopAgencies_returns401_whenUnauthenticated() throws Exception {
+        mockMvc.perform(get("/api/admin/metrics/top-agencies"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Acceso no autorizado")));
+    }
+
+    @Test
+    void getTopAgencies_returns403_whenRoleIsNotAdmin() throws Exception {
+        mockMvc.perform(get("/api/admin/metrics/top-agencies").with(user("buyer").roles("BUYER")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Acceso denegado")));
+        mockMvc.perform(get("/api/admin/metrics/top-agencies").with(user("agency").roles("AGENCY")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Acceso denegado")));
+    }
+
+    @Test
+    void getTopAgencies_isDocumentedInOpenApi() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paths['/api/admin/metrics/top-agencies'].get.responses['200']"
+                        + ".content['application/json'].schema.type").value("array"))
+                .andExpect(jsonPath("$.paths['/api/admin/metrics/top-agencies'].get.responses['200']"
+                        + ".content['application/json'].schema.items['$ref']")
+                        .value("#/components/schemas/AgenciesTopResponseDTO"))
+                .andExpect(jsonPath("$.components.schemas.AgenciesTopResponseDTO.properties.agency['$ref']")
+                        .value("#/components/schemas/SimpleAgencyDTO"))
+                .andExpect(jsonPath("$.components.schemas.AgenciesTopResponseDTO.properties.sellsCount.type")
+                        .value("integer"))
+                .andExpect(jsonPath("$.components.schemas.SimpleAgencyDTO.properties.length()").value(3))
+                .andExpect(jsonPath("$.components.schemas.SimpleAgencyDTO.properties.id.type").value("integer"))
+                .andExpect(jsonPath("$.components.schemas.SimpleAgencyDTO.properties.businessName.type").value("string"))
+                .andExpect(jsonPath("$.components.schemas.SimpleAgencyDTO.properties.email.type").value("string"))
+                .andExpect(jsonPath("$.paths['/api/admin/metrics/top-agencies'].get.responses['401']"
+                        + ".content['application/json'].schema['$ref']").value("#/components/schemas/ErrorDTO"))
+                .andExpect(jsonPath("$.paths['/api/admin/metrics/top-agencies'].get.responses['403']"
+                        + ".content['application/json'].schema['$ref']").value("#/components/schemas/ErrorDTO"))
+                .andExpect(jsonPath("$.security[0].bearerAuth").isArray());
+    }
+
+    @Test
     void getTopBuyers_isDocumentedInOpenApi() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
