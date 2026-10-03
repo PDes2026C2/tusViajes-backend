@@ -169,19 +169,20 @@ class TravelPackageControllerTest {
         Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
-        String json = """
-                {
-                    "name": "Bariloche 7d",
-                    "description": "Desc",
-                    "price": 150000.0,
-                    "startDate": "2026-10-01T10:00:00",
-                    "endDate": "2026-10-08T10:00:00",
-                    "hotelId": %d,
-                    "agencyId": %d,
-                    "departureFlightId": %d,
-                    "returnFlightId": %d
-                }
-                """.formatted(hotel.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
+        LocalDateTime startDate = LocalDateTime.now().plusDays(10);
+
+        TravelPackageRequestDTO dto = TravelPackageRequestDTO.builder()
+                .name("Bariloche 7d")
+                .description("Desc")
+                .price(150000.0)
+                .startDate(startDate)
+                .endDate(startDate.plusDays(7))
+                .hotelId(hotel.getId())
+                .departureFlightId(depFlight.getId())
+                .returnFlightId(retFlight.getId())
+                .build();
+
+        String json = mapper.writeValueAsString(dto);
 
         mockMvc.perform(post("/api/travel-packages")
                         .with(withCustomUserDetails(agency))
@@ -288,19 +289,20 @@ class TravelPackageControllerTest {
         Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(30L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(31L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
-        String json = """
-                {
-                    "name": "Viaje invalido",
-                    "description": "Hotel en otra ciudad",
-                    "price": 150000.0,
-                    "startDate": "2026-10-01T10:00:00",
-                    "endDate": "2026-10-08T10:00:00",
-                    "hotelId": %d,
-                    "agencyId": %d,
-                    "departureFlightId": %d,
-                    "returnFlightId": %d
-                }
-                """.formatted(hotelInMendoza.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
+        LocalDateTime startDate = LocalDateTime.now().plusDays(10);
+
+        TravelPackageRequestDTO dto = TravelPackageRequestDTO.builder()
+                .name("Viaje invalido")
+                .description("Hotel en otra ciudad")
+                .price(150000.0)
+                .startDate(startDate)
+                .endDate(startDate.plusDays(7))
+                .hotelId(hotelInMendoza.getId())
+                .departureFlightId(depFlight.getId())
+                .returnFlightId(retFlight.getId())
+                .build();
+
+        String json = mapper.writeValueAsString(dto);
 
         mockMvc.perform(post("/api/travel-packages")
                         .with(withCustomUserDetails(agency))
@@ -326,20 +328,19 @@ class TravelPackageControllerTest {
         TravelPackage saved = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotelInBariloche).withAgency(agency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
 
-        String json = """
-                {
-                    "id": %d,
-                    "name": "Update invalido",
-                    "description": "Hotel mismatch",
-                    "price": 200000.0,
-                    "startDate": "2026-11-01T10:00:00",
-                    "endDate": "2026-11-10T10:00:00",
-                    "hotelId": %d,
-                    "agencyId": %d,
-                    "departureFlightId": %d,
-                    "returnFlightId": %d
-                }
-                """.formatted(saved.getId(), hotelInMendoza.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
+        UpdateTravelPackageRequestDTO dto = UpdateTravelPackageRequestDTO.builder()
+                .id(saved.getId())
+                .name("Update invalido")
+                .description("Hotel mismatch")
+                .price(200000.0)
+                .startDate(saved.getStartDate())
+                .endDate(saved.getEndDate())
+                .hotelId(hotelInMendoza.getId())
+                .departureFlightId(depFlight.getId())
+                .returnFlightId(retFlight.getId())
+                .build();
+
+        String json = mapper.writeValueAsString(dto);
 
         mockMvc.perform(put("/api/travel-packages/" + saved.getId())
                         .with(withCustomUserDetails(agency))

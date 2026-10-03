@@ -1,7 +1,9 @@
 package ar.edu.unq.tusViajes.repository;
 
 import ar.edu.unq.tusViajes.model.Purchase;
+import ar.edu.unq.tusViajes.repository.projection.BuyerPurchaseCount;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,4 +21,12 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
     Page<Purchase> findByTravelPackageAgencyId(Long agencyId, Pageable pageable);
 
     List<Purchase> findByTravelPackageId(Long travelPackageId);
+
+    @Query("""
+            SELECT b AS buyer, COUNT(p) AS purchaseCount
+            FROM Purchase p JOIN p.buyer b
+            GROUP BY b
+            ORDER BY COUNT(p) DESC, b.id ASC
+            """)
+    List<BuyerPurchaseCount> findTopBuyers(Pageable pageable);
 }
