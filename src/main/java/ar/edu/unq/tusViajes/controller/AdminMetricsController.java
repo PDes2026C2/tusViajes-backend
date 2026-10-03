@@ -1,7 +1,9 @@
 package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.controller.dto.response.BuyersTopResponseDTO;
+import ar.edu.unq.tusViajes.controller.dto.response.DestinationsTopResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.ErrorDTO;
+import ar.edu.unq.tusViajes.controller.dto.response.RatedDestinationsTopResponseDTO;
 import ar.edu.unq.tusViajes.service.AdminMetricsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -37,5 +39,29 @@ public class AdminMetricsController {
     public ResponseEntity<List<BuyersTopResponseDTO>> getTopBuyers() {
         return ResponseEntity.ok(adminMetricsService.getTopBuyers().stream()
                 .map(BuyersTopResponseDTO::from).toList());
+    }
+
+    @Operation(summary = "Obtener top 5 destinos más vendidos", description = "Devuelve hasta cinco ciudades de destino con su cantidad total de ventas, sumando las compras de todos sus paquetes y hoteles. Ordena por ventas descendentes y por ID de ciudad ascendente en caso de empate. Excluye ciudades sin ventas y devuelve una lista vacía si no hay compras (requiere rol ADMIN).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Top destinos con su cantidad de ventas", content = @Content(array = @ArraySchema(schema = @Schema(implementation = DestinationsTopResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Acceso no autorizado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content(schema = @Schema(implementation = ErrorDTO.class)))
+    })
+    @GetMapping(value = "/top-destinations", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<DestinationsTopResponseDTO>> getTopDestinations() {
+        return ResponseEntity.ok(adminMetricsService.getTopDestinations().stream()
+                .map(DestinationsTopResponseDTO::from).toList());
+    }
+
+    @Operation(summary = "Obtener top 5 destinos mejor calificados", description = "Devuelve hasta cinco ciudades de destino con el promedio de los puntajes de todas sus reseñas, en la escala de 0 a 10. Ordena por promedio descendente y por ID de ciudad ascendente en caso de empate. Excluye ciudades sin reseñas con puntaje y devuelve una lista vacía si no hay calificaciones (requiere rol ADMIN).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Top destinos con su calificación promedio", content = @Content(array = @ArraySchema(schema = @Schema(implementation = RatedDestinationsTopResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Acceso no autorizado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content(schema = @Schema(implementation = ErrorDTO.class)))
+    })
+    @GetMapping(value = "/top-rated-destinations", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<RatedDestinationsTopResponseDTO>> getTopRatedDestinations() {
+        return ResponseEntity.ok(adminMetricsService.getTopRatedDestinations().stream()
+                .map(RatedDestinationsTopResponseDTO::from).toList());
     }
 }
