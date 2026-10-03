@@ -1,5 +1,6 @@
 package ar.edu.unq.tusViajes.service;
 
+import ar.edu.unq.tusViajes.model.AgenciesTop;
 import ar.edu.unq.tusViajes.model.BuyersTop;
 import ar.edu.unq.tusViajes.model.DestinationsTop;
 import ar.edu.unq.tusViajes.model.RatedDestinationsTop;
@@ -40,6 +41,14 @@ public class AdminMetricsService {
         return reviewRepository.findTopRatedDestinations(PageRequest.of(0, 5))
                 .stream()
                 .map(result -> new RatedDestinationsTop(result.getCity(), result.getStars()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AgenciesTop> getTopAgencies() {
+        return purchaseRepository.findTopAgencies(PageRequest.of(0, 5))
+                .stream()
+                .map(result -> new AgenciesTop(result.getAgency(), result.getSellsCount()))
                 .toList();
     }
 }
