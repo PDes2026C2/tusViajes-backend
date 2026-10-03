@@ -1,6 +1,7 @@
 package ar.edu.unq.tusViajes.repository;
 
 import ar.edu.unq.tusViajes.model.Purchase;
+import ar.edu.unq.tusViajes.repository.projection.AgencySellsCount;
 import ar.edu.unq.tusViajes.repository.projection.BuyerPurchaseCount;
 import ar.edu.unq.tusViajes.repository.projection.CitySalesCount;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,4 +39,12 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
             ORDER BY COUNT(p) DESC, c.id ASC
             """)
     List<CitySalesCount> findTopDestinations(Pageable pageable);
+
+    @Query("""
+            SELECT a AS agency, COUNT(p) AS sellsCount
+            FROM Purchase p JOIN p.travelPackage.agency a
+            GROUP BY a
+            ORDER BY COUNT(p) DESC, a.id ASC
+            """)
+    List<AgencySellsCount> findTopAgencies(Pageable pageable);
 }
