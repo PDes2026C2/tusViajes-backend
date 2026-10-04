@@ -1,9 +1,7 @@
 package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.adapters.dto.PassengerDTO;
-import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
 import ar.edu.unq.tusViajes.exception.FlightFullException;
-import ar.edu.unq.tusViajes.exception.PackageAlreadyStartedException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Buyer;
 import ar.edu.unq.tusViajes.model.Purchase;
@@ -49,6 +47,8 @@ public class PurchaseService {
         TravelPackage travelPackage = travelPackageRepository.findById(travelPackageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Paquete de viaje con id " + travelPackageId + " no encontrado"));
 
+        Purchase purchase = buyer.buy(travelPackage);
+
         PassengerDTO passenger = toPassengerDTO(buyer);
         logger.info("Processing purchase for buyer {} and travelPackage {}", buyerId, travelPackageId);
 
@@ -65,12 +65,12 @@ public class PurchaseService {
             sellFlight(returnFlightId, passenger);
             returnSold = true;
 
-            Purchase purchase = buyer.buy(travelPackage);
             Purchase saved = purchaseRepository.save(purchase);
             logger.info("Purchase {} created for buyer {} with price {}", saved.getId(), buyerId, saved.getPrice());
             return saved;
         } catch (Exception ex) {
             logger.warn("Purchase failed for buyer {} and travelPackage {}. Initiating flight compensation.", buyerId, travelPackageId, ex);
+            buyer.removePurchase(purchase);
             if (returnSold) {
                 compensateFlight(returnFlightId, passenger);
             }

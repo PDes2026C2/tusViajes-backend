@@ -1,159 +1,266 @@
 package ar.edu.unq.tusViajes.service;
 
+import ar.edu.unq.tusViajes.adapters.FlightsApiClient;
 import ar.edu.unq.tusViajes.adapters.dto.PassengerDTO;
-import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
-import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
-import ar.edu.unq.tusViajes.model.Buyer;
-import ar.edu.unq.tusViajes.model.TravelPackage;
-import ar.edu.unq.tusViajes.repository.BuyerRepository;
-import ar.edu.unq.tusViajes.repository.PurchaseRepository;
-import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
-import ar.edu.unq.tusViajes.validator.EntityValidator;
-import ar.edu.unq.tusViajes.builder.BuyerBuilder;
-import ar.edu.unq.tusViajes.builder.FlightBuilder;
-import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
-import ar.edu.unq.tusViajes.model.City;
-import ar.edu.unq.tusViajes.model.Country;
-import ar.edu.unq.tusViajes.model.Flight;
+import ar.edu.unq.tusViajes.builder.*;
+import ar.edu.unq.tusViajes.exception.*;
+import ar.edu.unq.tusViajes.model.*;
+import ar.edu.unq.tusViajes.repository.*;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.Optional;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@Testcontainers(disabledWithoutDocker = true)
+@SpringBootTest
+@Transactional
 class PurchaseServiceTest {
 
-    @Mock
-    private PurchaseRepository purchaseRepository;
-    @Mock
-    private BuyerRepository buyerRepository;
-    @Mock
-    private TravelPackageRepository travelPackageRepository;
-    @Mock
-    private FlightsApiService flightsApiService;
-    @Mock
-    private EntityValidator entityValidator;
+    @Container
+    @ServiceConnection
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 
-    @InjectMocks
+    @Autowired
     private PurchaseService purchaseService;
+
+    @Autowired
+    private PurchaseRepository purchaseRepository;
+
+    @Autowired
+    private BuyerRepository buyerRepository;
+
+    @Autowired
+    private TravelPackageRepository travelPackageRepository;
+
+    @Autowired
+    private HotelRepository hotelRepository;
+
+    @Autowired
+    private AgencyRepository agencyRepository;
+
+    @Autowired
+    private FlightRepository flightRepository;
+
+    @Autowired
+    private CityRepository cityRepository;
+
+    @Autowired
+    private CountryRepository countryRepository;
+
+    @MockitoBean
+    private FlightsApiClient flightsApiClient;
+
+    @BeforeEach
+    void setUp() {
+        reset(flightsApiClient);
+    }
+
+    private TravelPackage createAndSaveTravelPackage(Long depFlightId, Long retFlightId, Double price, LocalDateTime startDate) {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City origin = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires " + depFlightId).withCountry(country).build());
+        City dest = cityRepository.save(CityBuilder.aCity().withName("Bariloche " + retFlightId).withCountry(country).build());
+        Flight dep = flightRepository.save(FlightBuilder.aFlight().withId(depFlightId).withOriginCity(origin).withDestinationCity(dest).build());
+        Flight ret = flightRepository.save(FlightBuilder.aFlight().withId(retFlightId).withOriginCity(dest).withDestinationCity(origin).build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(dest).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+
+        TravelPackageBuilder builder = TravelPackageBuilder.aTravelPackage()
+                .withPrice(price)
+                .withHotel(hotel)
+                .withAgency(agency)
+                .withDepartureFlight(dep)
+                .withReturnFlight(ret);
+
+        if (startDate != null) {
+            builder.withStartDate(startDate);
+        }
+
+        return travelPackageRepository.save(builder.build());
+    }
+
+    private Buyer createAndSaveBuyer(String nationalId, String firstName, String lastName) {
+        return buyerRepository.save(BuyerBuilder.aBuyer()
+                .withNationalId(nationalId)
+                .withFirstName(firstName)
+                .withLastName(lastName)
+                .withEmail("buyer_" + nationalId + "@test.com")
+                .build());
+    }
 
     @Test
     void purchase_createsPurchaseAndCallsFlightsApiTwice() {
-        Buyer buyer = BuyerBuilder.aBuyer().withFirstName("Ana").withLastName("Gomez").withNationalId("40123456").build();
-        Country country = new Country("AR", "Argentina");
-        City originCity = new City(1L, "Buenos Aires", country);
-        City destCity = new City(2L, "Bariloche", country);
-        Flight departureFlight = FlightBuilder.aFlight().withId(10L).withOriginCity(originCity).withDestinationCity(destCity).build();
-        Flight returnFlight = FlightBuilder.aFlight().withId(11L).withOriginCity(destCity).withDestinationCity(originCity).build();
-        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
-                .withId(99L)
-                .withPrice(250000.0)
-                .withDepartureFlight(departureFlight)
-                .withReturnFlight(returnFlight)
-                .build();
+        Buyer buyer = createAndSaveBuyer("40123456", "Ana", "Gomez");
+        TravelPackage travelPackage = createAndSaveTravelPackage(10L, 11L, 250000.0, null);
 
-        when(entityValidator.findByIdOrThrow(buyerRepository, 1L, "Comprador")).thenReturn(buyer);
-        when(travelPackageRepository.findById(99L)).thenReturn(Optional.of(travelPackage));
-        when(purchaseRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(flightsApiClient.sellFlight(any(), any(PassengerDTO.class))).thenReturn(null);
 
-        ar.edu.unq.tusViajes.model.Purchase result = purchaseService.purchase(1L, 99L);
+        Purchase result = purchaseService.purchase(buyer.getId(), travelPackage.getId());
 
         assertThat(result.getPrice()).isEqualTo(250000.0);
         assertThat(result.getPurchasedAt()).isNotNull();
-        assertThat(buyer.getTravelPackagesPurchased()).hasSize(1);
-        assertThat(buyer.hasAcquired(travelPackage)).isTrue();
-        verify(flightsApiService).sellFlight(eq(10L), any(PassengerDTO.class));
-        verify(flightsApiService).sellFlight(eq(11L), any(PassengerDTO.class));
+        assertThat(result.getBuyer().getId()).isEqualTo(buyer.getId());
+        assertThat(result.getTravelPackage().getId()).isEqualTo(travelPackage.getId());
+
+        assertThat(purchaseRepository.findById(result.getId())).isPresent();
+        Buyer persistedBuyer = buyerRepository.findById(buyer.getId()).orElseThrow();
+        assertThat(persistedBuyer.getTravelPackagesPurchased()).hasSize(1);
+        assertThat(persistedBuyer.hasAcquired(travelPackage)).isTrue();
+
+        verify(flightsApiClient).sellFlight(eq(10L), any(PassengerDTO.class));
+        verify(flightsApiClient).sellFlight(eq(11L), any(PassengerDTO.class));
 
         ArgumentCaptor<PassengerDTO> captor = ArgumentCaptor.forClass(PassengerDTO.class);
-        verify(flightsApiService).sellFlight(eq(10L), captor.capture());
+        verify(flightsApiClient).sellFlight(eq(10L), captor.capture());
         assertThat(captor.getValue().dni()).isEqualTo(40123456);
         assertThat(captor.getValue().name()).isEqualTo("Ana");
+        assertThat(captor.getValue().surname()).isEqualTo("Gomez");
     }
 
     @Test
     void purchase_throwsWhenTravelPackageNotFound() {
-        Buyer buyer = BuyerBuilder.aBuyer().build();
-        when(entityValidator.findByIdOrThrow(buyerRepository, 1L, "Comprador")).thenReturn(buyer);
-        when(travelPackageRepository.findById(999L)).thenReturn(Optional.empty());
+        Buyer buyer = createAndSaveBuyer("40123456", "Ana", "Gomez");
 
-        assertThatThrownBy(() -> purchaseService.purchase(1L, 999L))
+        assertThatThrownBy(() -> purchaseService.purchase(buyer.getId(), 99999L))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Paquete de viaje con id 999 no encontrado");
+                .hasMessageContaining("Paquete de viaje con id 99999 no encontrado");
 
-        verifyNoInteractions(flightsApiService);
-        verifyNoInteractions(purchaseRepository);
+        verifyNoInteractions(flightsApiClient);
+        assertThat(purchaseRepository.findByBuyerId(buyer.getId())).isEmpty();
     }
 
     @Test
-    void purchase_throwsWhenPriceIsNull() {
-        Buyer buyer = BuyerBuilder.aBuyer().build();
-        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().withPrice(null).build();
-        when(entityValidator.findByIdOrThrow(buyerRepository, 1L, "Comprador")).thenReturn(buyer);
-        when(travelPackageRepository.findById(1L)).thenReturn(Optional.of(travelPackage));
+    void purchase_throwsWhenBuyerNotFound() {
+        TravelPackage travelPackage = createAndSaveTravelPackage(20L, 21L, 200000.0, null);
 
-        assertThatThrownBy(() -> purchaseService.purchase(1L, 1L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("El precio del paquete de viaje no puede ser nulo");
+        assertThatThrownBy(() -> purchaseService.purchase(99999L, travelPackage.getId()))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Comprador con id 99999 no encontrado");
+
+        verifyNoInteractions(flightsApiClient);
     }
+
 
     @Test
     void purchase_throwsWhenNationalIdNotNumeric() {
-        Buyer buyer = BuyerBuilder.aBuyer().withNationalId("ABC12345").build();
-        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().build();
-        when(entityValidator.findByIdOrThrow(buyerRepository, 1L, "Comprador")).thenReturn(buyer);
-        when(travelPackageRepository.findById(1L)).thenReturn(Optional.of(travelPackage));
+        Buyer buyer = createAndSaveBuyer("ABC12345", "Ana", "Gomez");
+        TravelPackage travelPackage = createAndSaveTravelPackage(40L, 41L, 200000.0, null);
 
-        assertThatThrownBy(() -> purchaseService.purchase(1L, 1L))
+        assertThatThrownBy(() -> purchaseService.purchase(buyer.getId(), travelPackage.getId()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("El DNI del comprador debe ser numérico");
+
+        verifyNoInteractions(flightsApiClient);
     }
 
     @Test
     void purchase_throwsWhenBuyerAlreadyAcquiredPackage() {
-        Buyer buyer = BuyerBuilder.aBuyer().build();
-        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage().withId(10L).build();
-        buyer.buy(travelPackage);
+        Buyer buyer = createAndSaveBuyer("40123456", "Ana", "Gomez");
+        TravelPackage travelPackage = createAndSaveTravelPackage(50L, 51L, 200000.0, null);
 
-        when(entityValidator.findByIdOrThrow(buyerRepository, 1L, "Comprador")).thenReturn(buyer);
-        when(travelPackageRepository.findById(10L)).thenReturn(Optional.of(travelPackage));
+        when(flightsApiClient.sellFlight(any(), any(PassengerDTO.class))).thenReturn(null);
+        purchaseService.purchase(buyer.getId(), travelPackage.getId());
 
-        assertThatThrownBy(() -> purchaseService.purchase(1L, 10L))
+        assertThatThrownBy(() -> purchaseService.purchase(buyer.getId(), travelPackage.getId()))
                 .isInstanceOf(DuplicateResourceException.class)
                 .hasMessageContaining("El comprador ya adquirió este paquete de viaje");
-
-        verifyNoInteractions(flightsApiService);
-        verifyNoInteractions(purchaseRepository);
     }
 
     @Test
-    void purchase_throwsWhenTravelPackageHasEnded() {
-        Buyer buyer = BuyerBuilder.aBuyer().build();
-        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
-                .withId(10L)
-                .withEndDate(java.time.LocalDateTime.now().minusDays(1))
-                .build();
+    void purchase_throwsWhenTravelPackageHasStarted() {
+        Buyer buyer = createAndSaveBuyer("40123456", "Ana", "Gomez");
+        TravelPackage travelPackage = createAndSaveTravelPackage(60L, 61L, 200000.0, LocalDateTime.now().minusDays(1));
 
-        when(entityValidator.findByIdOrThrow(buyerRepository, 1L, "Comprador")).thenReturn(buyer);
-        when(travelPackageRepository.findById(10L)).thenReturn(Optional.of(travelPackage));
+        assertThatThrownBy(() -> purchaseService.purchase(buyer.getId(), travelPackage.getId()))
+                .isInstanceOf(PackageAlreadyStartedException.class)
+                .hasMessageContaining("No se puede comprar un paquete de viaje que ya ha comenzado");
 
-        assertThatThrownBy(() -> purchaseService.purchase(1L, 10L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("No se puede comprar un paquete de viaje que ya ha finalizado");
+        verifyNoInteractions(flightsApiClient);
+        assertThat(purchaseRepository.findByBuyerId(buyer.getId())).isEmpty();
+    }
 
-        verifyNoInteractions(flightsApiService);
-        verifyNoInteractions(purchaseRepository);
+    @Test
+    void purchase_throwsFlightFullExceptionAndCompensatesDepartureFlightWhenReturnFlightIsFull() {
+        Buyer buyer = createAndSaveBuyer("40123456", "Ana", "Gomez");
+        TravelPackage travelPackage = createAndSaveTravelPackage(70L, 71L, 250000.0, null);
+
+        when(flightsApiClient.sellFlight(eq(70L), any(PassengerDTO.class))).thenReturn(null);
+        when(flightsApiClient.sellFlight(eq(71L), any(PassengerDTO.class)))
+                .thenThrow(new HttpClientErrorException(HttpStatus.CONFLICT, "Flight is full"));
+
+        assertThatThrownBy(() -> purchaseService.purchase(buyer.getId(), travelPackage.getId()))
+                .isInstanceOf(FlightFullException.class)
+                .hasMessageContaining("Uno de los vuelos asociados no cuenta con cupo disponible");
+
+        verify(flightsApiClient).sellFlight(eq(70L), any(PassengerDTO.class));
+        verify(flightsApiClient).sellFlight(eq(71L), any(PassengerDTO.class));
+        verify(flightsApiClient).cancelFlight(eq(70L), any(PassengerDTO.class));
+        verify(flightsApiClient, never()).cancelFlight(eq(71L), any(PassengerDTO.class));
+        assertThat(purchaseRepository.findByBuyerId(buyer.getId())).isEmpty();
+    }
+
+    @Test
+    void purchase_throwsFlightFullExceptionWhenDepartureFlightIsFull() {
+        Buyer buyer = createAndSaveBuyer("40123456", "Ana", "Gomez");
+        TravelPackage travelPackage = createAndSaveTravelPackage(80L, 81L, 250000.0, null);
+
+        when(flightsApiClient.sellFlight(eq(80L), any(PassengerDTO.class)))
+                .thenThrow(new HttpClientErrorException(HttpStatus.CONFLICT, "Flight is full"));
+
+        assertThatThrownBy(() -> purchaseService.purchase(buyer.getId(), travelPackage.getId()))
+                .isInstanceOf(FlightFullException.class)
+                .hasMessageContaining("Uno de los vuelos asociados no cuenta con cupo disponible");
+
+        verify(flightsApiClient).sellFlight(eq(80L), any(PassengerDTO.class));
+        verify(flightsApiClient, never()).sellFlight(eq(81L), any(PassengerDTO.class));
+        verify(flightsApiClient, never()).cancelFlight(any(), any());
+        assertThat(purchaseRepository.findByBuyerId(buyer.getId())).isEmpty();
+    }
+
+    @Test
+    void getPurchasesByBuyer_returnsPaginatedPurchases() {
+        Buyer buyer = createAndSaveBuyer("40123456", "Ana", "Gomez");
+        TravelPackage travelPackage = createAndSaveTravelPackage(90L, 91L, 180000.0, null);
+
+        when(flightsApiClient.sellFlight(any(), any(PassengerDTO.class))).thenReturn(null);
+        purchaseService.purchase(buyer.getId(), travelPackage.getId());
+
+        Page<Purchase> page = purchaseService.getPurchasesByBuyer(buyer.getId(), PageRequest.of(0, 10));
+
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getContent().getFirst().getTravelPackage().getId()).isEqualTo(travelPackage.getId());
+    }
+
+    @Test
+    void getSalesByAgency_returnsPaginatedSales() {
+        Buyer buyer = createAndSaveBuyer("40123456", "Ana", "Gomez");
+        TravelPackage travelPackage = createAndSaveTravelPackage(92L, 93L, 220000.0, null);
+
+        when(flightsApiClient.sellFlight(any(), any(PassengerDTO.class))).thenReturn(null);
+        purchaseService.purchase(buyer.getId(), travelPackage.getId());
+
+        Long agencyId = travelPackage.getAgency().getId();
+        Page<Purchase> page = purchaseService.getSalesByAgency(agencyId, PageRequest.of(0, 10));
+
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getContent().getFirst().getTravelPackage().getId()).isEqualTo(travelPackage.getId());
     }
 }

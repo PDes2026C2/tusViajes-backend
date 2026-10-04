@@ -51,7 +51,7 @@ public class Buyer extends User {
     }
 
     public Purchase buy(TravelPackage travelPackage) {
-        validatePurchase(travelPackage);
+        ensureCanBuy(travelPackage);
         Purchase purchase = new Purchase(this, travelPackage, travelPackage.getPrice());
         addPurchase(purchase);
         return purchase;
@@ -59,6 +59,10 @@ public class Buyer extends User {
 
     public void addPurchase(Purchase purchase) {
         this.travelPackagesPurchased.add(purchase);
+    }
+
+    public void removePurchase(Purchase purchase) {
+        this.travelPackagesPurchased.remove(purchase);
     }
 
     public void addFavorite(TravelPackage travelPackage) {
@@ -96,7 +100,10 @@ public class Buyer extends User {
         }
     }
 
-    private void validatePurchase(TravelPackage travelPackage) {
+    public void ensureCanBuy(TravelPackage travelPackage) {
+        if (travelPackage == null) {
+            throw new IllegalArgumentException("El paquete de viaje no puede ser nulo");
+        }
         if (travelPackage.hasStarted()) {
             throw new PackageAlreadyStartedException("No se puede comprar un paquete de viaje que ya ha comenzado");
         }
