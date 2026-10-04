@@ -72,6 +72,16 @@ public class FlightsApiClient {
                 .body(FlightDTO.class);
     }
 
+    public FlightDTO cancelFlight(Long flightId, PassengerDTO passenger) {
+        return restClient.post()
+                .uri("/flights/{id}/cancel", flightId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(passenger)
+                .retrieve()
+                .body(FlightDTO.class);
+    }
+
     public FlightDTO getFlight(Long flightId) {
         return restClient.get()
                 .uri("/flights/{id}", flightId)

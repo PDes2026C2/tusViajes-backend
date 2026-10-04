@@ -116,6 +116,46 @@ class FlightsApiClientTest {
     }
 
     @Test
+    void cancelFlightReturnsUpdatedFlight() {
+        String jsonResponse = """
+                {
+                    "id": 1,
+                    "airline": "Aerolíneas Argentinas",
+                    "originCity": {
+                        "id": 10,
+                        "name": "Buenos Aires",
+                        "country": {
+                            "isoCode": "AR",
+                            "name": "Argentina"
+                        }
+                    },
+                    "destinationCity": {
+                        "id": 20,
+                        "name": "Madrid",
+                        "country": {
+                            "isoCode": "ES",
+                            "name": "España"
+                        }
+                    },
+                    "departureDate": "2026-10-01T10:00:00",
+                    "arrivalDate": "2026-10-01T22:00:00"
+                }
+                """;
+
+        server.expect(requestTo("http://localhost:8081/flights/1/cancel"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+
+        PassengerDTO passenger = new PassengerDTO(40123456, "Lionel", "Messi");
+        FlightDTO flight = flightsApiClient.cancelFlight(1L, passenger);
+
+        server.verify();
+        assertThat(flight).isNotNull();
+        assertThat(flight.id()).isEqualTo(1L);
+        assertThat(flight.airline()).isEqualTo("Aerolíneas Argentinas");
+    }
+
+    @Test
     void getFlightReturnsFlightById() {
         String jsonResponse = """
                 {

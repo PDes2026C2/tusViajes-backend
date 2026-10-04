@@ -94,6 +94,10 @@ public class TravelPackage {
         return endDate.isBefore(LocalDateTime.now());
     }
 
+    public boolean hasStarted() {
+        return !startDate.isAfter(LocalDateTime.now());
+    }
+
     public void deactivate(Agency agency) {
         this.validAgencyIsOwner(agency);
         this.active = false;

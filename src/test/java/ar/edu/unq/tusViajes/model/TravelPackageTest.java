@@ -119,4 +119,22 @@ class TravelPackageTest {
 
         assertThatThrownBy(() -> travelPackage.activate(otherAgency)).isInstanceOf(UnauthorizedAgencyException.class);
     }
+
+    @Test
+    void hasStarted_returnsTrue_whenStartDateIsInThePast() {
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
+                .withStartDate(LocalDateTime.now().minusDays(1))
+                .build();
+
+        assertThat(travelPackage.hasStarted()).isTrue();
+    }
+
+    @Test
+    void hasStarted_returnsFalse_whenStartDateIsInTheFuture() {
+        TravelPackage travelPackage = TravelPackageBuilder.aTravelPackage()
+                .withStartDate(LocalDateTime.now().plusDays(2))
+                .build();
+
+        assertThat(travelPackage.hasStarted()).isFalse();
+    }
 }
