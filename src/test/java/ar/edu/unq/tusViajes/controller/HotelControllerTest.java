@@ -138,12 +138,12 @@ class HotelControllerTest {
 
     @Test
     void create_returns401_whenUnauthenticated() throws Exception {
-        String json = """
-                {
-                    "name": "Hotel Nuevo",
-                    "cityId": 99999
-                }
-                """;
+        HotelRequestDTO hotel = HotelRequestDTO
+                .builder()
+                .name("Hotel Nuevo")
+                .cityId(99999L)
+                .build();
+        String json = objectMapper.writeValueAsString(hotel);
 
         mockMvc.perform(post("/api/hotels")
                         .contentType(MediaType.APPLICATION_JSON)

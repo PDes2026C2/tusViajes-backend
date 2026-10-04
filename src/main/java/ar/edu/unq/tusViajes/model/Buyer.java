@@ -3,6 +3,8 @@ package ar.edu.unq.tusViajes.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
+import ar.edu.unq.tusViajes.exception.PackageAlreadyStartedException;
 import ar.edu.unq.tusViajes.exception.ReviewNotAllowedException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -49,11 +51,9 @@ public class Buyer extends User {
     }
 
     public Purchase buy(TravelPackage travelPackage) {
-        if (travelPackage == null || travelPackage.getPrice() == null) {
-            throw new IllegalArgumentException("El paquete de viaje y su precio no pueden ser nulos");
-        }
+        validatePurchase(travelPackage);
         Purchase purchase = new Purchase(this, travelPackage, travelPackage.getPrice());
-        this.travelPackagesPurchased.add(purchase);
+        addPurchase(purchase);
         return purchase;
     }
 
@@ -96,4 +96,12 @@ public class Buyer extends User {
         }
     }
 
+    private void validatePurchase(TravelPackage travelPackage) {
+        if (travelPackage.hasStarted()) {
+            throw new PackageAlreadyStartedException("No se puede comprar un paquete de viaje que ya ha comenzado");
+        }
+        if (this.hasAcquired(travelPackage)) {
+            throw new DuplicateResourceException("El comprador ya adquirió este paquete de viaje");
+        }
+    }
 }

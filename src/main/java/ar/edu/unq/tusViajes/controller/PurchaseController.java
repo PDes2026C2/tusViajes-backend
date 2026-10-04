@@ -31,11 +31,11 @@ public class PurchaseController {
     @Operation(summary = "Comprar paquete de viaje", description = "Registra la compra de un paquete turístico para el comprador autenticado (requiere rol BUYER).")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Compra realizada con éxito", content = @Content(schema = @Schema(implementation = PurchaseResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "DNI no numérico, precio nulo o paquete ya finalizado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "400", description = "DNI no numérico, precio nulo o paquete ya comenzado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
             @ApiResponse(responseCode = "401", description = "Acceso no autorizado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol BUYER)", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
             @ApiResponse(responseCode = "404", description = "Paquete de viaje o comprador no encontrado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
-            @ApiResponse(responseCode = "409", description = "El comprador ya adquirió este paquete", content = @Content(schema = @Schema(implementation = ErrorDTO.class)))
+            @ApiResponse(responseCode = "409", description = "El comprador ya adquirió este paquete o uno de los vuelos está completo", content = @Content(schema = @Schema(implementation = ErrorDTO.class)))
     })
     @PostMapping("/{travelPackageId}")
     public ResponseEntity<PurchaseResponseDTO> purchase(
