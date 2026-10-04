@@ -1,8 +1,10 @@
 package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.builder.AdminBuilder;
+import ar.edu.unq.tusViajes.controller.dto.request.AdminRegistrationRequestDTO;
 import ar.edu.unq.tusViajes.model.Admin;
 import ar.edu.unq.tusViajes.repository.AdminRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,6 +39,8 @@ class AdminControllerTest {
 
     @Autowired
     private AdminRepository adminRepository;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void getAll_returns401_whenUnauthenticated() throws Exception {
@@ -99,14 +103,13 @@ class AdminControllerTest {
 
     @Test
     void create_returns401_whenUnauthenticated() throws Exception {
-        String json = """
-                {
-                    "firstName": "Admin",
-                    "lastName": "Root",
-                    "email": "admin@tusviajes.com",
-                    "password": "rootPassword123"
-                }
-                """;
+        AdminRegistrationRequestDTO request = new AdminRegistrationRequestDTO(
+                "Admin",
+                "Root",
+                "admin@tusviajes.com",
+                "rootPassword123"
+        );
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/api/admin/administrators")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -116,14 +119,13 @@ class AdminControllerTest {
 
     @Test
     void create_returns403_whenRoleIsNotAdmin() throws Exception {
-        String json = """
-                {
-                    "firstName": "Admin",
-                    "lastName": "Root",
-                    "email": "admin@tusviajes.com",
-                    "password": "rootPassword123"
-                }
-                """;
+        AdminRegistrationRequestDTO request = new AdminRegistrationRequestDTO(
+                "Admin",
+                "Root",
+                "admin@tusviajes.com",
+                "rootPassword123"
+        );
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/api/admin/administrators")
                         .with(user("buyer").roles("BUYER"))
@@ -134,14 +136,13 @@ class AdminControllerTest {
 
     @Test
     void create_returns201AndLocationHeader() throws Exception {
-        String json = """
-                {
-                    "firstName": "Admin",
-                    "lastName": "Root",
-                    "email": "admin@tusviajes.com",
-                    "password": "rootPassword123"
-                }
-                """;
+        AdminRegistrationRequestDTO request = new AdminRegistrationRequestDTO(
+                "Admin",
+                "Root",
+                "admin@tusviajes.com",
+                "rootPassword123"
+        );
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/api/admin/administrators")
                         .with(user("admin").roles("ADMIN"))

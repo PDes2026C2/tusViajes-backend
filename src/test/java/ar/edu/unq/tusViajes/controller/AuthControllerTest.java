@@ -2,11 +2,16 @@ package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.builder.AdminBuilder;
 import ar.edu.unq.tusViajes.builder.AgencyBuilder;
+import ar.edu.unq.tusViajes.controller.dto.request.AgencyRegistrationRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.BuyerRegistrationRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.LoginRequestDTO;
+import ar.edu.unq.tusViajes.controller.dto.request.RefreshTokenRequest;
 import ar.edu.unq.tusViajes.model.Admin;
 import ar.edu.unq.tusViajes.model.AgencyStatus;
 import ar.edu.unq.tusViajes.repository.AdminRepository;
 import ar.edu.unq.tusViajes.repository.AgencyRepository;
 import ar.edu.unq.tusViajes.security.JwtTokenService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -48,6 +53,7 @@ class AuthControllerTest {
     @Autowired
     private JwtTokenService jwtTokenService;
 
+    private ObjectMapper objectMapper = new ObjectMapper();
     @Test
     void login_returns200AndToken_whenAdminIsValid() throws Exception {
         adminRepository.save(AdminBuilder.anAdmin()
@@ -55,12 +61,8 @@ class AuthControllerTest {
                 .withPasswordHash(passwordEncoder.encode("secretPassword123"))
                 .build());
 
-        String json = """
-                {
-                    "email": "admin@test.com",
-                    "password": "secretPassword123"
-                }
-                """;
+        LoginRequestDTO request = new LoginRequestDTO("admin@test.com", "secretPassword123");
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -80,12 +82,8 @@ class AuthControllerTest {
                 .withStatus(AgencyStatus.PENDING)
                 .build());
 
-        String json = """
-                {
-                    "email": "pending@agency.com",
-                    "password": "secretPassword123"
-                }
-                """;
+        LoginRequestDTO request = new LoginRequestDTO("pending@agency.com", "secretPassword123");
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -104,12 +102,8 @@ class AuthControllerTest {
                 .withStatus(AgencyStatus.AUTHORIZED)
                 .build());
 
-        String json = """
-                {
-                    "email": "authorized@agency.com",
-                    "password": "secretPassword123"
-                }
-                """;
+        LoginRequestDTO request = new LoginRequestDTO("authorized@agency.com", "secretPassword123");
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -126,12 +120,8 @@ class AuthControllerTest {
                 .withPasswordHash(passwordEncoder.encode("secretPassword123"))
                 .build());
 
-        String json = """
-                {
-                    "email": "admin@test.com",
-                    "password": "wrongPassword"
-                }
-                """;
+        LoginRequestDTO request = new LoginRequestDTO("admin@test.com", "wrongPassword");
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -144,14 +134,13 @@ class AuthControllerTest {
 
     @Test
     void registerAgency_returns201AndPendingStatus() throws Exception {
-        String json = """
-                {
-                    "businessName": "New Agency SA",
-                    "taxId": "30-55667788-9",
-                    "email": "new@agency.com",
-                    "password": "secretPassword123"
-                }
-                """;
+        AgencyRegistrationRequestDTO request = AgencyRegistrationRequestDTO.builder()
+                .email("new@agency.com")
+                .taxId("30-55667788-9")
+                    .businessName("New Agency SA")
+                .password("securePassword123")
+                .build();
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/api/auth/register/agency")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -166,16 +155,16 @@ class AuthControllerTest {
 
     @Test
     void registerBuyer_returns201WithTokens() throws Exception {
-        String json = """
-                {
-                    "firstName": "Agustin",
-                    "lastName": "Perez",
-                    "email": "agustin@buyer.com",
-                    "password": "secretPassword123",
-                    "phoneNumber": "1122334455",
-                    "nationalId": "39123456"
-                }
-                """;
+        BuyerRegistrationRequestDTO request = BuyerRegistrationRequestDTO
+                .builder()
+                .firstName("Agustin")
+                .lastName("Perez")
+                .email("agustin@buyer.com")
+                .password("securePassword123")
+                .phoneNumber("123456789")
+                .nationalId("12345678")
+                .build();
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/api/auth/register/buyer")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -199,11 +188,8 @@ class AuthControllerTest {
 
         String accessToken = jwtTokenService.generateToken(admin, false);
 
-        String json = """
-                {
-                    "refreshToken": "%s"
-                }
-                """.formatted(accessToken);
+        RefreshTokenRequest request = new RefreshTokenRequest(accessToken);
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -227,11 +213,8 @@ class AuthControllerTest {
         );
         String expiredRefreshToken = expiredService.generateToken(admin, true);
 
-        String json = """
-                {
-                    "refreshToken": "%s"
-                }
-                """.formatted(expiredRefreshToken);
+        RefreshTokenRequest request = new RefreshTokenRequest(expiredRefreshToken);
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -250,11 +233,8 @@ class AuthControllerTest {
 
         String refreshToken = jwtTokenService.generateToken(admin, true);
 
-        String json = """
-                {
-                    "refreshToken": "%s"
-                }
-                """.formatted(refreshToken);
+        RefreshTokenRequest request = new RefreshTokenRequest(refreshToken);
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)

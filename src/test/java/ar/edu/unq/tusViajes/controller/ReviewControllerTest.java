@@ -1,9 +1,11 @@
 package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.builder.*;
+import ar.edu.unq.tusViajes.controller.dto.request.ReviewRequestDTO;
 import ar.edu.unq.tusViajes.model.*;
 import ar.edu.unq.tusViajes.repository.*;
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -57,6 +59,8 @@ class ReviewControllerTest {
     @Autowired
     private CityRepository cityRepository;
 
+    private ObjectMapper objectMapper = new ObjectMapper();
+
     @Test
     void create_returns201WithReview() throws Exception {
         Country country = countryRepository.save(CountryBuilder.aCountry().build());
@@ -77,11 +81,14 @@ class ReviewControllerTest {
         buyer.buy(travelPackage);
         buyerRepository.save(buyer);
 
+        ReviewRequestDTO request = new ReviewRequestDTO(5, "Excellent");
+        String json = objectMapper.writeValueAsString(request);
+
         mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":5,\"comment\":\"Excellent\"}"))
+                        .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.score").value(5))
@@ -109,11 +116,14 @@ class ReviewControllerTest {
         buyer.buy(travelPackage);
         buyerRepository.save(buyer);
 
+        ReviewRequestDTO request = new ReviewRequestDTO(11, null);
+        String json = objectMapper.writeValueAsString(request);
+
         mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":11}"))
+                        .content(json))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("Error de validación"))
@@ -141,11 +151,14 @@ class ReviewControllerTest {
         buyer.buy(travelPackage);
         buyerRepository.save(buyer);
 
+        ReviewRequestDTO request = new ReviewRequestDTO(4, null);
+        String json = objectMapper.writeValueAsString(request);
+
         mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":4}"))
+                        .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.score").value(4))
                 .andExpect(jsonPath("$.comment").value(""));
@@ -171,11 +184,14 @@ class ReviewControllerTest {
         buyer.buy(travelPackage);
         buyerRepository.save(buyer);
 
+        ReviewRequestDTO request = new ReviewRequestDTO(null, "Excellent");
+        String json = objectMapper.writeValueAsString(request);
+
         mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"comment\":\"Excellent\"}"))
+                        .content(json))
                 .andExpect(status().isBadRequest());
     }
 
@@ -199,11 +215,14 @@ class ReviewControllerTest {
         buyer.buy(travelPackage);
         buyerRepository.save(buyer);
 
+        ReviewRequestDTO request = new ReviewRequestDTO(null, null);
+        String json = objectMapper.writeValueAsString(request);
+
         mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+                        .content(json))
                 .andExpect(status().isBadRequest());
     }
 
@@ -225,19 +244,25 @@ class ReviewControllerTest {
                 .build());
         Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().build());
 
+        ReviewRequestDTO request = new ReviewRequestDTO(4, null);
+        String json = objectMapper.writeValueAsString(request);
+
         mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":4}"))
+                        .content(json))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void create_returns401WhenUnauthenticated() throws Exception {
+        ReviewRequestDTO request = new ReviewRequestDTO(4, null);
+        String json = objectMapper.writeValueAsString(request);
+
         mockMvc.perform(post("/api/reviews/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":4}"))
+                        .content(json))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -261,11 +286,14 @@ class ReviewControllerTest {
         buyer.buy(travelPackage);
         buyerRepository.save(buyer);
 
+        ReviewRequestDTO request = new ReviewRequestDTO(3, "Good");
+        String json = objectMapper.writeValueAsString(request);
+
         mockMvc.perform(post("/api/reviews/" + travelPackage.getId())
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":3,\"comment\":\"Good\"}"))
+                        .content(json))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/reviews/" + travelPackage.getId())

@@ -75,7 +75,6 @@ class TravelPackageControllerTest {
 
     private final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
-
     @Test
     void getAll_returns200AndListOfTravelPackages() throws Exception {
         Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
@@ -169,19 +168,19 @@ class TravelPackageControllerTest {
         Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(1L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(2L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
-        String json = """
-                {
-                    "name": "Bariloche 7d",
-                    "description": "Desc",
-                    "price": 150000.0,
-                    "startDate": "2026-10-01T10:00:00",
-                    "endDate": "2026-10-08T10:00:00",
-                    "hotelId": %d,
-                    "agencyId": %d,
-                    "departureFlightId": %d,
-                    "returnFlightId": %d
-                }
-                """.formatted(hotel.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
+        TravelPackageRequestDTO dto = TravelPackageRequestDTO
+                .builder()
+                .name("Bariloche 7d")
+                .description("Desc")
+                .price(150000.0)
+                .startDate(LocalDateTime.now().plusDays(10))
+                .endDate(LocalDateTime.now().plusDays(20))
+                .hotelId(hotel.getId())
+                .departureFlightId(depFlight.getId())
+                .returnFlightId(retFlight.getId())
+                .build();
+
+        String json = mapper.writeValueAsString(dto);
 
         mockMvc.perform(post("/api/travel-packages")
                         .with(withCustomUserDetails(agency))
@@ -195,9 +194,23 @@ class TravelPackageControllerTest {
 
     @Test
     void update_returns401_whenUnauthenticated() throws Exception {
+        UpdateTravelPackageRequestDTO dto = UpdateTravelPackageRequestDTO.builder()
+                .id(1L)
+                .name("Bariloche 10d")
+                .description("Desc")
+                .price(200000.0)
+                .startDate(LocalDateTime.now().plusDays(10))
+                .endDate(LocalDateTime.now().plusDays(20))
+                .hotelId(1L)
+                .departureFlightId(1L)
+                .returnFlightId(2L)
+                .build();
+
+        String json = mapper.writeValueAsString(dto);
+
         mockMvc.perform(put("/api/travel-packages/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+                        .content(json))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -288,19 +301,18 @@ class TravelPackageControllerTest {
         Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(30L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(31L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
-        String json = """
-                {
-                    "name": "Viaje invalido",
-                    "description": "Hotel en otra ciudad",
-                    "price": 150000.0,
-                    "startDate": "2026-10-01T10:00:00",
-                    "endDate": "2026-10-08T10:00:00",
-                    "hotelId": %d,
-                    "agencyId": %d,
-                    "departureFlightId": %d,
-                    "returnFlightId": %d
-                }
-                """.formatted(hotelInMendoza.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
+        TravelPackageRequestDTO dto = TravelPackageRequestDTO.builder()
+                .name("Viaje invalido")
+                .description("Hotel en otra ciudad")
+                .price(150000.0)
+                .startDate(LocalDateTime.now().plusDays(10))
+                .endDate(LocalDateTime.now().plusDays(20))
+                .hotelId(hotelInMendoza.getId())
+                .departureFlightId(depFlight.getId())
+                .returnFlightId(retFlight.getId())
+                .build();
+
+        String json = mapper.writeValueAsString(dto);
 
         mockMvc.perform(post("/api/travel-packages")
                         .with(withCustomUserDetails(agency))
@@ -326,20 +338,19 @@ class TravelPackageControllerTest {
         TravelPackage saved = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withHotel(hotelInBariloche).withAgency(agency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
 
-        String json = """
-                {
-                    "id": %d,
-                    "name": "Update invalido",
-                    "description": "Hotel mismatch",
-                    "price": 200000.0,
-                    "startDate": "2026-11-01T10:00:00",
-                    "endDate": "2026-11-10T10:00:00",
-                    "hotelId": %d,
-                    "agencyId": %d,
-                    "departureFlightId": %d,
-                    "returnFlightId": %d
-                }
-                """.formatted(saved.getId(), hotelInMendoza.getId(), agency.getId(), depFlight.getId(), retFlight.getId());
+        UpdateTravelPackageRequestDTO dto = UpdateTravelPackageRequestDTO.builder()
+                .id(saved.getId())
+                .name("Update invalido")
+                .description("Hotel mismatch")
+                .price(200000.0)
+                .startDate(LocalDateTime.of(2026, 11, 1, 10, 0))
+                .endDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .hotelId(hotelInMendoza.getId())
+                .departureFlightId(depFlight.getId())
+                .returnFlightId(retFlight.getId())
+                .build();
+
+        String json = mapper.writeValueAsString(dto);
 
         mockMvc.perform(put("/api/travel-packages/" + saved.getId())
                         .with(withCustomUserDetails(agency))
@@ -351,19 +362,18 @@ class TravelPackageControllerTest {
 
     @Test
     void create_returns403_whenRoleIsNotAgency() throws Exception {
-        String json = """
-                {
-                    "name": "Bariloche 7d",
-                    "description": "Desc",
-                    "price": 150000.0,
-                    "startDate": "2026-10-01T10:00:00",
-                    "endDate": "2026-10-08T10:00:00",
-                    "hotelId": 1,
-                    "agencyId": 1,
-                    "departureFlightId": 1,
-                    "returnFlightId": 2
-                }
-                """;
+        TravelPackageRequestDTO dto = TravelPackageRequestDTO.builder()
+                .name("Bariloche 7d")
+                .description("Desc")
+                .price(150000.0)
+                .startDate(LocalDateTime.of(2026, 10, 1, 10, 0))
+                .endDate(LocalDateTime.of(2026, 10, 8, 10, 0))
+                .hotelId(1L)
+                .departureFlightId(1L)
+                .returnFlightId(2L)
+                .build();
+
+        String json = mapper.writeValueAsString(dto);
 
         mockMvc.perform(post("/api/travel-packages")
                         .with(user("buyer").roles("BUYER"))
@@ -374,10 +384,24 @@ class TravelPackageControllerTest {
 
     @Test
     void update_returns403_whenRoleIsNotAgency() throws Exception {
+        UpdateTravelPackageRequestDTO dto = UpdateTravelPackageRequestDTO.builder()
+                .id(1L)
+                .name("Bariloche 10d")
+                .description("Desc")
+                .price(200000.0)
+                .startDate(LocalDateTime.of(2026, 10, 1, 10, 0))
+                .endDate(LocalDateTime.of(2026, 10, 10, 10, 0))
+                .hotelId(1L)
+                .departureFlightId(1L)
+                .returnFlightId(2L)
+                .build();
+
+        String json = mapper.writeValueAsString(dto);
+
         mockMvc.perform(put("/api/travel-packages/1")
                         .with(user("buyer").roles("BUYER"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+                        .content(json))
                 .andExpect(status().isForbidden());
     }
 
