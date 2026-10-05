@@ -1,0 +1,80 @@
+package ar.edu.unq.tusViajes.controller;
+
+import ar.edu.unq.tusViajes.controller.dto.response.AgenciesTopResponseDTO;
+import ar.edu.unq.tusViajes.controller.dto.response.BuyersTopResponseDTO;
+import ar.edu.unq.tusViajes.controller.dto.response.DestinationsTopResponseDTO;
+import ar.edu.unq.tusViajes.controller.dto.response.ErrorDTO;
+import ar.edu.unq.tusViajes.controller.dto.response.RatedDestinationsTopResponseDTO;
+import ar.edu.unq.tusViajes.service.AdminMetricsService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@Tag(name = "Reportes de Admin", description = "Sistema de reportes de uso administrativo")
+@RestController
+@RequestMapping("/api/admin/metrics")
+@RequiredArgsConstructor
+public class AdminMetricsController {
+
+    private final AdminMetricsService adminMetricsService;
+
+    @Operation(summary = "Obtener top 5 compradores", description = "Devuelve hasta cinco compradores con compras, ordenados por cantidad de compras descendente y ID de comprador ascendente en caso de empate (requiere rol ADMIN).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Top compradores con su cantidad de compras", content = @Content(array = @ArraySchema(schema = @Schema(implementation = BuyersTopResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Acceso no autorizado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content(schema = @Schema(implementation = ErrorDTO.class)))
+    })
+    @GetMapping(value = "/top-buyers", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<BuyersTopResponseDTO>> getTopBuyers() {
+        return ResponseEntity.ok(adminMetricsService.getTopBuyers().stream()
+                .map(BuyersTopResponseDTO::from).toList());
+    }
+
+    @Operation(summary = "Obtener top 5 destinos más vendidos", description = "Devuelve hasta cinco ciudades de destino con su cantidad total de ventas, sumando las compras de todos sus paquetes y hoteles. Ordena por ventas descendentes y por ID de ciudad ascendente en caso de empate. Excluye ciudades sin ventas y devuelve una lista vacía si no hay compras (requiere rol ADMIN).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Top destinos con su cantidad de ventas", content = @Content(array = @ArraySchema(schema = @Schema(implementation = DestinationsTopResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Acceso no autorizado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content(schema = @Schema(implementation = ErrorDTO.class)))
+    })
+    @GetMapping(value = "/top-destinations", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<DestinationsTopResponseDTO>> getTopDestinations() {
+        return ResponseEntity.ok(adminMetricsService.getTopDestinations().stream()
+                .map(DestinationsTopResponseDTO::from).toList());
+    }
+
+    @Operation(summary = "Obtener top 5 destinos mejor calificados", description = "Devuelve hasta cinco ciudades de destino con el promedio de los puntajes de todas sus reseñas, en la escala de 0 a 10. Ordena por promedio descendente y por ID de ciudad ascendente en caso de empate. Excluye ciudades sin reseñas con puntaje y devuelve una lista vacía si no hay calificaciones (requiere rol ADMIN).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Top destinos con su calificación promedio", content = @Content(array = @ArraySchema(schema = @Schema(implementation = RatedDestinationsTopResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Acceso no autorizado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content(schema = @Schema(implementation = ErrorDTO.class)))
+    })
+    @GetMapping(value = "/top-rated-destinations", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<RatedDestinationsTopResponseDTO>> getTopRatedDestinations() {
+        return ResponseEntity.ok(adminMetricsService.getTopRatedDestinations().stream()
+                .map(RatedDestinationsTopResponseDTO::from).toList());
+    }
+
+    @Operation(summary = "Obtener top 5 agencias vendedoras", description = "Devuelve hasta cinco agencias con su cantidad total de ventas, sumando las compras de todos sus paquetes. Ordena por ventas descendentes y por ID de agencia ascendente en caso de empate. Excluye agencias sin ventas y devuelve una lista vacía si no hay compras (requiere rol ADMIN).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Top agencias con sus datos básicos y cantidad de ventas", content = @Content(array = @ArraySchema(schema = @Schema(implementation = AgenciesTopResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Acceso no autorizado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content(schema = @Schema(implementation = ErrorDTO.class)))
+    })
+    @GetMapping(value = "/top-agencies", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<AgenciesTopResponseDTO>> getTopAgencies() {
+        return ResponseEntity.ok(adminMetricsService.getTopAgencies().stream()
+                .map(AgenciesTopResponseDTO::from).toList());
+    }
+}

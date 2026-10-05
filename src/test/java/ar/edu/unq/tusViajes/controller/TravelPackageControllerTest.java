@@ -75,6 +75,7 @@ class TravelPackageControllerTest {
 
     private final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
+
     @Test
     void getAll_returns200AndListOfTravelPackages() throws Exception {
         Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
@@ -210,7 +211,7 @@ class TravelPackageControllerTest {
 
         mockMvc.perform(put("/api/travel-packages/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
+                        .content("{}"))
                 .andExpect(status().isUnauthorized());
     }
 
