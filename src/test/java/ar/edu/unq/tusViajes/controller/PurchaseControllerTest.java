@@ -88,7 +88,7 @@ class PurchaseControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.price").value(300000.0))
-                .andExpect(jsonPath("$.buyerId").value(buyer.getId()))
+                .andExpect(jsonPath("$.buyer.id").value(buyer.getId()))
                 .andExpect(jsonPath("$.travelPackage.id").value(tp.getId()))
                 .andExpect(jsonPath("$.purchasedAt").isNotEmpty());
 
