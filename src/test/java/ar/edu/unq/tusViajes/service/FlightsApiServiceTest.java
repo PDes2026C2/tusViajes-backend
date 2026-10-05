@@ -68,6 +68,19 @@ class FlightsApiServiceTest {
     }
 
     @Test
+    void cancelFlight_delegatesToClient() {
+        PassengerDTO passenger = new PassengerDTO(12345678, "Lionel", "Messi");
+        FlightDTO flight = new FlightDTO(1L, "Aerolíneas Argentinas", null, null, LocalDateTime.parse("2026-10-15T08:00"), LocalDateTime.parse("2026-10-15T21:00"));
+
+        when(flightsApiClient.cancelFlight(1L, passenger)).thenReturn(flight);
+
+        FlightDTO result = flightsApiService.cancelFlight(1L, passenger);
+
+        assertThat(result).isEqualTo(flight);
+        verify(flightsApiClient).cancelFlight(1L, passenger);
+    }
+
+    @Test
     void getFlight_delegatesToClient() {
         FlightDTO flight = new FlightDTO(1L, "Aerolíneas Argentinas", null, null, LocalDateTime.parse("2026-10-15T08:00"), LocalDateTime.parse("2026-10-15T21:00"));
 

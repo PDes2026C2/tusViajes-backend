@@ -17,6 +17,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import ar.edu.unq.tusViajes.service.FlightsApiService;
 import ar.edu.unq.tusViajes.adapters.dto.PassengerDTO;
+import ar.edu.unq.tusViajes.exception.FlightFullException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -181,7 +182,7 @@ class PurchaseControllerTest {
     }
 
     @Test
-    void purchase_returns400WhenTravelPackageHasEnded() throws Exception {
+    void purchase_returns400WhenTravelPackageHasStarted() throws Exception {
         Country country = countryRepository.save(CountryBuilder.aCountry().build());
         City origin = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
         City dest = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
@@ -190,7 +191,7 @@ class PurchaseControllerTest {
         Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(dest).build());
         Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
         TravelPackage tp = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
-                .withEndDate(java.time.LocalDateTime.now().minusDays(2))
+                .withStartDate(java.time.LocalDateTime.now().minusDays(2))
                 .withHotel(hotel)
                 .withAgency(agency)
                 .withDepartureFlight(dep)
@@ -202,6 +203,36 @@ class PurchaseControllerTest {
                         .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
                                 createAuthorityList("ROLE_BUYER"), true))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("No se puede comprar un paquete de viaje que ya ha finalizado"));
+                .andExpect(jsonPath("$.message").value("No se puede comprar un paquete de viaje que ya ha comenzado"));
+    }
+
+    @Test
+    void purchase_returns409WhenFlightIsFull() throws Exception {
+        Country country = countryRepository.save(CountryBuilder.aCountry().build());
+        City origin = cityRepository.save(CityBuilder.aCity().withName("Buenos Aires").withCountry(country).build());
+        City dest = cityRepository.save(CityBuilder.aCity().withName("Bariloche").withCountry(country).build());
+        Flight dep = flightRepository.save(FlightBuilder.aFlight().withId(400L).withOriginCity(origin).withDestinationCity(dest).build());
+        Flight ret = flightRepository.save(FlightBuilder.aFlight().withId(401L).withOriginCity(dest).withDestinationCity(origin).build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(dest).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        TravelPackage tp = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withHotel(hotel)
+                .withAgency(agency)
+                .withDepartureFlight(dep)
+                .withReturnFlight(ret)
+                .build());
+        Buyer buyer = buyerRepository.save(BuyerBuilder.aBuyer().withNationalId("40123456").build());
+        when(flightsApiService.sellFlight(eq(400L), any())).thenReturn(null);
+        when(flightsApiService.sellFlight(eq(401L), any()))
+                .thenThrow(new FlightFullException("Uno de los vuelos asociados no cuenta con cupo disponible"));
+
+        mockMvc.perform(post("/api/purchases/" + tp.getId())
+                        .with(user(new CustomUserDetails(buyer.getId(), buyer.getEmail(), buyer.getPasswordHash(),
+                                createAuthorityList("ROLE_BUYER"), true))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Uno de los vuelos asociados no cuenta con cupo disponible"));
+
+        verify(flightsApiService).cancelFlight(eq(400L), any());
+        assertThat(purchaseRepository.findByBuyerId(buyer.getId())).isEmpty();
     }
 }

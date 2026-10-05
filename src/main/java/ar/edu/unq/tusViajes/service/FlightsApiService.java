@@ -27,6 +27,10 @@ public class FlightsApiService {
         return flightsApiClient.sellFlight(flightId, passenger);
     }
 
+    public FlightDTO cancelFlight(Long flightId, PassengerDTO passenger) {
+        return flightsApiClient.cancelFlight(flightId, passenger);
+    }
+
     public FlightDTO getFlight(Long flightId) {
         return flightsApiClient.getFlight(flightId);
     }

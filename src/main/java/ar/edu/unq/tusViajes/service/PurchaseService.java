@@ -1,7 +1,7 @@
 package ar.edu.unq.tusViajes.service;
 
 import ar.edu.unq.tusViajes.adapters.dto.PassengerDTO;
-import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
+import ar.edu.unq.tusViajes.exception.FlightFullException;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.Buyer;
 import ar.edu.unq.tusViajes.model.Purchase;
@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientResponseException;
 
 @Service
 public class PurchaseService {
@@ -46,28 +47,38 @@ public class PurchaseService {
         TravelPackage travelPackage = travelPackageRepository.findById(travelPackageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Paquete de viaje con id " + travelPackageId + " no encontrado"));
 
-        if (travelPackage.getPrice() == null) {
-            throw new IllegalArgumentException("El precio del paquete de viaje no puede ser nulo");
-        }
-        if (travelPackage.hasEnded()) {
-            throw new IllegalArgumentException("No se puede comprar un paquete de viaje que ya ha finalizado");
-        }
-        if (buyer.hasAcquired(travelPackage)) {
-            throw new DuplicateResourceException("El comprador ya adquirió este paquete de viaje");
-        }
+        Purchase purchase = buyer.buy(travelPackage);
 
         PassengerDTO passenger = toPassengerDTO(buyer);
         logger.info("Processing purchase for buyer {} and travelPackage {}", buyerId, travelPackageId);
 
-        flightsApiService.sellFlight(travelPackage.getDepartureFlight().getId(), passenger);
-        logger.info("Departure flight {} sold for buyer {}", travelPackage.getDepartureFlight().getId(), buyerId);
-        flightsApiService.sellFlight(travelPackage.getReturnFlight().getId(), passenger);
-        logger.info("Return flight {} sold for buyer {}", travelPackage.getReturnFlight().getId(), buyerId);
+        Long departureFlightId = travelPackage.getDepartureFlight().getId();
+        Long returnFlightId = travelPackage.getReturnFlight().getId();
 
-        Purchase purchase = buyer.buy(travelPackage);
-        Purchase saved = purchaseRepository.save(purchase);
-        logger.info("Purchase {} created for buyer {} with price {}", saved.getId(), buyerId, saved.getPrice());
-        return saved;
+        boolean departureSold = false;
+        boolean returnSold = false;
+
+        try {
+            sellFlight(departureFlightId, passenger);
+            departureSold = true;
+
+            sellFlight(returnFlightId, passenger);
+            returnSold = true;
+
+            Purchase saved = purchaseRepository.save(purchase);
+            logger.info("Purchase {} created for buyer {} with price {}", saved.getId(), buyerId, saved.getPrice());
+            return saved;
+        } catch (Exception ex) {
+            logger.warn("Purchase failed for buyer {} and travelPackage {}. Initiating flight compensation.", buyerId, travelPackageId, ex);
+            buyer.removePurchase(purchase);
+            if (returnSold) {
+                compensateFlight(returnFlightId, passenger);
+            }
+            if (departureSold) {
+                compensateFlight(departureFlightId, passenger);
+            }
+            throw ex;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -78,6 +89,30 @@ public class PurchaseService {
     @Transactional(readOnly = true)
     public Page<Purchase> getSalesByAgency(Long agencyId, Pageable pageable) {
         return purchaseRepository.findByTravelPackageAgencyId(agencyId, pageable);
+    }
+
+    private void sellFlight(Long flightId, PassengerDTO passenger) {
+        try {
+            flightsApiService.sellFlight(flightId, passenger);
+            logger.info("Flight {} sold for passenger DNI {}", flightId, passenger.dni());
+        } catch (FlightFullException e) {
+            throw e;
+        } catch (RestClientResponseException e) {
+            if (e.getStatusCode().value() == 409) {
+                logger.warn("Flight {} is full (409) for passenger DNI {}", flightId, passenger.dni());
+                throw new FlightFullException("Uno de los vuelos asociados no cuenta con cupo disponible");
+            }
+            throw e;
+        }
+    }
+
+    private void compensateFlight(Long flightId, PassengerDTO passenger) {
+        try {
+            flightsApiService.cancelFlight(flightId, passenger);
+            logger.info("Compensated flight {} for passenger DNI {}", flightId, passenger.dni());
+        } catch (Exception cancelEx) {
+            logger.error("Failed to compensate flight {} for passenger DNI {}", flightId, passenger.dni(), cancelEx);
+        }
     }
 
     private PassengerDTO toPassengerDTO(Buyer buyer) {
