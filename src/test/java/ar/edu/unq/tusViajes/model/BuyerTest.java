@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class BuyerTest {
@@ -101,7 +102,8 @@ class BuyerTest {
                 .withStartDate(LocalDateTime.now().plusDays(5))
                 .build();
 
-        buyer.ensureCanBuy(travelPackage);
+        assertThatCode(() -> buyer.ensureCanBuy(travelPackage))
+                .doesNotThrowAnyException();
     }
 
     @Test
