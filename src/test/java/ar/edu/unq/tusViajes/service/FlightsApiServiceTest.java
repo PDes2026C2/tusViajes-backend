@@ -5,6 +5,7 @@ import ar.edu.unq.tusViajes.adapters.dto.CityDTO;
 import ar.edu.unq.tusViajes.adapters.dto.CountryDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightFilterDTO;
+import ar.edu.unq.tusViajes.adapters.dto.PageResponseDTO;
 import ar.edu.unq.tusViajes.adapters.dto.PassengerDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,22 +36,22 @@ class FlightsApiServiceTest {
         CityDTO destination = new CityDTO(2L, "Madrid", new CountryDTO("ES", "España"));
         FlightDTO flight = new FlightDTO(1L, "Aerolíneas Argentinas", origin, destination, LocalDateTime.parse("2026-10-15T08:00"), LocalDateTime.parse("2026-10-15T21:00"));
 
-        when(flightsApiClient.searchFlights()).thenReturn(List.of(flight));
+        when(flightsApiClient.searchFlights()).thenReturn(PageResponseDTO.of(List.of(flight)));
 
-        List<FlightDTO> result = flightsApiService.searchFlights();
+        PageResponseDTO<FlightDTO> result = flightsApiService.searchFlights();
 
-        assertThat(result).containsExactly(flight);
+        assertThat(result.content()).containsExactly(flight);
         verify(flightsApiClient).searchFlights();
     }
 
     @Test
     void searchFlightsWithFilter_delegatesToClient() {
         FlightFilterDTO filter = FlightFilterDTO.empty();
-        when(flightsApiClient.searchFlights(filter, 0, 10)).thenReturn(List.of());
+        when(flightsApiClient.searchFlights(filter, 0, 10)).thenReturn(PageResponseDTO.empty());
 
-        List<FlightDTO> result = flightsApiService.searchFlights(filter, 0, 10);
+        PageResponseDTO<FlightDTO> result = flightsApiService.searchFlights(filter, 0, 10);
 
-        assertThat(result).isEmpty();
+        assertThat(result.content()).isEmpty();
         verify(flightsApiClient).searchFlights(filter, 0, 10);
     }
 
