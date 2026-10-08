@@ -8,7 +8,7 @@ public record PurchaseResponseDTO(
         Long id,
         Double price,
         LocalDateTime purchasedAt,
-        Long buyerId,
+        BuyerResponseDTO buyer,
         TravelPackageResponseDTO travelPackage
 ) {
     public static PurchaseResponseDTO from(Purchase purchase) {
@@ -16,7 +16,7 @@ public record PurchaseResponseDTO(
                 purchase.getId(),
                 purchase.getPrice(),
                 purchase.getPurchasedAt(),
-                purchase.getBuyer() != null ? purchase.getBuyer().getId() : null,
+                purchase.getBuyer() != null ? BuyerResponseDTO.from(purchase.getBuyer()) : null,
                 TravelPackageResponseDTO.from(purchase.getTravelPackage())
         );
     }

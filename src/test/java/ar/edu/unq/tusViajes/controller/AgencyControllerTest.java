@@ -291,7 +291,9 @@ class AgencyControllerTest {
                         .with(user(new CustomUserDetails(mine.getId(), mine.getEmail(), mine.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0].travelPackage.id").value(mineTp.getId()));
+                .andExpect(jsonPath("$.content[0].travelPackage.id").value(mineTp.getId()))
+                .andExpect(jsonPath("$.content[0].buyer.email").value("buyer-sales@example.com"))
+                .andExpect(jsonPath("$.content[0].buyer.nationalId").value("40222222"));
     }
 
     @Test
