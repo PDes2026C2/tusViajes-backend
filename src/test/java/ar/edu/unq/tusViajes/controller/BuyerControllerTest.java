@@ -284,7 +284,7 @@ class BuyerControllerTest {
                         .with(user(new CustomUserDetails(me.getId(), me.getEmail(), me.getPasswordHash(), createAuthorityList("ROLE_BUYER"), true))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0].buyerId").value(me.getId()))
+                .andExpect(jsonPath("$.content[0].buyer.id").value(me.getId()))
                 .andExpect(jsonPath("$.content[0].travelPackage.id").value(tp.getId()));
     }
 

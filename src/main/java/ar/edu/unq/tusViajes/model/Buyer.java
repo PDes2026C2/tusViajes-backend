@@ -3,6 +3,8 @@ package ar.edu.unq.tusViajes.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import ar.edu.unq.tusViajes.exception.DuplicateResourceException;
+import ar.edu.unq.tusViajes.exception.PackageAlreadyStartedException;
 import ar.edu.unq.tusViajes.exception.ReviewNotAllowedException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -49,16 +51,18 @@ public class Buyer extends User {
     }
 
     public Purchase buy(TravelPackage travelPackage) {
-        if (travelPackage == null || travelPackage.getPrice() == null) {
-            throw new IllegalArgumentException("El paquete de viaje y su precio no pueden ser nulos");
-        }
+        ensureCanBuy(travelPackage);
         Purchase purchase = new Purchase(this, travelPackage, travelPackage.getPrice());
-        this.travelPackagesPurchased.add(purchase);
+        addPurchase(purchase);
         return purchase;
     }
 
     public void addPurchase(Purchase purchase) {
         this.travelPackagesPurchased.add(purchase);
+    }
+
+    public void removePurchase(Purchase purchase) {
+        this.travelPackagesPurchased.remove(purchase);
     }
 
     public void addFavorite(TravelPackage travelPackage) {
@@ -96,4 +100,15 @@ public class Buyer extends User {
         }
     }
 
+    public void ensureCanBuy(TravelPackage travelPackage) {
+        if (travelPackage == null) {
+            throw new IllegalArgumentException("El paquete de viaje no puede ser nulo");
+        }
+        if (travelPackage.hasStarted()) {
+            throw new PackageAlreadyStartedException("No se puede comprar un paquete de viaje que ya ha comenzado");
+        }
+        if (this.hasAcquired(travelPackage)) {
+            throw new DuplicateResourceException("El comprador ya adquirió este paquete de viaje");
+        }
+    }
 }

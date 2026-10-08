@@ -35,6 +35,12 @@ public class GlobalExceptionHandler {
                 .body(new ErrorDTO(HttpStatus.CONFLICT.value(), ex.getMessage()));
     }
 
+    @ExceptionHandler(FlightFullException.class)
+    public ResponseEntity<ErrorDTO> handleFlightFull(FlightFullException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorDTO(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
     @ExceptionHandler(UnauthorizedAgencyException.class)
     public ResponseEntity<ErrorDTO> handleUnauthorizedAgency(UnauthorizedAgencyException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -61,6 +67,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidTravelPackageException.class)
     public ResponseEntity<ErrorDTO> handleInvalidTravelPackage(InvalidTravelPackageException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorDTO(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(PackageAlreadyStartedException.class)
+    public ResponseEntity<ErrorDTO> handlePackageAlreadyStarted(PackageAlreadyStartedException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorDTO(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }

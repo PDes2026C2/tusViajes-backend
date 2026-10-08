@@ -2,11 +2,11 @@ package ar.edu.unq.tusViajes.controller;
 
 import ar.edu.unq.tusViajes.adapters.dto.FlightDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightFilterDTO;
+import ar.edu.unq.tusViajes.adapters.dto.PageResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.ErrorDTO;
 import ar.edu.unq.tusViajes.service.FlightService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Tag(name = "Vuelos", description = "Endpoints para consulta de vuelos")
 @RestController
@@ -34,12 +33,12 @@ public class FlightController {
 
     @Operation(summary = "Consultar vuelos disponibles", description = "Obtiene vuelos disponibles aplicando filtros de búsqueda y paginación (requiere rol ADMIN o AGENCY).")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lista de vuelos disponibles", content = @Content(array = @ArraySchema(schema = @Schema(implementation = FlightDTO.class)))),
+            @ApiResponse(responseCode = "200", description = "Lista de vuelos disponibles", content = @Content(schema = @Schema(implementation = PageResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "Acceso no autorizado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN o AGENCY)", content = @Content(schema = @Schema(implementation = ErrorDTO.class)))
     })
     @GetMapping
-    public ResponseEntity<List<FlightDTO>> getAvailableFlights(
+    public ResponseEntity<PageResponseDTO<FlightDTO>> getAvailableFlights(
             @Parameter(description = "Nombre de la aerolínea") @RequestParam(required = false) String airline,
             @Parameter(description = "Fecha/hora mínima de salida (ISO)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime departureDateFrom,
             @Parameter(description = "Fecha/hora máxima de salida (ISO)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime departureDateTo,

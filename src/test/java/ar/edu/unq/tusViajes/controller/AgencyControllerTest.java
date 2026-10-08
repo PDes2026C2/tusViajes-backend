@@ -5,6 +5,7 @@ import ar.edu.unq.tusViajes.builder.BuyerBuilder;
 import ar.edu.unq.tusViajes.builder.FlightBuilder;
 import ar.edu.unq.tusViajes.builder.HotelBuilder;
 import ar.edu.unq.tusViajes.builder.TravelPackageBuilder;
+import ar.edu.unq.tusViajes.controller.dto.request.UpdateAgencyRequestDTO;
 import ar.edu.unq.tusViajes.model.Agency;
 import ar.edu.unq.tusViajes.model.Buyer;
 import ar.edu.unq.tusViajes.model.City;
@@ -20,6 +21,7 @@ import ar.edu.unq.tusViajes.repository.FlightRepository;
 import ar.edu.unq.tusViajes.repository.HotelRepository;
 import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static ar.edu.unq.tusViajes.builder.CityBuilder.aCity;
 import static ar.edu.unq.tusViajes.builder.CountryBuilder.aCountry;
@@ -74,6 +76,8 @@ class AgencyControllerTest {
 
     @Autowired
     private BuyerRepository buyerRepository;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void getAll_returns401_whenUnauthenticated() throws Exception {
@@ -140,11 +144,8 @@ class AgencyControllerTest {
 
     @Test
     void update_returns401_whenUnauthenticated() throws Exception {
-        String json = """
-                {
-                    "businessName": "Updated SA"
-                }
-                """;
+        UpdateAgencyRequestDTO request = new UpdateAgencyRequestDTO("Updated SA");
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(put("/api/agencies/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -155,11 +156,8 @@ class AgencyControllerTest {
     @Test
     void update_returns403_whenRoleIsAdmin() throws Exception {
         Agency saved = agencyRepository.save(AgencyBuilder.anAgency().withBusinessName("Original SA").build());
-        String json = """
-                {
-                    "businessName": "Updated SA"
-                }
-                """;
+        UpdateAgencyRequestDTO request = new UpdateAgencyRequestDTO("Updated SA");
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(put("/api/agencies/" + saved.getId())
                         .with(user("admin").roles("ADMIN"))
@@ -171,11 +169,8 @@ class AgencyControllerTest {
     @Test
     void update_returns403_whenRoleIsBuyer() throws Exception {
         Agency saved = agencyRepository.save(AgencyBuilder.anAgency().withBusinessName("Original SA").build());
-        String json = """
-                {
-                    "businessName": "Updated SA"
-                }
-                """;
+        UpdateAgencyRequestDTO request = new UpdateAgencyRequestDTO("Updated SA");
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(put("/api/agencies/" + saved.getId())
                         .with(user("buyer").roles("BUYER"))
@@ -187,11 +182,8 @@ class AgencyControllerTest {
     @Test
     void updateMine_modifiesBusinessNameAndReturns200_whenRoleIsAgency() throws Exception {
         Agency saved = agencyRepository.save(AgencyBuilder.anAgency().withBusinessName("Original SA").build());
-        String json = """
-                {
-                    "businessName": "Updated Via Me SA"
-                }
-                """;
+        UpdateAgencyRequestDTO request = new UpdateAgencyRequestDTO("Updated Via Me SA");
+        String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(put("/api/agencies/me")
                         .with(user(new CustomUserDetails(saved.getId(), saved.getEmail(), saved.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true)))
@@ -299,7 +291,9 @@ class AgencyControllerTest {
                         .with(user(new CustomUserDetails(mine.getId(), mine.getEmail(), mine.getPasswordHash(), createAuthorityList("ROLE_AGENCY"), true))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0].travelPackage.id").value(mineTp.getId()));
+                .andExpect(jsonPath("$.content[0].travelPackage.id").value(mineTp.getId()))
+                .andExpect(jsonPath("$.content[0].buyer.email").value("buyer-sales@example.com"))
+                .andExpect(jsonPath("$.content[0].buyer.nationalId").value("40222222"));
     }
 
     @Test

@@ -2,6 +2,7 @@ package ar.edu.unq.tusViajes.adapters;
 
 import ar.edu.unq.tusViajes.adapters.dto.FlightDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightFilterDTO;
+import ar.edu.unq.tusViajes.adapters.dto.PageResponseDTO;
 import ar.edu.unq.tusViajes.adapters.dto.PassengerDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import java.util.List;
 
 @Component
 public class FlightsApiClient {
@@ -34,12 +34,12 @@ public class FlightsApiClient {
                 .build();
     }
 
-    public List<FlightDTO> searchFlights() {
+    public PageResponseDTO<FlightDTO> searchFlights() {
         return searchFlights(null, null, null);
     }
 
-    public List<FlightDTO> searchFlights(FlightFilterDTO filter, Integer page, Integer size) {
-        return restClient.get()
+    public PageResponseDTO<FlightDTO> searchFlights(FlightFilterDTO filter, Integer page, Integer size) {
+        PageResponseDTO<FlightDTO> response = restClient.get()
                 .uri(uriBuilder -> {
                     uriBuilder.path("/flights");
                     if (filter != null) {
@@ -59,12 +59,24 @@ public class FlightsApiClient {
                 })
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<FlightDTO>>() {});
+                .body(new ParameterizedTypeReference<PageResponseDTO<FlightDTO>>() {});
+
+        return response != null ? response : PageResponseDTO.empty();
     }
 
     public FlightDTO sellFlight(Long flightId, PassengerDTO passenger) {
         return restClient.post()
                 .uri("/flights/{id}/sell", flightId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(passenger)
+                .retrieve()
+                .body(FlightDTO.class);
+    }
+
+    public FlightDTO cancelFlight(Long flightId, PassengerDTO passenger) {
+        return restClient.post()
+                .uri("/flights/{id}/cancel", flightId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .body(passenger)

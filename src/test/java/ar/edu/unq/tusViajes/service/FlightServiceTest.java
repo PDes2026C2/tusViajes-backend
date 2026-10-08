@@ -6,6 +6,7 @@ import ar.edu.unq.tusViajes.adapters.dto.CityDTO;
 import ar.edu.unq.tusViajes.adapters.dto.CountryDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightDTO;
 import ar.edu.unq.tusViajes.adapters.dto.FlightFilterDTO;
+import ar.edu.unq.tusViajes.adapters.dto.PageResponseDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
 import ar.edu.unq.tusViajes.model.City;
 import ar.edu.unq.tusViajes.model.Country;
@@ -185,11 +186,11 @@ class FlightServiceTest {
     @Test
     void getAvailableFlights_returnsFlightsFromFlightsApiService() {
         FlightDTO flight = new FlightDTO(70L, "Aerolíneas", null, null, LocalDateTime.now().plusDays(2), LocalDateTime.now().plusDays(2).plusHours(2));
-        when(flightsApiService.searchFlights()).thenReturn(List.of(flight));
+        when(flightsApiService.searchFlights()).thenReturn(PageResponseDTO.of(List.of(flight)));
 
-        List<FlightDTO> result = flightService.getAvailableFlights();
+        PageResponseDTO<FlightDTO> result = flightService.getAvailableFlights();
 
-        assertThat(result).containsExactly(flight);
+        assertThat(result.content()).containsExactly(flight);
         verify(flightsApiService).searchFlights();
     }
 
@@ -197,11 +198,11 @@ class FlightServiceTest {
     void getAvailableFlights_withFilterAndPagination_delegatesToFlightsApiService() {
         FlightFilterDTO filter = new FlightFilterDTO("Flybondi", null, null, null, null, 1L, "AR", 2L, "ES");
         FlightDTO flight = new FlightDTO(80L, "Flybondi", null, null, LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(3).plusHours(4));
-        when(flightsApiService.searchFlights(filter, 0, 10)).thenReturn(List.of(flight));
+        when(flightsApiService.searchFlights(filter, 0, 10)).thenReturn(PageResponseDTO.of(List.of(flight)));
 
-        List<FlightDTO> result = flightService.getAvailableFlights(filter, 0, 10);
+        PageResponseDTO<FlightDTO> result = flightService.getAvailableFlights(filter, 0, 10);
 
-        assertThat(result).containsExactly(flight);
+        assertThat(result.content()).containsExactly(flight);
         verify(flightsApiService).searchFlights(filter, 0, 10);
     }
 
