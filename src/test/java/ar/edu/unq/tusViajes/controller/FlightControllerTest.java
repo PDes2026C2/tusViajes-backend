@@ -14,6 +14,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import ar.edu.unq.tusViajes.adapters.dto.PageResponseDTO;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -65,31 +67,31 @@ class FlightControllerTest {
     @Test
     void getAvailableFlights_returns200AndFlightList_whenRoleIsAgency() throws Exception {
         FlightDTO flight = createSampleFlight(1L, "Aerolíneas Argentinas");
-        when(flightService.getAvailableFlights(any(), any(), any())).thenReturn(List.of(flight));
+        when(flightService.getAvailableFlights(any(), any(), any())).thenReturn(PageResponseDTO.of(List.of(flight)));
 
         mockMvc.perform(get("/api/flights").with(user("agency").roles("AGENCY")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].airline").value("Aerolíneas Argentinas"))
-                .andExpect(jsonPath("$[0].originCity.name").value("Buenos Aires"))
-                .andExpect(jsonPath("$[0].destinationCity.name").value("Bariloche"));
+                .andExpect(jsonPath("$.content[0].id").value(1L))
+                .andExpect(jsonPath("$.content[0].airline").value("Aerolíneas Argentinas"))
+                .andExpect(jsonPath("$.content[0].originCity.name").value("Buenos Aires"))
+                .andExpect(jsonPath("$.content[0].destinationCity.name").value("Bariloche"));
     }
 
     @Test
     void getAvailableFlights_returns200AndFlightList_whenRoleIsAdmin() throws Exception {
         FlightDTO flight = createSampleFlight(2L, "Flybondi");
-        when(flightService.getAvailableFlights(any(), any(), any())).thenReturn(List.of(flight));
+        when(flightService.getAvailableFlights(any(), any(), any())).thenReturn(PageResponseDTO.of(List.of(flight)));
 
         mockMvc.perform(get("/api/flights").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(2L))
-                .andExpect(jsonPath("$[0].airline").value("Flybondi"));
+                .andExpect(jsonPath("$.content[0].id").value(2L))
+                .andExpect(jsonPath("$.content[0].airline").value("Flybondi"));
     }
 
     @Test
     void getAvailableFlights_passesFilterParametersCorrectly() throws Exception {
         FlightDTO flight = createSampleFlight(3L, "Flybondi");
-        when(flightService.getAvailableFlights(any(), any(), any())).thenReturn(List.of(flight));
+        when(flightService.getAvailableFlights(any(), any(), any())).thenReturn(PageResponseDTO.of(List.of(flight)));
 
         mockMvc.perform(get("/api/flights")
                         .with(user("agency").roles("AGENCY"))
@@ -101,7 +103,7 @@ class FlightControllerTest {
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(3L));
+                .andExpect(jsonPath("$.content[0].id").value(3L));
 
         ArgumentCaptor<FlightFilterDTO> filterCaptor = ArgumentCaptor.forClass(FlightFilterDTO.class);
         ArgumentCaptor<Integer> pageCaptor = ArgumentCaptor.forClass(Integer.class);
