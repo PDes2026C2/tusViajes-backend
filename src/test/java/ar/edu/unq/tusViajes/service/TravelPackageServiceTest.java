@@ -608,4 +608,255 @@ class TravelPackageServiceTest {
         assertThat(result.getContent()).extracting(TravelPackage::getName)
                 .containsExactly(match.getName());
     }
+
+    @Test
+    void search_filtersByDepartureFromDateOnly() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("depfrom@test.com").withTaxId("30-70000008-8").build());
+
+        Flight dep1 = flightRepository.save(FlightBuilder.aFlight().withId(331L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight ret1 = flightRepository.save(FlightBuilder.aFlight().withId(332L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        Flight dep2 = flightRepository.save(FlightBuilder.aFlight().withId(333L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight ret2 = flightRepository.save(FlightBuilder.aFlight().withId(334L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        TravelPackage packageNov = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Paquete Nov Salida")
+                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
+                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(dep1).withReturnFlight(ret1).build());
+
+        TravelPackage packageDec = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Paquete Dic Salida")
+                .withStartDate(LocalDateTime.of(2026, 12, 1, 10, 0))
+                .withEndDate(LocalDateTime.of(2026, 12, 10, 10, 0))
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(dep2).withReturnFlight(ret2).build());
+
+        TravelPackageFilterDTO filter = aFilter()
+                .withDepartureFrom(LocalDateTime.of(2026, 11, 15, 0, 0))
+                .build();
+
+        Page<TravelPackage> result = travelPackageService.search(filter, PageRequest.of(0, 10));
+        assertThat(result.getContent()).extracting(TravelPackage::getName)
+                .contains(packageDec.getName())
+                .doesNotContain(packageNov.getName());
+    }
+
+    @Test
+    void search_filtersByDepartureToOnly() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("depto@test.com").withTaxId("30-70000009-9").build());
+
+        Flight dep1 = flightRepository.save(FlightBuilder.aFlight().withId(335L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight ret1 = flightRepository.save(FlightBuilder.aFlight().withId(336L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        Flight dep2 = flightRepository.save(FlightBuilder.aFlight().withId(337L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight ret2 = flightRepository.save(FlightBuilder.aFlight().withId(338L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        TravelPackage packageNov = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Paquete Nov Salida Antes")
+                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
+                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(dep1).withReturnFlight(ret1).build());
+
+        TravelPackage packageDec = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Paquete Dic Salida Despues")
+                .withStartDate(LocalDateTime.of(2026, 12, 1, 10, 0))
+                .withEndDate(LocalDateTime.of(2026, 12, 10, 10, 0))
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(dep2).withReturnFlight(ret2).build());
+
+        TravelPackageFilterDTO filter = aFilter()
+                .withDepartureTo(LocalDateTime.of(2026, 11, 15, 23, 59))
+                .build();
+
+        Page<TravelPackage> result = travelPackageService.search(filter, PageRequest.of(0, 10));
+        assertThat(result.getContent()).extracting(TravelPackage::getName)
+                .contains(packageNov.getName())
+                .doesNotContain(packageDec.getName());
+    }
+
+    @Test
+    void search_filtersByArrivalFromOnly() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("arrfrom@test.com").withTaxId("30-70000010-0").build());
+
+        Flight dep1 = flightRepository.save(FlightBuilder.aFlight().withId(339L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight ret1 = flightRepository.save(FlightBuilder.aFlight().withId(340L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        Flight dep2 = flightRepository.save(FlightBuilder.aFlight().withId(341L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight ret2 = flightRepository.save(FlightBuilder.aFlight().withId(342L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        TravelPackage packageEarly = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Regreso Temprano Solo From")
+                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
+                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(dep1).withReturnFlight(ret1).build());
+
+        TravelPackage packageLate = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Regreso Tardio Solo From")
+                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
+                .withEndDate(LocalDateTime.of(2026, 11, 28, 10, 0))
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(dep2).withReturnFlight(ret2).build());
+
+        TravelPackageFilterDTO filter = aFilter()
+                .withArrivalFrom(LocalDateTime.of(2026, 11, 20, 0, 0))
+                .build();
+
+        Page<TravelPackage> result = travelPackageService.search(filter, PageRequest.of(0, 10));
+        assertThat(result.getContent()).extracting(TravelPackage::getName)
+                .contains(packageLate.getName())
+                .doesNotContain(packageEarly.getName());
+    }
+
+    @Test
+    void search_filtersByArrivalToOnly() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("arrto@test.com").withTaxId("30-70000011-1").build());
+
+        Flight dep1 = flightRepository.save(FlightBuilder.aFlight().withId(343L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight ret1 = flightRepository.save(FlightBuilder.aFlight().withId(344L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        Flight dep2 = flightRepository.save(FlightBuilder.aFlight().withId(345L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight ret2 = flightRepository.save(FlightBuilder.aFlight().withId(346L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        TravelPackage packageEarly = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Regreso Temprano Solo To")
+                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
+                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(dep1).withReturnFlight(ret1).build());
+
+        TravelPackage packageLate = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Regreso Tardio Solo To")
+                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
+                .withEndDate(LocalDateTime.of(2026, 11, 28, 10, 0))
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(dep2).withReturnFlight(ret2).build());
+
+        TravelPackageFilterDTO filter = aFilter()
+                .withArrivalTo(LocalDateTime.of(2026, 11, 15, 23, 59))
+                .build();
+
+        Page<TravelPackage> result = travelPackageService.search(filter, PageRequest.of(0, 10));
+        assertThat(result.getContent()).extracting(TravelPackage::getName)
+                .contains(packageEarly.getName())
+                .doesNotContain(packageLate.getName());
+    }
+
+    @Test
+    void search_whenDestinationCityIdIsZeroOrNegative_doesNotFilterByDestinationCity() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+        City mendoza = cityRepository.save(aCity().withName("Mendoza").withCountry(argentina).build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+
+        Hotel hotelBRC = hotelRepository.save(HotelBuilder.aHotel().withName("Hotel BRC Zero").withCity(bariloche).build());
+        Hotel hotelMDZ = hotelRepository.save(HotelBuilder.aHotel().withName("Hotel MDZ Zero").withCity(mendoza).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("destcityzero@test.com").withTaxId("30-70000012-2").build());
+
+        Flight dep1 = flightRepository.save(FlightBuilder.aFlight().withId(347L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight ret1 = flightRepository.save(FlightBuilder.aFlight().withId(348L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        Flight dep2 = flightRepository.save(FlightBuilder.aFlight().withId(349L).withOriginCity(buenosAires).withDestinationCity(mendoza).build());
+        Flight ret2 = flightRepository.save(FlightBuilder.aFlight().withId(350L).withOriginCity(mendoza).withDestinationCity(buenosAires).build());
+
+        TravelPackage packageBRC = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Destino Bariloche Zero")
+                .withHotel(hotelBRC).withAgency(agency).withDepartureFlight(dep1).withReturnFlight(ret1).build());
+
+        TravelPackage packageMDZ = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Destino Mendoza Zero")
+                .withHotel(hotelMDZ).withAgency(agency).withDepartureFlight(dep2).withReturnFlight(ret2).build());
+
+        TravelPackageFilterDTO filterZero = aFilter().withDestinationCityId(0L).build();
+        Page<TravelPackage> resultZero = travelPackageService.search(filterZero, PageRequest.of(0, 10));
+        assertThat(resultZero.getContent()).extracting(TravelPackage::getName)
+                .contains(packageBRC.getName(), packageMDZ.getName());
+
+        TravelPackageFilterDTO filterNeg = aFilter().withDestinationCityId(-1L).build();
+        Page<TravelPackage> resultNeg = travelPackageService.search(filterNeg, PageRequest.of(0, 10));
+        assertThat(resultNeg.getContent()).extracting(TravelPackage::getName)
+                .contains(packageBRC.getName(), packageMDZ.getName());
+    }
+
+    @Test
+    void search_whenOriginCityIdIsZeroOrNegative_doesNotFilterByOriginCity() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City cordoba = cityRepository.save(aCity().withName("Cordoba").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("origincityzero@test.com").withTaxId("30-70000013-3").build());
+
+        Flight dep1 = flightRepository.save(FlightBuilder.aFlight().withId(351L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight ret1 = flightRepository.save(FlightBuilder.aFlight().withId(352L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        Flight dep2 = flightRepository.save(FlightBuilder.aFlight().withId(353L).withOriginCity(cordoba).withDestinationCity(bariloche).build());
+        Flight ret2 = flightRepository.save(FlightBuilder.aFlight().withId(354L).withOriginCity(bariloche).withDestinationCity(cordoba).build());
+
+        TravelPackage packageBUE = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Origen BUE Zero")
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(dep1).withReturnFlight(ret1).build());
+
+        TravelPackage packageCOR = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Origen COR Zero")
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(dep2).withReturnFlight(ret2).build());
+
+        TravelPackageFilterDTO filterZero = aFilter().withOriginCityId(0L).build();
+        Page<TravelPackage> resultZero = travelPackageService.search(filterZero, PageRequest.of(0, 10));
+        assertThat(resultZero.getContent()).extracting(TravelPackage::getName)
+                .contains(packageBUE.getName(), packageCOR.getName());
+
+        TravelPackageFilterDTO filterNeg = aFilter().withOriginCityId(-5L).build();
+        Page<TravelPackage> resultNeg = travelPackageService.search(filterNeg, PageRequest.of(0, 10));
+        assertThat(resultNeg.getContent()).extracting(TravelPackage::getName)
+                .contains(packageBUE.getName(), packageCOR.getName());
+    }
+
+    @Test
+    void search_whenCountryIsoIsBlankOrEmpty_doesNotFilterByCountry() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        Country brasil = countryRepository.save(aCountry().withIsoCode("BR").withName("Brasil").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+        City rioDeJaneiro = cityRepository.save(aCity().withName("Rio de Janeiro").withCountry(brasil).build());
+
+        Hotel hotelAR = hotelRepository.save(HotelBuilder.aHotel().withName("Hotel AR Blank").withCity(bariloche).build());
+        Hotel hotelBR = hotelRepository.save(HotelBuilder.aHotel().withName("Hotel BR Blank").withCity(rioDeJaneiro).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("countryblank@test.com").withTaxId("30-70000014-4").build());
+
+        Flight dep1 = flightRepository.save(FlightBuilder.aFlight().withId(355L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight ret1 = flightRepository.save(FlightBuilder.aFlight().withId(356L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        Flight dep2 = flightRepository.save(FlightBuilder.aFlight().withId(357L).withOriginCity(buenosAires).withDestinationCity(rioDeJaneiro).build());
+        Flight ret2 = flightRepository.save(FlightBuilder.aFlight().withId(358L).withOriginCity(rioDeJaneiro).withDestinationCity(buenosAires).build());
+
+        TravelPackage packageAR = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Destino AR Blank")
+                .withHotel(hotelAR).withAgency(agency).withDepartureFlight(dep1).withReturnFlight(ret1).build());
+
+        TravelPackage packageBR = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Destino BR Blank")
+                .withHotel(hotelBR).withAgency(agency).withDepartureFlight(dep2).withReturnFlight(ret2).build());
+
+        TravelPackageFilterDTO filterSpaces = aFilter().withDestinationCountryIso("   ").withOriginCountryIso("").build();
+        Page<TravelPackage> resultSpaces = travelPackageService.search(filterSpaces, PageRequest.of(0, 10));
+        assertThat(resultSpaces.getContent()).extracting(TravelPackage::getName)
+                .contains(packageAR.getName(), packageBR.getName());
+    }
 }
