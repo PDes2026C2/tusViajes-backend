@@ -92,54 +92,24 @@ public final class TravelPackageSpecifications {
     }
 
     public static Specification<TravelPackage> fromFilter(TravelPackageFilterDTO filter) {
-        return (root, query, cb) -> {
-            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
-            predicates.add(cb.isTrue(root.get("active")));
+        if (filter == null) {
+            return isActive();
+        }
 
-            if (filter == null) {
-                return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
-            }
+        Specification<TravelPackage> spec = isActive();
+        spec = andIfPresent(spec, originCountryIs(filter.originCountryIso()));
+        spec = andIfPresent(spec, originCityIdIs(filter.originCityId()));
+        spec = andIfPresent(spec, destinationCountryIs(filter.destinationCountryIso()));
+        spec = andIfPresent(spec, destinationCityIdIs(filter.destinationCityId()));
+        spec = andIfPresent(spec, departureAfter(filter.departureFrom()));
+        spec = andIfPresent(spec, departureBefore(filter.departureTo()));
+        spec = andIfPresent(spec, arrivalAfter(filter.arrivalFrom()));
+        spec = andIfPresent(spec, arrivalBefore(filter.arrivalTo()));
+        return spec;
+    }
 
-            if (StringUtils.hasText(filter.originCountryIso())) {
-                Join<TravelPackage, Flight> flight = getOrCreateJoin(root, "departureFlight", JoinType.INNER);
-                Join<Flight, City> city = getOrCreateJoin(flight, "originCity", JoinType.INNER);
-                Join<City, Country> country = getOrCreateJoin(city, "country", JoinType.INNER);
-                predicates.add(cb.equal(cb.upper(country.get("isoCode")), filter.originCountryIso().trim().toUpperCase()));
-            }
-
-            if (filter.originCityId() != null && filter.originCityId() > 0) {
-                Join<TravelPackage, Flight> flight = getOrCreateJoin(root, "departureFlight", JoinType.INNER);
-                predicates.add(cb.equal(flight.get("originCity").get("id"), filter.originCityId()));
-            }
-
-            if (StringUtils.hasText(filter.destinationCountryIso())) {
-                Join<TravelPackage, Hotel> hotel = getOrCreateJoin(root, "hotel", JoinType.INNER);
-                Join<Hotel, City> city = getOrCreateJoin(hotel, "city", JoinType.INNER);
-                Join<City, Country> country = getOrCreateJoin(city, "country", JoinType.INNER);
-                predicates.add(cb.equal(cb.upper(country.get("isoCode")), filter.destinationCountryIso().trim().toUpperCase()));
-            }
-
-            if (filter.destinationCityId() != null && filter.destinationCityId() > 0) {
-                Join<TravelPackage, Hotel> hotel = getOrCreateJoin(root, "hotel", JoinType.INNER);
-                predicates.add(cb.equal(hotel.get("city").get("id"), filter.destinationCityId()));
-            }
-
-            if (filter.departureFrom() != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("startDate"), filter.departureFrom()));
-            }
-            if (filter.departureTo() != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("startDate"), filter.departureTo()));
-            }
-
-            if (filter.arrivalFrom() != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("endDate"), filter.arrivalFrom()));
-            }
-            if (filter.arrivalTo() != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("endDate"), filter.arrivalTo()));
-            }
-
-            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
-        };
+    private static Specification<TravelPackage> andIfPresent(Specification<TravelPackage> base, Specification<TravelPackage> other) {
+        return other != null ? base.and(other) : base;
     }
 
     @SuppressWarnings("unchecked")
