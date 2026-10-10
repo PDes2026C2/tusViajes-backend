@@ -16,5 +16,5 @@ public record BuyerRegistrationRequestDTO(
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres") String password,
     String phoneNumber,
     @NotBlank(message = "El DNI es obligatorio")
-    @Pattern(regexp = "\\d{8}", message = "El DNI debe contener 8 dígitos numéricos") String nationalId
+    @Pattern(regexp = "\\d+$", message = "El DNI debe contener solo dígitos numéricos") String nationalId
 ) {}
