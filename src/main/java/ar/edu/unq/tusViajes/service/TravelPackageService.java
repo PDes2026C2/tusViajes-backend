@@ -1,5 +1,6 @@
 package ar.edu.unq.tusViajes.service;
 
+import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageFilterDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.UpdateTravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
@@ -11,6 +12,7 @@ import ar.edu.unq.tusViajes.repository.TravelPackageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -26,8 +28,9 @@ public class TravelPackageService {
     private final TransactionTemplate transactionTemplate;
 
     @Transactional(readOnly = true)
-    public Page<TravelPackage> search(Pageable pageable) {
-        return travelPackageRepository.findByActiveTrue(pageable);
+    public Page<TravelPackage> search(TravelPackageFilterDTO filter, Pageable pageable) {
+        Specification<TravelPackage> spec = filter.toSpecification();
+        return travelPackageRepository.findAll(spec, pageable);
     }
 
     @Transactional(readOnly = true)

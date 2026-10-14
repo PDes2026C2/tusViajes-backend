@@ -1,5 +1,6 @@
 package ar.edu.unq.tusViajes.controller;
 
+import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageFilterDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.UpdateTravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.ErrorDTO;
@@ -32,13 +33,15 @@ public class TravelPackageController {
 
     private final TravelPackageService travelPackageService;
 
-    @Operation(summary = "Buscar paquetes de viaje", description = "Consulta pública y paginada de todos los paquetes de viaje disponibles.")
+    @Operation(summary = "Buscar paquetes de viaje", description = "Consulta pública y paginada de todos los paquetes de viaje disponibles con soporte de filtros opcionales (origen, destino, fechas).")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Página de paquetes de viaje", content = @Content(schema = @Schema(implementation = Page.class)))
     })
     @GetMapping
-    public ResponseEntity<Page<TravelPackageResponseDTO>> search(@PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(travelPackageService.search(pageable).map(TravelPackageResponseDTO::from));
+    public ResponseEntity<Page<TravelPackageResponseDTO>> search(
+            @ModelAttribute TravelPackageFilterDTO filter,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(travelPackageService.search(filter, pageable).map(TravelPackageResponseDTO::from));
     }
 
     @Operation(summary = "Obtener paquete por ID", description = "Consulta pública de los detalles de un paquete de viaje por su ID.")

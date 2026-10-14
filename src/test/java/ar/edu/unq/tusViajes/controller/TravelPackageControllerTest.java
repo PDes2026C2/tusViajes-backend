@@ -105,6 +105,54 @@ class TravelPackageControllerTest {
     }
 
     @Test
+    void search_returns200AndFilteredPackages_whenFiltersProvided() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        Country brasil = countryRepository.save(aCountry().withIsoCode("BR").withName("Brasil").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+        City rioDeJaneiro = cityRepository.save(aCity().withName("Rio de Janeiro").withCountry(brasil).build());
+
+        Hotel hotelAR = hotelRepository.save(HotelBuilder.aHotel().withName("Hotel Bariloche").withCity(bariloche).build());
+        Hotel hotelBR = hotelRepository.save(HotelBuilder.aHotel().withName("Hotel Rio").withCity(rioDeJaneiro).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("controllerfilter@test.com").withTaxId("30-80000001-1").build());
+
+        Flight depFlightAR = flightRepository.save(FlightBuilder.aFlight().withId(401L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlightAR = flightRepository.save(FlightBuilder.aFlight().withId(402L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        Flight depFlightBR = flightRepository.save(FlightBuilder.aFlight().withId(403L).withOriginCity(buenosAires).withDestinationCity(rioDeJaneiro).build());
+        Flight retFlightBR = flightRepository.save(FlightBuilder.aFlight().withId(404L).withOriginCity(rioDeJaneiro).withDestinationCity(buenosAires).build());
+
+        travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Paquete Bariloche")
+                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
+                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withHotel(hotelAR)
+                .withAgency(agency)
+                .withDepartureFlight(depFlightAR)
+                .withReturnFlight(retFlightAR)
+                .build());
+
+        travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Paquete Rio")
+                .withStartDate(LocalDateTime.of(2026, 12, 1, 10, 0))
+                .withEndDate(LocalDateTime.of(2026, 12, 10, 10, 0))
+                .withHotel(hotelBR)
+                .withAgency(agency)
+                .withDepartureFlight(depFlightBR)
+                .withReturnFlight(retFlightBR)
+                .build());
+
+        mockMvc.perform(get("/api/travel-packages")
+                        .param("originCountryIso", "AR")
+                        .param("destinationCityId", String.valueOf(bariloche.getId()))
+                        .param("departureFrom", "2026-10-25T00:00:00.000Z")
+                        .param("departureTo", "2026-11-05T23:59:59.000Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Paquete Bariloche"));
+    }
+
+    @Test
     void getById_returns200WhenExists() throws Exception {
         Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
         City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
