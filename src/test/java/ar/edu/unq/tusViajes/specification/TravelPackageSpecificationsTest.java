@@ -59,4 +59,11 @@ class TravelPackageSpecificationsTest {
         assertThat(TravelPackageSpecifications.arrivalAfter(null)).isNull();
         assertThat(TravelPackageSpecifications.arrivalBefore(null)).isNull();
     }
+
+    @Test
+    void hasNotStarted_returnsSpecification() {
+        assertThat(TravelPackageSpecifications.hasNotStarted()).isNotNull();
+        assertThat(TravelPackageSpecifications.hasNotStarted(java.time.LocalDateTime.now())).isNotNull();
+        assertThat(TravelPackageSpecifications.hasNotStarted(null)).isNull();
+    }
 }
