@@ -105,6 +105,35 @@ class TravelPackageControllerTest {
     }
 
     @Test
+    void search_doesNotReturnPackagesThatHaveAlreadyStarted() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("ctrlstarted@test.com").withTaxId("30-80000099-9").build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(491L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(492L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Paquete Futuro")
+                .withStartDate(LocalDateTime.now().plusDays(5))
+                .withEndDate(LocalDateTime.now().plusDays(10))
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+
+        travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Paquete Ya Comenzado")
+                .withStartDate(LocalDateTime.now().minusDays(2))
+                .withEndDate(LocalDateTime.now().plusDays(3))
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+
+        mockMvc.perform(get("/api/travel-packages"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Paquete Futuro"));
+    }
+
+    @Test
     void search_returns200AndFilteredPackages_whenFiltersProvided() throws Exception {
         Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
         Country brasil = countryRepository.save(aCountry().withIsoCode("BR").withName("Brasil").build());

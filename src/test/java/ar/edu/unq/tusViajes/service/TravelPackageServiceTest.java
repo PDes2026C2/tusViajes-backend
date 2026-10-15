@@ -859,4 +859,40 @@ class TravelPackageServiceTest {
         assertThat(resultSpaces.getContent()).extracting(TravelPackage::getName)
                 .contains(packageAR.getName(), packageBR.getName());
     }
+
+    @Test
+    void search_doesNotReturnPackagesThatHaveAlreadyStartedOrExpired() {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().withEmail("started@agency.com").withTaxId("30-77777777-7").build());
+        Flight depFlight = flightRepository.save(FlightBuilder.aFlight().withId(390L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight retFlight = flightRepository.save(FlightBuilder.aFlight().withId(391L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+
+        TravelPackage futurePackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Future Package")
+                .withStartDate(LocalDateTime.now().plusDays(5))
+                .withEndDate(LocalDateTime.now().plusDays(10))
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+
+        TravelPackage startedPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Started Package")
+                .withStartDate(LocalDateTime.now().minusDays(2))
+                .withEndDate(LocalDateTime.now().plusDays(3))
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+
+        TravelPackage expiredPackage = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
+                .withName("Expired Package")
+                .withStartDate(LocalDateTime.now().minusDays(10))
+                .withEndDate(LocalDateTime.now().minusDays(3))
+                .withHotel(hotel).withAgency(agency).withDepartureFlight(depFlight).withReturnFlight(retFlight).build());
+
+        Page<TravelPackage> result = travelPackageService.search(TravelPackageFilterDTO.empty(), PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).extracting(TravelPackage::getName)
+                .contains(futurePackage.getName())
+                .doesNotContain(startedPackage.getName(), expiredPackage.getName());
+    }
 }

@@ -19,6 +19,17 @@ public final class TravelPackageSpecifications {
         return (root, query, cb) -> cb.isTrue(root.get("active"));
     }
 
+    public static Specification<TravelPackage> hasNotStarted() {
+        return hasNotStarted(LocalDateTime.now());
+    }
+
+    public static Specification<TravelPackage> hasNotStarted(LocalDateTime now) {
+        if (now == null) {
+            return null;
+        }
+        return (root, query, cb) -> cb.greaterThan(root.get("startDate"), now);
+    }
+
     public static Specification<TravelPackage> originCountryIs(String isoCode) {
         if (!StringUtils.hasText(isoCode)) {
             return null;
@@ -92,11 +103,11 @@ public final class TravelPackageSpecifications {
     }
 
     public static Specification<TravelPackage> fromFilter(TravelPackageFilterDTO filter) {
+        Specification<TravelPackage> spec = isActive().and(hasNotStarted());
         if (filter == null) {
-            return isActive();
+            return spec;
         }
 
-        Specification<TravelPackage> spec = isActive();
         spec = andIfPresent(spec, originCountryIs(filter.originCountryIso()));
         spec = andIfPresent(spec, originCityIdIs(filter.originCityId()));
         spec = andIfPresent(spec, destinationCountryIs(filter.destinationCountryIso()));
