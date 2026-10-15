@@ -14,6 +14,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     boolean existsByBuyerIdAndTravelPackageId(Long buyerId, Long travelPackageId);
 
+    Page<Review> findByBuyerIdOrderByCreatedAtDesc(Long buyerId, Pageable pageable);
+
     Page<Review> findByTravelPackageIdOrderByCreatedAtDesc(Long travelPackageId, Pageable pageable);
 
     @Query("""

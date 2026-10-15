@@ -62,6 +62,9 @@ class BuyerControllerTest {
     @Autowired
     private CountryRepository countryRepository;
 
+    @Autowired
+    private ReviewRepository reviewRepository;
+
     @Test
     void getAll_returns401_whenUnauthenticated() throws Exception {
         mockMvc.perform(get("/api/buyers"))
@@ -293,6 +296,59 @@ class BuyerControllerTest {
         Buyer me = buyerRepository.save(BuyerBuilder.aBuyer().withEmail("empty@example.com").withNationalId("40333333").build());
 
         mockMvc.perform(get("/api/buyers/me/purchases")
+                        .with(user(new CustomUserDetails(me.getId(), me.getEmail(), me.getPasswordHash(), createAuthorityList("ROLE_BUYER"), true))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
+    void getMyReviews_returns401_whenUnauthenticated() throws Exception {
+        mockMvc.perform(get("/api/buyers/me/reviews"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getMyReviews_returns403_whenNotBuyer() throws Exception {
+        mockMvc.perform(get("/api/buyers/me/reviews").with(user("agency").roles("AGENCY")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/buyers/me/reviews").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getMyReviews_returnsOnlyOwnReviews() throws Exception {
+        Country argentina = countryRepository.save(aCountry().withIsoCode("AR").withName("Argentina").build());
+        City buenosAires = cityRepository.save(aCity().withName("Buenos Aires").withCountry(argentina).build());
+        City bariloche = cityRepository.save(aCity().withName("Bariloche").withCountry(argentina).build());
+        Hotel hotel = hotelRepository.save(HotelBuilder.aHotel().withCity(bariloche).build());
+        Agency agency = agencyRepository.save(AgencyBuilder.anAgency().build());
+        Flight dep = flightRepository.save(FlightBuilder.aFlight().withId(112L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
+        Flight ret = flightRepository.save(FlightBuilder.aFlight().withId(113L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
+        TravelPackage tp = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage().withHotel(hotel).withAgency(agency).withDepartureFlight(dep).withReturnFlight(ret).build());
+
+        Buyer me = buyerRepository.save(BuyerBuilder.aBuyer().withEmail("me.rev@example.com").withNationalId("41123456").build());
+        Buyer other = buyerRepository.save(BuyerBuilder.aBuyer().withEmail("other.rev@example.com").withNationalId("41987654").build());
+
+        reviewRepository.save(ReviewBuilder.aReview().withBuyer(me).withTravelPackage(tp).withScore(5).withComment("Excelente viaje").build());
+        reviewRepository.save(ReviewBuilder.aReview().withBuyer(other).withTravelPackage(tp).withScore(3).withComment("Regular").build());
+
+        mockMvc.perform(get("/api/buyers/me/reviews")
+                        .with(user(new CustomUserDetails(me.getId(), me.getEmail(), me.getPasswordHash(), createAuthorityList("ROLE_BUYER"), true))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].buyerId").value(me.getId()))
+                .andExpect(jsonPath("$.content[0].travelPackageId").value(tp.getId()))
+                .andExpect(jsonPath("$.content[0].score").value(5))
+                .andExpect(jsonPath("$.content[0].comment").value("Excelente viaje"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    void getMyReviews_returnsEmptyWhenNoReviews() throws Exception {
+        Buyer me = buyerRepository.save(BuyerBuilder.aBuyer().withEmail("noreviews@example.com").withNationalId("41333333").build());
+
+        mockMvc.perform(get("/api/buyers/me/reviews")
                         .with(user(new CustomUserDetails(me.getId(), me.getEmail(), me.getPasswordHash(), createAuthorityList("ROLE_BUYER"), true))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(0))

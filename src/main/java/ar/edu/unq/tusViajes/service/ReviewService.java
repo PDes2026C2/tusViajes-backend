@@ -47,4 +47,9 @@ public class ReviewService {
         travelPackageService.getEntityById(travelPackageId);
         return reviewRepository.findByTravelPackageIdOrderByCreatedAtDesc(travelPackageId, pageable);
     }
+
+    @Transactional(readOnly = true)
+    public Page<Review> getByBuyerId(Long buyerId, Pageable pageable) {
+        return reviewRepository.findByBuyerIdOrderByCreatedAtDesc(buyerId, pageable);
+    }
 }
