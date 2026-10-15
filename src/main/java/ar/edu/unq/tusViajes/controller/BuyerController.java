@@ -14,10 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 import ar.edu.unq.tusViajes.controller.dto.response.BuyerResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.ErrorDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.PurchaseResponseDTO;
+import ar.edu.unq.tusViajes.controller.dto.response.ReviewResponseDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
 import ar.edu.unq.tusViajes.service.BuyerService;
 import ar.edu.unq.tusViajes.service.PurchaseService;
+import ar.edu.unq.tusViajes.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,6 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 
 @Tag(name = "Compradores", description = "Endpoints para administración de compradores y gestión personal de favoritos y compras")
@@ -38,6 +41,7 @@ public class BuyerController {
 
     private final BuyerService buyerService;
     private final PurchaseService purchaseService;
+    private final ReviewService reviewService;
 
     @Operation(summary = "Listar compradores", description = "Obtiene la lista completa de compradores registrados (requiere rol ADMIN).")
     @ApiResponses({
@@ -112,5 +116,18 @@ public class BuyerController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(purchaseService.getPurchasesByBuyer(userDetails.getId(), pageable).map(PurchaseResponseDTO::from));
+    }
+
+    @Operation(summary = "Listar reseñas propias", description = "Obtiene el historial paginado de reseñas del comprador autenticado (requiere rol BUYER).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Página de reseñas del comprador", content = @Content(schema = @Schema(implementation = Page.class))),
+            @ApiResponse(responseCode = "401", description = "Acceso no autorizado", content = @Content(schema = @Schema(implementation = ErrorDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol BUYER)", content = @Content(schema = @Schema(implementation = ErrorDTO.class)))
+    })
+    @GetMapping("/me/reviews")
+    public ResponseEntity<Page<ReviewResponseDTO>> getMyReviews(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(reviewService.getByBuyerId(userDetails.getId(), pageable).map(ReviewResponseDTO::from));
     }
 }
