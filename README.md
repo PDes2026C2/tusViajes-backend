@@ -1,158 +1,158 @@
-# TusViajes Web Application
+# TusViajes - Backend REST API
 
-Backend REST API for **TusViajes**, a travel package marketplace platform built with Java 21 and Spring Boot 4.
-
----
-
-## 🌟 Business Domain
-
-The platform connects three key user roles:
-
-1. **Agencies (`AGENCY`)**:
-   - Register their business with official credentials (tax ID, business name).
-   - Once authorized by an Administrator, create, publish, update, and manage travel packages (including hotel details, dates, pricing, and descriptions).
-
-2. **Buyers (`BUYER`)**:
-   - Register and explore available travel packages.
-   - Save and manage favorite travel packages in their wishlist.
-
-3. **Administrators (`ADMIN`)**:
-   - Review pending agency registrations and approve or reject them.
-   - Manage administrators, agencies, hotels, and oversee platform data.
+Backend de la plataforma **TusViajes**, desarrollado con Java 21 y Spring Boot 4.
 
 ---
 
-## 🛠 Tech Stack
+## 🛠 Tecnologías
 
-- **Java 21**
-- **Spring Boot 4.1.1** (Spring MVC, Spring Data JPA, Spring Security, Spring Validation)
-- **PostgreSQL** (Production & Docker Compose) / **H2** (In-Memory for testing)
-- **JWT (JSON Web Tokens)** for stateless authentication & refresh tokens (io.jsonwebtoken / jjwt)
-- **Lombok**
-- **Testcontainers** (Integration testing against PostgreSQL 16)
-- **JaCoCo** (Code coverage)
-- **Docker & Docker Compose**
-
----
-
-## 🚀 Unified REST API Endpoints
-
-All retrieval endpoints and internal service methods follow a unified `get` convention (`getAll`, `getById`, `getPending`, `getFavorites`).
-
-### Authentication (`/api/auth`)
-| Method | Path | Access | Description |
-|---|---|---|---|
-| `POST` | `/api/auth/login` | Public | Authenticate user (Admin, Agency, Buyer) and retrieve JWT access & refresh tokens |
-| `POST` | `/api/auth/register/agency` | Public | Register a new agency (status: `PENDING`) |
-| `POST` | `/api/auth/register/buyer` | Public | Register a new buyer |
-| `POST` | `/api/auth/refresh` | Public | Refresh expired access token using a valid refresh token |
-
-### Travel Packages (`/api/travel-packages`)
-| Method | Path | Access | Description |
-|---|---|---|---|
-| `GET` | `/api/travel-packages` | Public | Get all travel packages (paginated, e.g. `?page&size`) |
-| `GET` | `/api/travel-packages/{id}` | Public | Get travel package by ID |
-| `POST` | `/api/travel-packages` | `AGENCY` | Create own travel package (agencyId from JWT, no `agencyId` in body) |
-| `PUT` | `/api/travel-packages/{id}` | `AGENCY` | Update own travel package (403 if not owned, 404 if not found) |
-| `DELETE` | `/api/travel-packages/{id}` | `AGENCY` | Delete own travel package (403 if not owned, 404 if not found) |
-
-### Hotels (`/api/hotels`)
-| Method | Path | Access | Description |
-|---|---|---|---|
-| `GET` | `/api/hotels` | `ADMIN`, `AGENCY` | Get all hotels |
-| `GET` | `/api/hotels/{id}` | `ADMIN`, `AGENCY` | Get hotel by ID |
-| `POST` | `/api/hotels` | `ADMIN` | Register a new hotel |
-
-### Flights (`/api/flights`)
-| Method | Path | Access | Description |
-|---|---|---|---|
-| `GET` | `/api/flights` | `ADMIN`, `AGENCY` | Get available flights (supports filtering & pagination) |
-| `GET` | `/api/flights/{id}` | `ADMIN`, `AGENCY` | Get flight by ID |
-
-### Cities (`/api/cities`)
-| Method | Path | Access | Description |
-|---|---|---|---|
-| `GET` | `/api/cities` | Public | Get all cities (supports optional `?isoCode` filter) |
-
-### Countries (`/api/countries`)
-| Method | Path | Access | Description |
-|---|---|---|---|
-| `GET` | `/api/countries` | Public | Get all countries |
-
-### Buyers (`/api/buyers`)
-| Method | Path | Access | Description |
-|---|---|---|---|
-| `GET` | `/api/buyers` | `ADMIN` | Get all buyers |
-| `GET` | `/api/buyers/{id}` | `ADMIN` | Get buyer by ID |
-| `POST` | `/api/buyers/me/favorites/{travelPackageId}` | `BUYER` | Add own favorite travel package |
-| `DELETE` | `/api/buyers/me/favorites/{travelPackageId}` | `BUYER` | Remove own favorite travel package |
-| `GET` | `/api/buyers/me/favorites` | `BUYER` | Get own favorite travel packages |
-| `GET` | `/api/buyers/me/purchases` | `BUYER` | Get own purchases (paginated, `?page&size`) |
-
-### Agencies (`/api/agencies`)
-| Method | Path | Access | Description |
-|---|---|---|---|
-| `GET` | `/api/agencies` | `ADMIN` | Get all agencies |
-| `GET` | `/api/agencies/{id}` | `ADMIN` | Get agency by ID |
-| `GET` | `/api/agencies/me/packages` | `AGENCY` | Get own travel packages (paginated, e.g. `?page&size`) |
-| `GET` | `/api/agencies/me/sales` | `AGENCY` | Get own sales (paginated, `?page&size`, includes buyer + package) |
-| `PUT` | `/api/agencies/{id}` | `AGENCY` | Update own agency business name (403 if not owned) |
-| `PUT` | `/api/agencies/me` | `AGENCY` | Update own agency business name |
-| `DELETE` | `/api/agencies/{id}` | `ADMIN` | Delete agency |
-
-### Purchases (`/api/purchases` & `/api/buyers`)
-| Method | Path | Access | Description |
-|---|---|---|---|
-| `POST` | `/api/purchases/{travelPackageId}` | `BUYER` | Purchase a travel package |
-| `GET` | `/api/buyers/me/purchases` | `BUYER` | Get own purchases (paginated, `?page&size`) |
-
-### Reviews (`/api/reviews`)
-| Method | Path | Access | Description |
-|---|---|---|---|
-| `GET` | `/api/reviews/{travelPackageId}` | `ADMIN` | Get reviews for a travel package (paginated, `?page&size&sort`) |
-| `POST` | `/api/reviews/{travelPackageId}` | `BUYER` | Create a review for a finished, purchased travel package |
-
-### Administrator Management (`/api/admin`)
-| Method | Path | Access | Description |
-|---|---|---|---|
-| `GET` | `/api/admin/administrators` | `ADMIN` | Get all administrators |
-| `GET` | `/api/admin/administrators/{id}` | `ADMIN` | Get administrator by ID |
-| `POST` | `/api/admin/administrators` | `ADMIN` | Create a new administrator |
-| `GET` | `/api/admin/agencies/pending` | `ADMIN` | Get all pending agencies awaiting approval |
-| `POST` | `/api/admin/agencies/{id}/authorize` | `ADMIN` | Authorize agency |
-| `POST` | `/api/admin/agencies/{id}/reject` | `ADMIN` | Reject agency |
+- **Lenguaje:** Java 21
+- **Framework Principal:** [Spring Boot 4.1.1](https://spring.io/projects/spring-boot)
+  - Spring MVC (construcción de API REST)
+  - Spring Data JPA (persistencia de datos con Hibernate)
+  - Spring Security (autenticación y autorización)
+  - Spring Validation (validación de datos de entrada)
+- **Bases de Datos:**
+  - [PostgreSQL 16](https://www.postgresql.org/) (entorno local y producción)
+  - [H2 Database](https://www.h2database.com/) (base de datos en memoria para testing)
+- **Seguridad y Tokens:**
+  - JWT (JSON Web Tokens) con biblioteca `io.jsonwebtoken` (`jjwt` 0.12.6) para autenticación sin estado y refresh tokens
+- **Documentación de API:**
+  - [Springdoc OpenAPI UI](https://springdoc.org/) (OpenAPI 3 / Swagger UI)
+- **Testing:**
+  - JUnit 5 & Mockito
+  - Spring Security Test & MockMvc
+  - [Testcontainers](https://testcontainers.com/) (PostgreSQL 16) para pruebas de integración con contenedores reales
+- **Calidad de Código y Cobertura:**
+  - [JaCoCo](https://www.jacoco.org/) (reporte de cobertura)
+  - [SonarCloud](https://sonarcloud.io/)
+- **Herramientas de Build y Contenedores:**
+  - Apache Maven (con Maven Wrapper `mvnw` y `mvnw.cmd`)
+  - Docker & Docker Compose
+- **Otras Librerías:**
+  - Project Lombok
+  - Jackson Datatype JSR310
 
 ---
 
-## 📚 API Documentation (Swagger / OpenAPI)
+## 📋 Prerrequisitos
 
-Interactive documentation and API exploration is powered by Swagger UI and OpenAPI 3:
+Para levantar el proyecto y trabajar en él, se requiere contar con:
 
-- **Swagger UI**: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
-- **OpenAPI JSON Spec**: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
-
-> [!TIP]
-> **Autenticación en Swagger**:
-> 1. Inicie sesión mediante `POST /api/auth/login` o registre un usuario.
-> 2. Copie el valor de `token`.
-> 3. En la parte superior derecha de Swagger UI, haga clic en **Authorize**, pegue el token en el campo `Value` y presione **Authorize**. Todas las peticiones protegidas incluirán automáticamente la cabecera `Authorization: Bearer <token>`.
+1. **Java Development Kit (JDK) 21** o superior instalado y configurado en la variable de entorno `JAVA_HOME`.
+2. **Git** para el control de versiones.
+3. **Docker & Docker Compose** (o Docker Desktop) en ejecución (requerido para ejecutar PostgreSQL en contenedor y para los tests de integración).
+4. **PostgreSQL 16** (opcional si se utiliza Docker para levantar la base de datos).
+5. **Maven 3.9+** (opcional, el repositorio incluye los ejecutables del wrapper `./mvnw` y `mvnw.cmd`).
 
 ---
 
-## 🏃 Running the Application
+## 🧪 Cómo ejecutar los tests
 
-### Prerequisites
-- JDK 21+
-- Maven (or use included `mvnw`)
-- Docker (optional, for local PostgreSQL container)
+### Prerrequisitos para los tests
 
-### Build & Run
-```bash
-# Build the application
-./mvnw clean package
+- **Docker Desktop / Docker Engine:** Debe estar **iniciado y en ejecución**, ya que los tests de integración (`Testcontainers`) levantan automáticamente un contenedor de PostgreSQL (`postgres:16-alpine`) para validar los componentes contra una base de datos real.
 
-# Run the Spring Boot application
-./mvnw spring-boot:run
-```
+> [ACLARACION]
+> Los tests que emplean `@Testcontainers` cuentan con `disabledWithoutDocker = true`, por lo que se omitirán si Docker no está corriendo. Sin embargo, para la ejecución completa y la generación precisa del reporte de cobertura se requiere que Docker esté activo.
 
-The server starts on port `8080` by default.
+### Comandos de ejecución
+
+- **Ejecutar todos los tests:**
+  - En Linux / macOS:
+    ```bash
+    ./mvnw clean test
+    ```
+  - En Windows (PowerShell / CMD):
+    ```powershell
+    .\mvnw.cmd clean test
+    ```
+
+- **Ejecutar tests y verificar cobertura (JaCoCo):**
+  - En Linux / macOS:
+    ```bash
+    ./mvnw clean verify
+    ```
+  - En Windows (PowerShell / CMD):
+    ```powershell
+    .\mvnw.cmd clean verify
+    ```
+  Una vez finalizado, el reporte HTML de cobertura se encuentra en:
+  `target/site/jacoco/index.html`
+
+- **Ejecutar una clase de test específica:**
+  ```bash
+  ./mvnw test -Dtest=NombreDeLaClaseTest
+  # Ejemplo en Windows:
+  .\mvnw.cmd test -Dtest=TravelPackageServiceTest
+  ```
+
+---
+
+## 🚀 Cómo levantar la app
+
+### Opción 1: Ejecución local con Maven
+
+1. **Asegurar que la base de datos PostgreSQL esté corriendo:**
+   Si no posees una instancia local de PostgreSQL activa, puedes levantar una rápidamente con Docker:
+   ```bash
+   docker run --name postgres-local -e POSTGRES_DB=postgres -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:16-alpine
+   ```
+
+2. **Configuración de Variables de Entorno (Opcional):**
+   Las propiedades por defecto en `src/main/resources/application.properties` son:
+   - `spring.datasource.url`: `jdbc:postgresql://localhost:5432/postgres`
+   - `spring.datasource.username`: `admin`
+   - `spring.datasource.password`: `password`
+   - `FLIGHTS_API_BASE_URL`: `http://localhost:8081` (servicio externo de vuelos)
+
+   Puedes sobreescribirlas mediante variables de entorno si utilizas otras credenciales o puertos.
+
+3. **Iniciar la aplicación:**
+   - En Linux / macOS:
+     ```bash
+     ./mvnw spring-boot:run
+     ```
+   - En Windows (PowerShell / CMD):
+     ```powershell
+     .\mvnw.cmd spring-boot:run
+     ```
+
+   *O alternativamente empaquetando el `.jar`:*
+   ```bash
+   ./mvnw clean package -DskipTests
+   java -jar target/tusViajes-0.0.1-SNAPSHOT.jar
+   ```
+
+### Opción 2: Ejecución con Docker Compose
+
+El proyecto incluye un archivo `docker-compose.yaml` configurado para integrarse a una red compartida (`local-dev-network`):
+
+1. **Crear la red externa si aún no existe:**
+   ```bash
+   docker network create local-dev-network
+   ```
+
+2. **Construir y levantar el contenedor:**
+   ```bash
+   docker compose up --build
+   ```
+
+---
+
+## 📚 Documentación de Endpoints (Swagger / OpenAPI)
+
+El detalle completo de los endpoints, contratos de entrada/salida, códigos de respuesta y modelos de datos no se mantiene en este README; está documentado y accesible interactivamente a través de **Swagger UI**:
+
+- **Swagger UI:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+- **Especificación OpenAPI (JSON):** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+### Autenticación en Swagger UI
+
+Para probar endpoints protegidos desde la interfaz de Swagger:
+
+1. Autentícate a través del endpoint `POST /api/auth/login` (o registra un usuario nuevo en `POST /api/auth/register/...`).
+2. Copia el token JWT (`token`) retornado en la respuesta.
+3. Haz clic en el botón verde **Authorize** (ubicado en el extremo superior derecho de Swagger UI).
+4. Pega el token en el campo de texto `Value` y presiona **Authorize**.
+5. Todas las llamadas que requieran autenticación enviarán automáticamente el encabezado `Authorization: Bearer <token>`.
