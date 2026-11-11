@@ -1,7 +1,6 @@
 import http from 'k6/http';
 import { sleep, check } from 'k6';
 import { randomIntBetween, randomItem } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
-import { Trend } from 'k6/metrics'
 
 export const options = {
     stages: [
@@ -16,8 +15,6 @@ export const options = {
 };
 
 const BASE_URL = 'http://localhost:8080/api';
-
-const mostSearchedCountry = new Trend('searched_country')
 
 export default function () {
     const headers = { 'Content-Type': 'application/json' };
