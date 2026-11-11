@@ -91,6 +91,20 @@ Para levantar el proyecto y trabajar en él, se requiere contar con:
 
 ## 🚀 Cómo levantar la app
 
+### Stack completo con Docker Compose
+
+El Compose global se mantiene en el repositorio [tusViajes-frontend](https://github.com/PDes2026C2/tusViajes-frontend#stack-completo-con-docker-compose). Levanta **PostgreSQL 16 → API de vuelos → Backend → Frontend**, esperando que cada dependencia esté saludable. Solo requiere Git y Docker con Compose v2.17 o superior y contenedores Linux; no requiere Java ni Maven en la máquina.
+
+Clonar el frontend como carpeta hermana de este repositorio. Desde la raíz del backend:
+
+```bash
+docker compose --project-directory ../tusViajes-frontend -f ../tusViajes-frontend/compose.yaml up -d --build --wait --wait-timeout 240
+```
+
+Por defecto, el frontend queda en http://localhost:5173 y Swagger en http://localhost:8080/swagger-ui/index.html. Los puertos, las credenciales y las imágenes se configuran en el `.env` del frontend, tomando su `.env.example` como referencia.
+
+Las APIs usan imágenes publicadas desde `main`; este comando no compila los cambios locales del backend. Para desarrollar el backend, usar las opciones siguientes. El Compose global crea su propia red y un volumen persistente compartido por ambas APIs. La [guía del frontend](https://github.com/PDes2026C2/tusViajes-frontend#stack-completo-con-docker-compose) detalla la configuración, los datos iniciales, los logs, la actualización y cómo detener o reiniciar el entorno.
+
 ### Opción 1: Ejecución local con Maven
 
 1. **Asegurar que la base de datos PostgreSQL esté corriendo:**
