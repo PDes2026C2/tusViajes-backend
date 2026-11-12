@@ -170,3 +170,17 @@ Para probar endpoints protegidos desde la interfaz de Swagger:
 3. Haz clic en el botón verde **Authorize** (ubicado en el extremo superior derecho de Swagger UI).
 4. Pega el token en el campo de texto `Value` y presiona **Authorize**.
 5. Todas las llamadas que requieran autenticación enviarán automáticamente el encabezado `Authorization: Bearer <token>`.
+
+## Observabilidad: salud y métricas de Prometheus
+
+Actuator utiliza un puerto de gestión separado: **9091** de forma predeterminada. El Compose global mantiene ese puerto dentro de la red Docker. Se puede cambiar mediante la variable de entorno `MANAGEMENT_SERVER_PORT`.
+
+- `GET /actuator/health`: estado de salud de la aplicación, sin detalles de sus dependencias.
+- `GET /actuator/health/liveness` y `/actuator/health/readiness`: controles de actividad y disponibilidad para la orquestación de contenedores.
+- `GET /actuator/prometheus`: cantidad de peticiones HTTP, tiempos de respuesta (incluidos los histogramas), métricas de la JVM y del pool de conexiones a la base de datos, etiquetadas con el nombre de la aplicación.
+
+Al ejecutar Java localmente, estos endpoints están disponibles en `http://localhost:9091`. Los endpoints de negocio conservan su puerto y sus reglas de autorización. El puerto de gestión debe mantenerse fuera del ingress y del proxy del frontend.
+
+Estos endpoints permiten que Prometheus recolecte las métricas del backend por la red interna. El stack de monitoreo, los dashboards de Grafana y la instrumentación de la API de vuelos se incorporarán en cambios separados.
+
+Para ejecutar las pruebas de integración de los endpoints de gestión, usar `./mvnw -Dtest=ObservabilityIntegrationTest test` o `.\mvnw.cmd -Dtest=ObservabilityIntegrationTest test` en Windows. Las pruebas requieren Docker y utilizan una base PostgreSQL aislada mediante Testcontainers.
