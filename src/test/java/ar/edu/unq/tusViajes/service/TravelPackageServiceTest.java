@@ -479,21 +479,27 @@ class TravelPackageServiceTest {
         Flight depFlight2 = flightRepository.save(FlightBuilder.aFlight().withId(319L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight retFlight2 = flightRepository.save(FlightBuilder.aFlight().withId(320L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime novStart = now.plusDays(10);
+        LocalDateTime novEnd = now.plusDays(20);
+        LocalDateTime decStart = now.plusDays(40);
+        LocalDateTime decEnd = now.plusDays(50);
+
         TravelPackage packageNov = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Paquete Noviembre")
-                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withStartDate(novStart)
+                .withEndDate(novEnd)
                 .withHotel(hotel).withAgency(agency).withDepartureFlight(depFlight1).withReturnFlight(retFlight1).build());
 
         TravelPackage packageDec = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Paquete Diciembre")
-                .withStartDate(LocalDateTime.of(2026, 12, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 12, 10, 10, 0))
+                .withStartDate(decStart)
+                .withEndDate(decEnd)
                 .withHotel(hotel).withAgency(agency).withDepartureFlight(depFlight2).withReturnFlight(retFlight2).build());
 
         TravelPackageFilterDTO filterNov = aFilter()
-                .withDepartureFrom(LocalDateTime.of(2026, 10, 25, 0, 0))
-                .withDepartureTo(LocalDateTime.of(2026, 11, 5, 23, 59))
+                .withDepartureFrom(novStart.minusDays(5))
+                .withDepartureTo(novStart.plusDays(5))
                 .build();
         Page<TravelPackage> resultNov = travelPackageService.search(filterNov, PageRequest.of(0, 10));
         assertThat(resultNov.getContent()).extracting(TravelPackage::getName)
@@ -501,8 +507,8 @@ class TravelPackageServiceTest {
                 .doesNotContain(packageDec.getName());
 
         TravelPackageFilterDTO filterDec = aFilter()
-                .withDepartureFrom(LocalDateTime.of(2026, 11, 20, 0, 0))
-                .withDepartureTo(LocalDateTime.of(2026, 12, 5, 23, 59))
+                .withDepartureFrom(decStart.minusDays(5))
+                .withDepartureTo(decStart.plusDays(5))
                 .build();
         Page<TravelPackage> resultDec = travelPackageService.search(filterDec, PageRequest.of(0, 10));
         assertThat(resultDec.getContent()).extracting(TravelPackage::getName)
@@ -525,21 +531,26 @@ class TravelPackageServiceTest {
         Flight depFlight2 = flightRepository.save(FlightBuilder.aFlight().withId(323L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight retFlight2 = flightRepository.save(FlightBuilder.aFlight().withId(324L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime start = now.plusDays(10);
+        LocalDateTime earlyEnd = now.plusDays(20);
+        LocalDateTime lateEnd = now.plusDays(35);
+
         TravelPackage packageEarly = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Regreso Temprano")
-                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withStartDate(start)
+                .withEndDate(earlyEnd)
                 .withHotel(hotel).withAgency(agency).withDepartureFlight(depFlight1).withReturnFlight(retFlight1).build());
 
         TravelPackage packageLate = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Regreso Tardio")
-                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 11, 28, 10, 0))
+                .withStartDate(start)
+                .withEndDate(lateEnd)
                 .withHotel(hotel).withAgency(agency).withDepartureFlight(depFlight2).withReturnFlight(retFlight2).build());
 
         TravelPackageFilterDTO filterEarly = aFilter()
-                .withArrivalFrom(LocalDateTime.of(2026, 11, 5, 0, 0))
-                .withArrivalTo(LocalDateTime.of(2026, 11, 15, 23, 59))
+                .withArrivalFrom(earlyEnd.minusDays(3))
+                .withArrivalTo(earlyEnd.plusDays(3))
                 .build();
         Page<TravelPackage> resultEarly = travelPackageService.search(filterEarly, PageRequest.of(0, 10));
         assertThat(resultEarly.getContent()).extracting(TravelPackage::getName)
@@ -547,8 +558,8 @@ class TravelPackageServiceTest {
                 .doesNotContain(packageLate.getName());
 
         TravelPackageFilterDTO filterLate = aFilter()
-                .withArrivalFrom(LocalDateTime.of(2026, 11, 20, 0, 0))
-                .withArrivalTo(LocalDateTime.of(2026, 11, 30, 23, 59))
+                .withArrivalFrom(lateEnd.minusDays(3))
+                .withArrivalTo(lateEnd.plusDays(3))
                 .build();
         Page<TravelPackage> resultLate = travelPackageService.search(filterLate, PageRequest.of(0, 10));
         assertThat(resultLate.getContent()).extracting(TravelPackage::getName)
@@ -578,30 +589,36 @@ class TravelPackageServiceTest {
         Flight dep3 = flightRepository.save(FlightBuilder.aFlight().withId(329L).withOriginCity(saoPaulo).withDestinationCity(bariloche).build());
         Flight ret3 = flightRepository.save(FlightBuilder.aFlight().withId(330L).withOriginCity(bariloche).withDestinationCity(saoPaulo).build());
 
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime startMatch = now.plusDays(10);
+        LocalDateTime endMatch = now.plusDays(20);
+        LocalDateTime startDiffOrigin = now.plusDays(40);
+        LocalDateTime endDiffOrigin = now.plusDays(50);
+
         TravelPackage match = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Paquete Match")
-                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withStartDate(startMatch)
+                .withEndDate(endMatch)
                 .withHotel(hotelAR).withAgency(agency).withDepartureFlight(dep1).withReturnFlight(ret1).build());
 
         TravelPackage differentDestination = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Paquete Diff Dest")
-                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withStartDate(startMatch)
+                .withEndDate(endMatch)
                 .withHotel(hotelBR).withAgency(agency).withDepartureFlight(dep2).withReturnFlight(ret2).build());
 
         TravelPackage differentOriginAndDate = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Paquete Diff Origin")
-                .withStartDate(LocalDateTime.of(2026, 12, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 12, 10, 10, 0))
+                .withStartDate(startDiffOrigin)
+                .withEndDate(endDiffOrigin)
                 .withHotel(hotelAR).withAgency(agency).withDepartureFlight(dep3).withReturnFlight(ret3).build());
 
         TravelPackageFilterDTO filter = aFilter()
                 .withOriginCountryIso("AR")
                 .withDestinationCountryIso("AR")
                 .withDestinationCityId(bariloche.getId())
-                .withDepartureFrom(LocalDateTime.of(2026, 10, 20, 0, 0))
-                .withDepartureTo(LocalDateTime.of(2026, 11, 15, 23, 59))
+                .withDepartureFrom(startMatch.minusDays(5))
+                .withDepartureTo(startMatch.plusDays(5))
                 .build();
 
         Page<TravelPackage> result = travelPackageService.search(filter, PageRequest.of(0, 10));
@@ -624,20 +641,26 @@ class TravelPackageServiceTest {
         Flight dep2 = flightRepository.save(FlightBuilder.aFlight().withId(333L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight ret2 = flightRepository.save(FlightBuilder.aFlight().withId(334L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime startNov = now.plusDays(10);
+        LocalDateTime endNov = now.plusDays(20);
+        LocalDateTime startDec = now.plusDays(40);
+        LocalDateTime endDec = now.plusDays(50);
+
         TravelPackage packageNov = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Paquete Nov Salida")
-                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withStartDate(startNov)
+                .withEndDate(endNov)
                 .withHotel(hotel).withAgency(agency).withDepartureFlight(dep1).withReturnFlight(ret1).build());
 
         TravelPackage packageDec = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Paquete Dic Salida")
-                .withStartDate(LocalDateTime.of(2026, 12, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 12, 10, 10, 0))
+                .withStartDate(startDec)
+                .withEndDate(endDec)
                 .withHotel(hotel).withAgency(agency).withDepartureFlight(dep2).withReturnFlight(ret2).build());
 
         TravelPackageFilterDTO filter = aFilter()
-                .withDepartureFrom(LocalDateTime.of(2026, 11, 15, 0, 0))
+                .withDepartureFrom(startNov.plusDays(5))
                 .build();
 
         Page<TravelPackage> result = travelPackageService.search(filter, PageRequest.of(0, 10));
@@ -661,20 +684,26 @@ class TravelPackageServiceTest {
         Flight dep2 = flightRepository.save(FlightBuilder.aFlight().withId(337L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight ret2 = flightRepository.save(FlightBuilder.aFlight().withId(338L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime startNov = now.plusDays(10);
+        LocalDateTime endNov = now.plusDays(20);
+        LocalDateTime startDec = now.plusDays(40);
+        LocalDateTime endDec = now.plusDays(50);
+
         TravelPackage packageNov = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Paquete Nov Salida Antes")
-                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withStartDate(startNov)
+                .withEndDate(endNov)
                 .withHotel(hotel).withAgency(agency).withDepartureFlight(dep1).withReturnFlight(ret1).build());
 
         TravelPackage packageDec = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Paquete Dic Salida Despues")
-                .withStartDate(LocalDateTime.of(2026, 12, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 12, 10, 10, 0))
+                .withStartDate(startDec)
+                .withEndDate(endDec)
                 .withHotel(hotel).withAgency(agency).withDepartureFlight(dep2).withReturnFlight(ret2).build());
 
         TravelPackageFilterDTO filter = aFilter()
-                .withDepartureTo(LocalDateTime.of(2026, 11, 15, 23, 59))
+                .withDepartureTo(startNov.plusDays(5))
                 .build();
 
         Page<TravelPackage> result = travelPackageService.search(filter, PageRequest.of(0, 10));
@@ -698,20 +727,25 @@ class TravelPackageServiceTest {
         Flight dep2 = flightRepository.save(FlightBuilder.aFlight().withId(341L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight ret2 = flightRepository.save(FlightBuilder.aFlight().withId(342L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime start = now.plusDays(10);
+        LocalDateTime earlyEnd = now.plusDays(20);
+        LocalDateTime lateEnd = now.plusDays(35);
+
         TravelPackage packageEarly = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Regreso Temprano Solo From")
-                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withStartDate(start)
+                .withEndDate(earlyEnd)
                 .withHotel(hotel).withAgency(agency).withDepartureFlight(dep1).withReturnFlight(ret1).build());
 
         TravelPackage packageLate = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Regreso Tardio Solo From")
-                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 11, 28, 10, 0))
+                .withStartDate(start)
+                .withEndDate(lateEnd)
                 .withHotel(hotel).withAgency(agency).withDepartureFlight(dep2).withReturnFlight(ret2).build());
 
         TravelPackageFilterDTO filter = aFilter()
-                .withArrivalFrom(LocalDateTime.of(2026, 11, 20, 0, 0))
+                .withArrivalFrom(earlyEnd.plusDays(2))
                 .build();
 
         Page<TravelPackage> result = travelPackageService.search(filter, PageRequest.of(0, 10));
@@ -735,20 +769,25 @@ class TravelPackageServiceTest {
         Flight dep2 = flightRepository.save(FlightBuilder.aFlight().withId(345L).withOriginCity(buenosAires).withDestinationCity(bariloche).build());
         Flight ret2 = flightRepository.save(FlightBuilder.aFlight().withId(346L).withOriginCity(bariloche).withDestinationCity(buenosAires).build());
 
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime start = now.plusDays(10);
+        LocalDateTime earlyEnd = now.plusDays(20);
+        LocalDateTime lateEnd = now.plusDays(35);
+
         TravelPackage packageEarly = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Regreso Temprano Solo To")
-                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withStartDate(start)
+                .withEndDate(earlyEnd)
                 .withHotel(hotel).withAgency(agency).withDepartureFlight(dep1).withReturnFlight(ret1).build());
 
         TravelPackage packageLate = travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Regreso Tardio Solo To")
-                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 11, 28, 10, 0))
+                .withStartDate(start)
+                .withEndDate(lateEnd)
                 .withHotel(hotel).withAgency(agency).withDepartureFlight(dep2).withReturnFlight(ret2).build());
 
         TravelPackageFilterDTO filter = aFilter()
-                .withArrivalTo(LocalDateTime.of(2026, 11, 15, 23, 59))
+                .withArrivalTo(earlyEnd.plusDays(2))
                 .build();
 
         Page<TravelPackage> result = travelPackageService.search(filter, PageRequest.of(0, 10));
