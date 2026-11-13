@@ -5,6 +5,8 @@ import ar.edu.unq.tusViajes.adapters.dto.FlightFilterDTO;
 import ar.edu.unq.tusViajes.adapters.dto.PageResponseDTO;
 import ar.edu.unq.tusViajes.adapters.dto.PassengerDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
+import org.slf4j.MDC;
+import ar.edu.unq.tusViajes.config.RequestLoggingFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -31,6 +33,13 @@ public class FlightsApiClient {
     ) {
         this.restClient = restClientBuilder
                 .baseUrl(baseUrl)
+                .requestInterceptor((request, body, execution) -> {
+                    String requestId = MDC.get(RequestLoggingFilter.REQUEST_ID_MDC_KEY);
+                    if (requestId != null) {
+                        request.getHeaders().set(RequestLoggingFilter.REQUEST_ID_HEADER, requestId);
+                    }
+                    return execution.execute(request, body);
+                })
                 .build();
     }
 
