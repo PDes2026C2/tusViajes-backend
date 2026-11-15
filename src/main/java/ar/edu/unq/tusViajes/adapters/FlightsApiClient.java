@@ -22,14 +22,8 @@ public class FlightsApiClient {
 
     @Autowired
     public FlightsApiClient(
-            @Value("${flights.api.base-url:http://localhost:8081}") String baseUrl
-    ) {
-        this(RestClient.builder(), baseUrl);
-    }
-
-    public FlightsApiClient(
             RestClient.Builder restClientBuilder,
-            String baseUrl
+            @Value("${flights.api.base-url:http://localhost:8081}") String baseUrl
     ) {
         this.restClient = restClientBuilder
                 .baseUrl(baseUrl)

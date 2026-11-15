@@ -19,7 +19,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
+// Después del filtro de observación HTTP y antes de los filtros de seguridad.
+@Order(Ordered.HIGHEST_PRECEDENCE + 2)
 public class RequestLoggingFilter extends OncePerRequestFilter {
 
     public static final String REQUEST_ID_HEADER = "X-Request-ID";
@@ -39,6 +40,10 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         String previousRequestId = MDC.get(REQUEST_ID_MDC_KEY);
         MDC.put(REQUEST_ID_MDC_KEY, requestId);
         response.setHeader(REQUEST_ID_HEADER, requestId);
+        String traceId = MDC.get("traceId");
+        if (traceId != null) {
+            response.setHeader("X-Trace-ID", traceId);
+        }
         long start = System.nanoTime();
         int status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
         try {

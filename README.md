@@ -216,3 +216,25 @@ En PowerShell, usar `curl.exe` en lugar de `curl`. La respuesta debe incluir ese
 Las pruebas de `ObservabilityIntegrationTest` comprueban el formato JSON, la correlación entre logs y respuestas, el tratamiento de IDs ausentes o inválidos, las respuestas de error y el aislamiento entre solicitudes concurrentes. Requieren Docker para levantar PostgreSQL con Testcontainers.
 
 `FlightsApiClientTest` verifica además la propagación del contexto actual y que el cliente no conserve un ID anterior cuando el contexto cambia o deja de existir.
+
+## Observabilidad: trazas distribuidas
+
+La instrumentación HTTP de Spring Boot y OpenTelemetry conserva el contexto W3C recibido en `traceparent` y genera una traza nueva cuando no hay un contexto válido. La respuesta incluye `X-Trace-ID` y los registros de la solicitud agregan `traceId` y `spanId`. `X-Request-ID` mantiene su función de correlación de logs y sigue siendo independiente del identificador de traza.
+
+Cada operación HTTP instrumentada produce un span con su inicio, duración, resultado y relación con otras operaciones. La exportación de trazas está desactivada de forma predeterminada, para poder ejecutar la API sin un colector. Se controla con las siguientes variables:
+
+| Variable | Uso |
+|---|---|
+| `TRACING_EXPORT_ENABLED` | `true` activa la exportación OTLP. Su valor predeterminado es `false`. |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Endpoint HTTP completo del colector. Por defecto, `http://localhost:4318/v1/traces`; el Compose global utiliza `http://tempo:4318/v1/traces` por su red interna. |
+| `TRACING_SAMPLING_PROBABILITY` | Proporción de trazas nuevas a muestrear, entre `0.0` y `1.0`. Java local usa `0.1` de forma predeterminada; el Compose de desarrollo usa `1.0` para facilitar las pruebas. |
+
+El contexto de una traza puede existir en los logs aunque no se exporte o no se muestree. Para encontrar todas las solicitudes de una prueba en Tempo, activar la exportación y usar muestreo `1.0`. Los logs conservan Loki y las métricas conservan Prometheus como canales de almacenamiento.
+
+`FlightsApiClient` utiliza el `RestClient.Builder` autoconfigurado por Spring Boot. Así, la llamada a vuelos crea un span cliente y propaga el contexto W3C; vuelos continúa la misma traza con su propio span servidor. El cliente conserva además la propagación de `X-Request-ID`.
+
+Tempo y su fuente de Grafana se configuran en el repositorio `tusViajes-frontend`. En ese entorno se puede copiar `X-Trace-ID` desde una respuesta y buscarlo en **Explore → Tempo**. Los logs de Loki que contienen `traceId` incluyen el enlace **Ver traza**; desde un span también se pueden abrir los logs de esa traza.
+
+Las pruebas HTTP de `ObservabilityIntegrationTest` verifican el contexto W3C, los IDs nuevos ante contextos inválidos o ausentes, la correlación con los logs y el aislamiento de solicitudes concurrentes. Se ejecutan con Docker y PostgreSQL mediante Testcontainers, sin requerir Tempo ni exportar datos a un servicio externo.
+
+También se comprueba que el cliente de vuelos envíe el encabezado `traceparent` usando el contexto activo.

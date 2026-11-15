@@ -1,9 +1,21 @@
 package ar.edu.unq.tusViajes.config;
 
 import com.jayway.jsonpath.JsonPath;
+import ar.edu.unq.tusViajes.adapters.FlightsApiClient;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.RestClient;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.hamcrest.Matchers.matchesPattern;
 import java.util.Map;
 import java.net.URI;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -19,6 +31,7 @@ import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.micrometer.metrics.test.autoconfigure.AutoConfigureMetrics;
+import org.springframework.boot.micrometer.tracing.test.autoconfigure.AutoConfigureTracing;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
@@ -33,6 +46,7 @@ import static org.awaitility.Awaitility.await;
 @Testcontainers(disabledWithoutDocker = true)
 @ActiveProfiles("test")
 @AutoConfigureMetrics
+@AutoConfigureTracing
 @ExtendWith(OutputCaptureExtension.class)
 // application.properties de test reemplaza al principal; aquí se verifica la configuración de producción.
 @TestPropertySource(locations = "file:src/main/resources/application.properties")
@@ -50,6 +64,12 @@ class ObservabilityIntegrationTest {
 
     @Value("${local.management.port}")
     private int managementPort;
+
+    @Autowired
+    private RestClient.Builder restClientBuilder;
+
+    @Autowired
+    private Tracer tracer;
 
     private final HttpClient client = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
@@ -104,6 +124,7 @@ class ObservabilityIntegrationTest {
 
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.headers().firstValue("X-Request-ID")).contains(requestId);
+        assertThat(response.headers().firstValue("X-Trace-ID").orElseThrow()).matches("[0-9a-f]{32}");
         await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
             Map<String, Object> log = requestLog(output, requestId);
             assertThat(log).containsEntry("httpMethod", "GET")
@@ -142,6 +163,7 @@ class ObservabilityIntegrationTest {
 
         assertThat(response.statusCode()).isEqualTo(401);
         assertThat(response.headers().firstValue("X-Request-ID")).contains(requestId);
+        assertThat(response.headers().firstValue("X-Trace-ID").orElseThrow()).matches("[0-9a-f]{32}");
         await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
             Map<String, Object> log = requestLog(output, requestId);
             assertThat(log).containsEntry("httpStatus", 401);
@@ -153,6 +175,7 @@ class ObservabilityIntegrationTest {
     void concurrentRequests_keepTheirOwnIds(CapturedOutput output) throws Exception {
         List<String> requestIds = List.of("083541b8-ee65-41b9-903a-1c9ddb2bca50",
                 "3c74e61f-d35e-41e3-86ae-ced9746a7ff1", "bfb8c617-e68f-4e49-805d-70b1aa7ff850");
+        Map<String, String> traceIds = new HashMap<>();
         var responses = requestIds.stream().map(requestId -> client.sendAsync(
                 HttpRequest.newBuilder(URI.create("http://localhost:" + applicationPort + "/api/countries"))
                         .header("X-Request-ID", requestId).GET().build(), HttpResponse.BodyHandlers.ofString())).toList();
@@ -161,13 +184,83 @@ class ObservabilityIntegrationTest {
             HttpResponse<String> response = responses.get(index).get(10, TimeUnit.SECONDS);
             assertThat(response.statusCode()).isEqualTo(200);
             assertThat(response.headers().firstValue("X-Request-ID")).contains(requestIds.get(index));
+            String traceId = response.headers().firstValue("X-Trace-ID").orElseThrow();
+            assertThat(traceId).matches("[0-9a-f]{32}");
+            traceIds.put(requestIds.get(index), traceId);
         }
+        assertThat(new HashSet<>(traceIds.values())).hasSize(requestIds.size());
         await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
             for (String requestId : requestIds) {
                 assertThat(requestLog(output, requestId)).containsEntry("httpRoute", "/api/countries")
-                        .containsEntry("httpStatus", 200);
+                        .containsEntry("httpStatus", 200).containsEntry("traceId", traceIds.get(requestId));
             }
         });
+    }
+
+    @Test
+    void tracing_preservesIncomingTraceAndCorrelatesLogs(CapturedOutput output) throws Exception {
+        String traceId = "4bf92f3577b34da6a3ce929d0e0e4736";
+        String parentSpanId = "00f067aa0ba902b7";
+        String requestId = "0c587ffe-2e27-4f38-825b-3def0dbf009d";
+        HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + applicationPort + "/api/countries"))
+                .header("traceparent", "00-" + traceId + "-" + parentSpanId + "-01")
+                .header("X-Request-ID", requestId).GET().build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.headers().firstValue("X-Trace-ID")).contains(traceId);
+        assertThat(response.headers().firstValue("X-Request-ID")).contains(requestId);
+        assertThat(response.headers().firstValue("X-Trace-ID").orElseThrow()).matches("[0-9a-f]{32}");
+        await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+            Map<String, Object> log = requestLog(output, requestId);
+            assertThat(log).containsEntry("traceId", traceId);
+            assertThat((String) log.get("spanId")).matches("[0-9a-f]{16}").isNotEqualTo(parentSpanId);
+        });
+    }
+
+    @Test
+    void tracing_generatesIndependentIdsForMissingOrInvalidContext(CapturedOutput output) throws Exception {
+        Set<String> traces = new HashSet<>();
+        for (String candidate : new String[]{null, null, "not-a-traceparent"}) {
+            String requestId = UUID.randomUUID().toString();
+            HttpRequest.Builder request = HttpRequest.newBuilder(URI.create("http://localhost:" + applicationPort + "/api/countries"))
+                    .header("X-Request-ID", requestId);
+            if (candidate != null) {
+                request.header("traceparent", candidate);
+            }
+
+            HttpResponse<String> response = client.send(request.GET().build(), HttpResponse.BodyHandlers.ofString());
+
+            assertThat(response.statusCode()).isEqualTo(200);
+            String traceId = response.headers().firstValue("X-Trace-ID").orElseThrow();
+            assertThat(traceId).matches("[0-9a-f]{32}").isNotEqualTo("0".repeat(32));
+            assertThat(traces.add(traceId)).isTrue();
+            await().atMost(Duration.ofSeconds(3)).untilAsserted(() ->
+                    assertThat(requestLog(output, requestId)).containsEntry("traceId", traceId));
+        }
+    }
+
+    @Test
+    void flightsClient_propagatesW3cContextToTheExternalApi() {
+        String traceId = "a3ce929d0e0e47364bf92f3577b34da6";
+        RestClient.Builder builder = restClientBuilder.clone();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        FlightsApiClient flightsClient = new FlightsApiClient(builder, "http://flights.test");
+        server.expect(requestTo("http://flights.test/flights"))
+                .andExpect(header("traceparent", matchesPattern("00-" + traceId + "-[0-9a-f]{16}-01")))
+                .andRespond(withSuccess("{\"content\":[],\"totalElements\":0,\"totalPages\":0,\"size\":10,\"number\":0}", MediaType.APPLICATION_JSON));
+        Span parent = tracer.spanBuilder().setParent(tracer.traceContextBuilder()
+                .traceId(traceId).spanId("00f067aa0ba902b7").sampled(true).build())
+                .name("incoming-request").start();
+
+        try (Tracer.SpanInScope scope = tracer.withSpan(parent)) {
+            flightsClient.searchFlights();
+        } finally {
+            parent.end();
+        }
+
+        server.verify();
     }
 
     private Map<String, Object> requestLog(CapturedOutput output, String requestId) {
