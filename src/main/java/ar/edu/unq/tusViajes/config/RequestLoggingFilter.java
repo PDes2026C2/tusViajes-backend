@@ -25,7 +25,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
     public static final String REQUEST_ID_HEADER = "X-Request-ID";
     public static final String REQUEST_ID_MDC_KEY = "requestId";
-    private static final Logger logger = LoggerFactory.getLogger(RequestLoggingFilter.class);
+    private static final Logger requestLogger = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -53,7 +53,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             try {
                 Object route = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
                 Level level = status >= 500 ? Level.ERROR : status >= 400 ? Level.WARN : Level.INFO;
-                logger.atLevel(level)
+                requestLogger.atLevel(level)
                         .addKeyValue("httpMethod", request.getMethod())
                         .addKeyValue("httpRoute", route == null ? "UNMAPPED" : route.toString())
                         .addKeyValue("httpStatus", status)
