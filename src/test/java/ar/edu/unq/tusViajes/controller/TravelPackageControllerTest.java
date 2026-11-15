@@ -151,10 +151,16 @@ class TravelPackageControllerTest {
         Flight depFlightBR = flightRepository.save(FlightBuilder.aFlight().withId(403L).withOriginCity(buenosAires).withDestinationCity(rioDeJaneiro).build());
         Flight retFlightBR = flightRepository.save(FlightBuilder.aFlight().withId(404L).withOriginCity(rioDeJaneiro).withDestinationCity(buenosAires).build());
 
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime startAR = now.plusDays(10);
+        LocalDateTime endAR = now.plusDays(20);
+        LocalDateTime startBR = now.plusDays(40);
+        LocalDateTime endBR = now.plusDays(50);
+
         travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Paquete Bariloche")
-                .withStartDate(LocalDateTime.of(2026, 11, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .withStartDate(startAR)
+                .withEndDate(endAR)
                 .withHotel(hotelAR)
                 .withAgency(agency)
                 .withDepartureFlight(depFlightAR)
@@ -163,8 +169,8 @@ class TravelPackageControllerTest {
 
         travelPackageRepository.save(TravelPackageBuilder.aTravelPackage()
                 .withName("Paquete Rio")
-                .withStartDate(LocalDateTime.of(2026, 12, 1, 10, 0))
-                .withEndDate(LocalDateTime.of(2026, 12, 10, 10, 0))
+                .withStartDate(startBR)
+                .withEndDate(endBR)
                 .withHotel(hotelBR)
                 .withAgency(agency)
                 .withDepartureFlight(depFlightBR)
@@ -174,8 +180,8 @@ class TravelPackageControllerTest {
         mockMvc.perform(get("/api/travel-packages")
                         .param("originCountryIso", "AR")
                         .param("destinationCityId", String.valueOf(bariloche.getId()))
-                        .param("departureFrom", "2026-10-25T00:00:00.000Z")
-                        .param("departureTo", "2026-11-05T23:59:59.000Z"))
+                        .param("departureFrom", startAR.minusDays(5).toString())
+                        .param("departureTo", startAR.plusDays(5).toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].name").value("Paquete Bariloche"));
@@ -421,8 +427,8 @@ class TravelPackageControllerTest {
                 .name("Update invalido")
                 .description("Hotel mismatch")
                 .price(200000.0)
-                .startDate(LocalDateTime.of(2026, 11, 1, 10, 0))
-                .endDate(LocalDateTime.of(2026, 11, 10, 10, 0))
+                .startDate(LocalDateTime.now().plusDays(5))
+                .endDate(LocalDateTime.now().plusDays(10))
                 .hotelId(hotelInMendoza.getId())
                 .departureFlightId(depFlight.getId())
                 .returnFlightId(retFlight.getId())
