@@ -4,7 +4,9 @@ import ar.edu.unq.tusViajes.adapters.dto.FlightDTO;
 import ar.edu.unq.tusViajes.adapters.dto.PageResponseDTO;
 import ar.edu.unq.tusViajes.adapters.dto.PassengerDTO;
 import ar.edu.unq.tusViajes.exception.ResourceNotFoundException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.slf4j.MDC;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -14,6 +16,8 @@ import org.springframework.web.client.RestClient;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.headerDoesNotExist;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withResourceNotFound;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
@@ -210,6 +214,36 @@ class FlightsApiClientTest {
         assertThatThrownBy(() -> flightsApiClient.getFlight(999L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Vuelo con id 999 no encontrado");
+
+        server.verify();
+    }
+
+    @AfterEach
+    void clearRequestContext() {
+        MDC.remove("requestId");
+    }
+
+    @Test
+    void requestsForwardCurrentRequestIdWithoutReusingPreviousContext() {
+        String firstId = "a24a75dd-5d60-470a-8cd8-47f72cd1e792";
+        String secondId = "fc870244-6909-4389-b913-f7d783da0476";
+        String emptyPage = "{\"content\":[],\"totalElements\":0,\"totalPages\":0,\"size\":10,\"number\":0}";
+        server.expect(requestTo("http://localhost:8081/flights"))
+                .andExpect(header("X-Request-ID", firstId))
+                .andRespond(withSuccess(emptyPage, MediaType.APPLICATION_JSON));
+        server.expect(requestTo("http://localhost:8081/flights/1"))
+                .andExpect(header("X-Request-ID", secondId))
+                .andRespond(withSuccess("{\"id\":1}", MediaType.APPLICATION_JSON));
+        server.expect(requestTo("http://localhost:8081/flights"))
+                .andExpect(headerDoesNotExist("X-Request-ID"))
+                .andRespond(withSuccess(emptyPage, MediaType.APPLICATION_JSON));
+
+        MDC.put("requestId", firstId);
+        flightsApiClient.searchFlights();
+        MDC.put("requestId", secondId);
+        flightsApiClient.getFlight(1L);
+        MDC.remove("requestId");
+        flightsApiClient.searchFlights();
 
         server.verify();
     }
