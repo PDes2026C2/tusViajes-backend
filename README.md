@@ -154,6 +154,17 @@ El proyecto incluye un archivo `docker-compose.yaml` configurado para integrarse
 
 ---
 
+### Agencia y paquetes de ejemplo
+
+Para crear la agencia de ejemplo `agency@tusviajes.com` en una base sin agencias,
+establecer `TUSVIAJES_BOOTSTRAP_AGENCY_PASSWORD` con una contraseña elegida para ese entorno.
+Con el Compose global, configurar la variable en su archivo de entorno. Para ejecutar el
+backend directamente, exportarla antes de iniciarlo.
+
+La carga automática de paquetes de ejemplo requiere una agencia existente. La variable
+de inicialización sólo se usa al crear la cuenta nueva. Si la cuenta ya existe con la
+contraseña anterior, debe rotarse por separado en esa instancia.
+
 ## 📚 Documentación de Endpoints (Swagger / OpenAPI)
 
 El detalle completo de los endpoints, contratos de entrada/salida, códigos de respuesta y modelos de datos no se mantiene en este README; está documentado y accesible interactivamente a través de **Swagger UI**:
