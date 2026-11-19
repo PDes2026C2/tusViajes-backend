@@ -11,6 +11,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -24,17 +26,18 @@ class AgencyInitializerTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    private final String configuredPassword = UUID.randomUUID().toString();
     private AgencyInitializer agencyInitializer;
 
     @BeforeEach
     void setUp() {
-        agencyInitializer = new AgencyInitializer(agencyRepository, passwordEncoder);
+        agencyInitializer = new AgencyInitializer(agencyRepository, passwordEncoder, configuredPassword);
     }
 
     @Test
     void run_createsInitialAgency_whenNoAgenciesExist() {
         when(agencyRepository.count()).thenReturn(0L);
-        when(passwordEncoder.encode("agency123")).thenReturn("encodedPassword");
+        when(passwordEncoder.encode(configuredPassword)).thenReturn("encodedPassword");
 
         agencyInitializer.run();
 
@@ -47,6 +50,16 @@ class AgencyInitializerTest {
         assertThat(createdAgency.getBusinessName()).isEqualTo("Agency");
         assertThat(createdAgency.getTaxId()).isEqualTo("30-40663891-2");
         assertThat(createdAgency.getStatus()).isEqualTo(AgencyStatus.AUTHORIZED);
+    }
+
+    @Test
+    void run_doesNotCreateAgency_whenNoPasswordIsConfigured() {
+        AgencyInitializer withoutPassword = new AgencyInitializer(agencyRepository, passwordEncoder, "");
+
+        withoutPassword.run();
+
+        verify(agencyRepository, never()).save(any());
+        verify(passwordEncoder, never()).encode(any());
     }
 
     @Test
