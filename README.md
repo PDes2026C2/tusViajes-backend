@@ -196,6 +196,41 @@ Prometheus recolecta estas métricas por la red interna. El Compose global y la 
 
 Para ejecutar las pruebas de integración de los endpoints de gestión, usar `./mvnw -Dtest=ObservabilityIntegrationTest test` o `.\mvnw.cmd -Dtest=ObservabilityIntegrationTest test` en Windows. Las pruebas requieren Docker y utilizan una base PostgreSQL aislada mediante Testcontainers.
 
+### Métricas de negocio: búsquedas de paquetes
+
+Cada solicitud de `GET /api/travel-packages` que obtiene y arma la primera página de resultados
+(`page=0` o sin parámetro `page`) incrementa una vez `tusviajes_package_searches_total`.
+`result=found` indica que la página contiene paquetes y `result=empty` que está vacía.
+Las páginas posteriores y los fallos al obtener o armar los resultados quedan fuera del conteo.
+Las cargas iniciales, recargas y reintentos de la primera página cuentan como solicitudes
+independientes. La métrica no identifica personas ni deduplica acciones del navegador.
+
+`tusviajes_package_destination_searches_total` registra los filtros explícitos de destino.
+Una búsqueda con ambos filtros puede aportar una observación de país y otra de ciudad.
+Usar `type="country"` o `type="city"` para analizar cada dimensión. El contador general
+es la fuente para calcular totales de búsquedas.
+
+- **País:** `destinationCountryIso` se recorta y normaliza a mayúsculas. Se registra sólo
+  si es un código ISO 3166-1 alfa-2 reconocido por Java.
+- **Ciudad:** se registra un ID individual sólo si está incluido en la lista de monitoreo.
+  Los IDs positivos restantes, incluidos los desconocidos, se agrupan en `other`.
+  Los IDs ausentes o no positivos se tratan como ausencia de filtro, igual que en la búsqueda.
+- **Sin destino:** se incrementa el contador general sin atribuirlo a país ni ciudad.
+  Las búsquedas vacías pueden contribuir al ranking cuando contienen filtros válidos.
+
+Para monitorear ciudades específicas, consultar `GET /api/cities?isoCode=AR` (o el país
+correspondiente) y usar los IDs de ese catálogo. Configurar hasta 50 IDs positivos distintos,
+separados por comas, en `TUSVIAJES_METRICS_MONITORED_CITY_IDS` y reiniciar el backend.
+En Compose, configurar la variable en el archivo de entorno y volver a ejecutar el arranque
+para aplicar el cambio. Si queda vacía, todas las ciudades se agrupan en `other`.
+La lista se considera configuración del despliegue. El contador no consulta el catálogo
+durante las búsquedas, así que los IDs configurados deben corresponder a esa base.
+
+Los contadores se exponen en `/actuator/prometheus` por el puerto de gestión.
+Las series permitidas empiezan en cero para que Prometheus pueda tomar una línea de base.
+Ejecutar `mvn -Dtest=PackageSearchMetricsIntegrationTest test` con Docker para probar
+la búsqueda pública y la exposición de las métricas.
+
 ## Observabilidad: logs y correlación de solicitudes
 
 La aplicación escribe logs JSON en formato ECS en la salida estándar, con fecha, nivel, nombre del servicio (`tusViajes`), logger y mensaje. No hace falta instalar otra biblioteca de logging. Por defecto, la impresión directa de SQL está desactivada para conservar la salida de la aplicación en formato estructurado.
