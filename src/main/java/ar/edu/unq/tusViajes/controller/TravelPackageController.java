@@ -46,7 +46,7 @@ public class TravelPackageController {
         Page<TravelPackageResponseDTO> results = travelPackageService.search(filter, pageable)
                 .map(TravelPackageResponseDTO::from);
         if (pageable.getPageNumber() == 0) {
-            travelPackageMetrics.recordSearch(results.hasContent(), filter.destinationCountryIso(), filter.destinationCityId());
+            travelPackageMetrics.recordSearch(results.hasContent(), filter.destinationCountryIso());
         }
         return ResponseEntity.ok(results);
     }

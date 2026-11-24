@@ -205,26 +205,11 @@ Las páginas posteriores y los fallos al obtener o armar los resultados quedan f
 Las cargas iniciales, recargas y reintentos de la primera página cuentan como solicitudes
 independientes. La métrica no identifica personas ni deduplica acciones del navegador.
 
-`tusviajes_package_destination_searches_total` registra los filtros explícitos de destino.
-Una búsqueda con ambos filtros puede aportar una observación de país y otra de ciudad.
-Usar `type="country"` o `type="city"` para analizar cada dimensión. El contador general
-es la fuente para calcular totales de búsquedas.
-
-- **País:** `destinationCountryIso` se recorta y normaliza a mayúsculas. Se registra sólo
-  si es un código ISO 3166-1 alfa-2 reconocido por Java.
-- **Ciudad:** se registra un ID individual sólo si está incluido en la lista de monitoreo.
-  Los IDs positivos restantes, incluidos los desconocidos, se agrupan en `other`.
-  Los IDs ausentes o no positivos se tratan como ausencia de filtro, igual que en la búsqueda.
-- **Sin destino:** se incrementa el contador general sin atribuirlo a país ni ciudad.
-  Las búsquedas vacías pueden contribuir al ranking cuando contienen filtros válidos.
-
-Para monitorear ciudades específicas, consultar `GET /api/cities?isoCode=AR` (o el país
-correspondiente) y usar los IDs de ese catálogo. Configurar hasta 50 IDs positivos distintos,
-separados por comas, en `TUSVIAJES_METRICS_MONITORED_CITY_IDS` y reiniciar el backend.
-En Compose, configurar la variable en el archivo de entorno y volver a ejecutar el arranque
-para aplicar el cambio. Si queda vacía, todas las ciudades se agrupan en `other`.
-La lista se considera configuración del despliegue. El contador no consulta el catálogo
-durante las búsquedas, así que los IDs configurados deben corresponder a esa base.
+`tusviajes_package_destination_searches_total{type="country"}` cuenta las búsquedas que
+incluyen el filtro explícito `destinationCountryIso`, incluidas las que devuelven una
+página vacía. El valor se recorta, se normaliza a mayúsculas y se registra sólo si es un
+código ISO 3166-1 alfa-2 reconocido por Java. Para obtener el total de búsquedas se usa
+`tusviajes_package_searches_total`.
 
 Los contadores se exponen en `/actuator/prometheus` por el puerto de gestión.
 Las series permitidas empiezan en cero para que Prometheus pueda tomar una línea de base.

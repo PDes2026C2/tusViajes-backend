@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
 @AutoConfigureMetrics
 @TestPropertySource(locations = "file:src/main/resources/application.properties")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"management.server.port=0", "tusviajes.metrics.monitored-city-ids=2"})
+        properties = "management.server.port=0")
 class PackageSearchMetricsIntegrationTest {
 
     private static final String SEARCHES = "tusviajes_package_searches_total";
@@ -88,48 +88,44 @@ class PackageSearchMetricsIntegrationTest {
     }
 
     @Test
-    void explicitCountryAndCity_countIndependentlyEvenWhenThereAreNoResults() throws Exception {
+    void explicitCountry_countsOnceEvenWhenTheSearchAlsoFiltersByCityAndHasNoResults() throws Exception {
         returnEmptyPage();
         String before = metrics();
 
-        // Córdoba (2) is defined in the flights catalog migration V2__init_cities.sql.
         assertThat(search("?destinationCountryIso=%20ar%20&destinationCityId=2").statusCode()).isEqualTo(200);
         String after = metrics();
 
         assertIncrease(before, after, SEARCHES, Map.of(), 1);
         assertIncrease(before, after, DESTINATIONS, Map.of("type", "country", "destination", "AR"), 1);
-        assertIncrease(before, after, DESTINATIONS, Map.of("type", "city", "destination", "2"), 1);
-        assertIncrease(before, after, DESTINATIONS, Map.of(), 2);
+        assertIncrease(before, after, DESTINATIONS, Map.of(), 1);
     }
 
     @Test
-    void filteringJustByAnUnmonitoredCity_usesOtherWithoutInferringACountry() throws Exception {
+    void filteringOnlyByCity_countsTheSearchWithoutAttributingADestination() throws Exception {
         returnEmptyPage();
         String before = metrics();
 
-        // Mendoza (4) is in the catalog but is not configured for monitoring.
         assertThat(search("?destinationCityId=4").statusCode()).isEqualTo(200);
-        assertThat(search("?destinationCityId=9223372036854775807").statusCode()).isEqualTo(200);
-        String after = metrics();
-
-        assertIncrease(before, after, DESTINATIONS, Map.of("type", "city", "destination", "other"), 2);
-        assertIncrease(before, after, DESTINATIONS, Map.of("type", "country"), 0);
-        assertIncrease(before, after, DESTINATIONS, Map.of(), 2);
-        assertThat(after).doesNotContain("destination=\"4\"", "destination=\"9223372036854775807\"");
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"ZZ", "Argentina", "%C3%9F"})
-    void invalidDestinationValues_doNotCreateDestinationLabels(String country) throws Exception {
-        returnEmptyPage();
-        String before = metrics();
-
-        assertThat(search("?destinationCountryIso=" + country + "&destinationCityId=-1").statusCode()).isEqualTo(200);
         String after = metrics();
 
         assertIncrease(before, after, SEARCHES, Map.of("result", "empty"), 1);
         assertIncrease(before, after, DESTINATIONS, Map.of(), 0);
-        assertThat(after).doesNotContain("destination=\"ZZ\"", "destination=\"Argentina\"", "destination=\"-1\"");
+        assertThat(after.lines().filter(line -> line.startsWith(DESTINATIONS + "{")))
+                .allMatch(line -> line.contains("type=\"country\""));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"ZZ", "Argentina", "%C3%9F"})
+    void invalidCountryCodes_doNotCreateDestinationLabels(String country) throws Exception {
+        returnEmptyPage();
+        String before = metrics();
+
+        assertThat(search("?destinationCountryIso=" + country).statusCode()).isEqualTo(200);
+        String after = metrics();
+
+        assertIncrease(before, after, SEARCHES, Map.of("result", "empty"), 1);
+        assertIncrease(before, after, DESTINATIONS, Map.of(), 0);
+        assertThat(after).doesNotContain("destination=\"ZZ\"", "destination=\"Argentina\"");
     }
 
     @Test
