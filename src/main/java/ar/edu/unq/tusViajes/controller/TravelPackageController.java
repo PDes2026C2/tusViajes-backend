@@ -5,6 +5,7 @@ import ar.edu.unq.tusViajes.controller.dto.request.TravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.request.UpdateTravelPackageRequestDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.ErrorDTO;
 import ar.edu.unq.tusViajes.controller.dto.response.TravelPackageResponseDTO;
+import ar.edu.unq.tusViajes.metrics.TravelPackageMetrics;
 import ar.edu.unq.tusViajes.security.CustomUserDetails;
 import ar.edu.unq.tusViajes.service.TravelPackageService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +33,7 @@ import org.springframework.data.web.PageableDefault;
 public class TravelPackageController {
 
     private final TravelPackageService travelPackageService;
+    private final TravelPackageMetrics travelPackageMetrics;
 
     @Operation(summary = "Buscar paquetes de viaje", description = "Consulta pública y paginada de todos los paquetes de viaje disponibles con soporte de filtros opcionales (origen, destino, fechas).")
     @ApiResponses({
@@ -41,7 +43,12 @@ public class TravelPackageController {
     public ResponseEntity<Page<TravelPackageResponseDTO>> search(
             @ModelAttribute TravelPackageFilterDTO filter,
             @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(travelPackageService.search(filter, pageable).map(TravelPackageResponseDTO::from));
+        Page<TravelPackageResponseDTO> results = travelPackageService.search(filter, pageable)
+                .map(TravelPackageResponseDTO::from);
+        if (pageable.getPageNumber() == 0) {
+            travelPackageMetrics.recordSearch(results.hasContent(), filter.destinationCountryIso());
+        }
+        return ResponseEntity.ok(results);
     }
 
     @Operation(summary = "Obtener paquete por ID", description = "Consulta pública de los detalles de un paquete de viaje por su ID.")

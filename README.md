@@ -154,6 +154,17 @@ El proyecto incluye un archivo `docker-compose.yaml` configurado para integrarse
 
 ---
 
+### Agencia y paquetes de ejemplo
+
+Para crear la agencia de ejemplo `agency@tusviajes.com` en una base sin agencias,
+establecer `TUSVIAJES_BOOTSTRAP_AGENCY_PASSWORD` con una contraseña elegida para ese entorno.
+Con el Compose global, configurar la variable en su archivo de entorno. Para ejecutar el
+backend directamente, exportarla antes de iniciarlo.
+
+La carga automática de paquetes de ejemplo requiere una agencia existente. La variable
+de inicialización sólo se usa al crear la cuenta nueva. Si la cuenta ya existe con la
+contraseña anterior, debe rotarse por separado en esa instancia.
+
 ## 📚 Documentación de Endpoints (Swagger / OpenAPI)
 
 El detalle completo de los endpoints, contratos de entrada/salida, códigos de respuesta y modelos de datos no se mantiene en este README; está documentado y accesible interactivamente a través de **Swagger UI**:
@@ -184,6 +195,26 @@ Al ejecutar Java localmente, estos endpoints están disponibles en `http://local
 Prometheus recolecta estas métricas por la red interna. El Compose global y la configuración de Prometheus, Grafana y sus alertas se mantienen en el repositorio `tusViajes-frontend`.
 
 Para ejecutar las pruebas de integración de los endpoints de gestión, usar `./mvnw -Dtest=ObservabilityIntegrationTest test` o `.\mvnw.cmd -Dtest=ObservabilityIntegrationTest test` en Windows. Las pruebas requieren Docker y utilizan una base PostgreSQL aislada mediante Testcontainers.
+
+### Métricas de negocio: búsquedas de paquetes
+
+Cada solicitud de `GET /api/travel-packages` que obtiene y arma la primera página de resultados
+(`page=0` o sin parámetro `page`) incrementa una vez `tusviajes_package_searches_total`.
+`result=found` indica que la página contiene paquetes y `result=empty` que está vacía.
+Las páginas posteriores y los fallos al obtener o armar los resultados quedan fuera del conteo.
+Las cargas iniciales, recargas y reintentos de la primera página cuentan como solicitudes
+independientes. La métrica no identifica personas ni deduplica acciones del navegador.
+
+`tusviajes_package_destination_searches_total{type="country"}` cuenta las búsquedas que
+incluyen el filtro explícito `destinationCountryIso`, incluidas las que devuelven una
+página vacía. El valor se recorta, se normaliza a mayúsculas y se registra sólo si es un
+código ISO 3166-1 alfa-2 reconocido por Java. Para obtener el total de búsquedas se usa
+`tusviajes_package_searches_total`.
+
+Los contadores se exponen en `/actuator/prometheus` por el puerto de gestión.
+Las series permitidas empiezan en cero para que Prometheus pueda tomar una línea de base.
+Ejecutar `mvn -Dtest=PackageSearchMetricsIntegrationTest test` con Docker para probar
+la búsqueda pública y la exposición de las métricas.
 
 ## Observabilidad: logs y correlación de solicitudes
 
